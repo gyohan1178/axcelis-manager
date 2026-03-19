@@ -2361,7 +2361,7 @@ div#po-inner-tabs .po-itab.active {
 // ══════════════════════════════════════════════════════════
 //  API 설정
 // ══════════════════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbykUYxESmCBaGZXhwPpXRAl2R3M2yOqTsWnZT4DWX2X35gC1gkT7C7f0eQmD691OFUvXg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwJ5cyJtXEKrQCu86AbJvbtX2YUQ2ZfgJLgXM1RnVbrV2A603D2vLX0pnmlKQlfdQPXuQ/exec';
 
 // 현재 로그인 사용자 (메모리)
 var CURRENT_USER = null;
@@ -2382,7 +2382,7 @@ function apiGet(params) {
   var parts = [];
   Object.keys(params).forEach(function(k){ parts.push(encodeURIComponent(k)+'='+encodeURIComponent(params[k])); });
   url += parts.join('&');
-  return fetch(url).then(function(r){ return r.json(); });
+  return fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); });
 }
 
 // API 호출 (POST)
@@ -2391,7 +2391,8 @@ function apiPost(body) {
   body.company = CURRENT_COMPANY;
   return fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(body)
   }).then(function(r){ return r.json(); });
 }
