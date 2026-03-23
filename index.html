@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리</title>
+<title>AXCELIS 통합 관리 v22</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -755,6 +755,211 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
 
 
 
+
+<style id="mobile-responsive">
+/* ══════════════════════════════════════
+   모바일 반응형 (max-width: 768px)
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── 헤더 ── */
+  header {
+    height: auto !important;
+    padding: 8px 12px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  header > div:first-child { /* 로고 영역 */
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  header > div:first-child .logo-text,
+  header > div:first-child div[style*="font-size:14px"] {
+    font-size: 13px !important;
+  }
+  header > div:last-child { /* 버튼 영역 */
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    width: 100% !important;
+  }
+  /* 헤더 통계 텍스트 숨김 */
+  #hstat { display: none !important; }
+  #last-updated { font-size: 10px !important; }
+
+  /* ── 앱 전환바 ── */
+  .app-bar {
+    top: auto !important;
+    position: sticky !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 0 8px !important;
+    gap: 0 !important;
+  }
+  .app-bar::-webkit-scrollbar { display: none !important; }
+  .app-btn {
+    padding: 10px 14px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+  .app-divider { display: none !important; }
+
+  /* ── 내부 탭바 ── */
+  div#pt-inner-tabs,
+  div#po-inner-tabs {
+    top: auto !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 0 8px !important;
+    position: sticky !important;
+  }
+  div#pt-inner-tabs::-webkit-scrollbar,
+  div#po-inner-tabs::-webkit-scrollbar { display: none !important; }
+  div#pt-inner-tabs .pt-itab,
+  div#po-inner-tabs .po-itab {
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ── 로그인 ── */
+  .login-box {
+    width: calc(100vw - 24px) !important;
+    padding: 28px 20px !important;
+    border-radius: 12px !important;
+  }
+  .login-title { font-size: 16px !important; }
+
+  /* ── 페이지 패딩 ── */
+  .pg, .page {
+    padding: 12px 10px !important;
+  }
+
+  /* ── 요약 카드 ── */
+  .sum { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .sum-row { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .sales-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .dv-sum { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .bom-sum { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .sc-val { font-size: 18px !important; }
+
+  /* ── 필터바 ── */
+  .fbar, .fb {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  .fbar .sw, .fb .sw { min-width: 0 !important; width: 100% !important; }
+  .chips { flex-wrap: wrap !important; gap: 4px !important; }
+  .chip { font-size: 11px !important; padding: 4px 10px !important; }
+
+  /* ── 테이블 ── */
+  .tbl-scroll, .tsc {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: 400px !important;
+  }
+  th, td {
+    padding: 7px 8px !important;
+    font-size: 11px !important;
+  }
+  .tw { border-radius: 8px !important; }
+  .th-row { padding: 10px 12px !important; }
+
+  /* ── 헤더 업로드 버튼 ── */
+  label[style*="납품이력"],
+  label[style*="PO 업로드"] {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* ── 모달 ── */
+  .mbox {
+    width: calc(100vw - 20px) !important;
+    max-width: none !important;
+    padding: 16px 14px !important;
+    border-radius: 10px !important;
+    max-height: 90vh !important;
+  }
+  .mfg { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .mfg3 { grid-template-columns: 1fr !important; }
+
+  /* ── 자재조회 ── */
+  .srch-hero { padding: 12px 14px !important; }
+  .srch-bar { flex-direction: row !important; gap: 6px !important; }
+  .srch-bar input { font-size: 13px !important; }
+  .req-panel { padding: 12px 14px !important; }
+  .req-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .item-card { padding: 12px 14px !important; }
+
+  /* ── BOM ── */
+  .bom-layout { flex-direction: column !important; }
+  .bom-left { width: 100% !important; max-width: none !important; border-right: none !important; border-bottom: 1px solid var(--border) !important; }
+  .bom-right { width: 100% !important; }
+
+  /* ── PO 액션바 ── */
+  .po-action-bar {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+  .po-act-btn { padding: 5px 10px !important; font-size: 11px !important; }
+
+  /* ── 차트 ── */
+  .chart-wrap { padding: 12px 10px !important; }
+
+  /* ── 발주 추이 탭 ── */
+  #otr-safety-content {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── 매입/매출 집계 ── */
+  #sect-agg .pg { padding: 10px 8px !important; }
+
+  /* ── 사용자 메뉴 ── */
+  #user-menu { right: 8px !important; min-width: 160px !important; }
+  .user-badge { padding: 4px 8px !important; }
+  #user-name-display { font-size: 11px !important; }
+
+  /* ── 전체 스크롤 ── */
+  body { overflow-x: hidden !important; }
+}
+
+/* ── 아주 작은 화면 (max-width: 420px) ── */
+@media (max-width: 420px) {
+  .sum { grid-template-columns: 1fr 1fr !important; }
+  .sales-grid { grid-template-columns: 1fr 1fr !important; }
+  header > div:last-child label,
+  header > div:last-child button {
+    font-size: 10px !important;
+    padding: 4px 7px !important;
+  }
+  .app-btn { font-size: 11px !important; padding: 9px 10px !important; }
+  .sc-val { font-size: 16px !important; }
+  .login-title { font-size: 15px !important; }
+  #otr-safety-content { grid-template-columns: 1fr 1fr !important; }
+  .req-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── 터치 디바이스 개선 ── */
+@media (hover: none) and (pointer: coarse) {
+  th, td, .chip, .app-btn, .pt-itab, .po-itab, .btn, button {
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  .chip, .app-btn, .btn {
+    min-height: 36px !important;
+  }
+  input, select {
+    font-size: 16px !important; /* iOS 줌 방지 */
+  }
+}
+</style>
 </head>
 <body>
 <style id="unified-override">
@@ -846,7 +1051,7 @@ div#po-inner-tabs .po-itab.active {
       <div class="login-logo-mark">JS</div>
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v1.0 — 진선테크</div>
+        <div class="login-sub">v22 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -860,6 +1065,10 @@ div#po-inner-tabs .po-itab.active {
     <button class="login-btn" onclick="doLogin()">로그인</button>
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+      <div style="font-size:11px;color:var(--text3)">v22 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
+    </div>
   </div>
 </div>
 
@@ -871,7 +1080,7 @@ div#po-inner-tabs .po-itab.active {
   <div style="display:flex;align-items:center;gap:8px">
     <div style="width:26px;height:26px;background:var(--accent);border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;font-family:var(--mono)">JS</div>
     <div style="font-size:14px;font-weight:600">AXCELIS 통합 관리</div>
-    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v1.0</div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v22</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <div id="hstat" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></div>
@@ -914,7 +1123,7 @@ div#po-inner-tabs .po-itab.active {
   <div class="app-divider"></div>
   <button class="app-btn po" id="appbtn-po" onclick="switchApp('po')">📋 PO 관리</button>
   <div class="app-divider"></div>
-  <button class="app-btn agg" id="appbtn-agg" onclick="switchApp('agg')">📊 매입/매출 집계</button>
+  <button class="app-btn srch" id="appbtn-srch" onclick="switchApp('srch')">🔍 자재조회</button>
 </div>
 
 <div class="sect-wrap on" id="sect-purchase">
@@ -924,7 +1133,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="pt-itab" data-tab="out" onclick="ptTab('out')">자재 불출 <span class="sbdg" id="b-out">0</span></div>
     <div class="pt-itab" data-tab="lt" onclick="ptTab('lt')">LT 미입력 <span class="sbdg r" id="b-lt">0</span></div>
     <div class="pt-itab" data-tab="bom" onclick="ptTab('bom')">🧩 BOM 관리 <span class="sbdg" id="b-bom">0</span></div>
-    <div class="pt-itab" data-tab="srch" onclick="ptTab('srch')" style="margin-left:auto;border-left:1px solid var(--border)">🔍 자재조회</div>
+    <div class="pt-itab" data-tab="rdash" onclick="ptTab('rdash')" style="border-left:1px solid var(--border);margin-left:auto">📊 매입 대시보드</div>
     <div class="pt-itab" data-tab="chk" onclick="ptTab('chk')">📋 재고점검</div>
   </div>
 
@@ -1295,7 +1504,7 @@ div#po-inner-tabs .po-itab.active {
                 <th onclick="reqSort('loc')" style="width:75px">보관좌표</th>
               </tr>
             </thead>
-            <tbody id="req-tbody"></tbody>
+            <tbody id="req-bom-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -1426,53 +1635,55 @@ div#po-inner-tabs .po-itab.active {
 </div>
 
 <!-- ═══ 자재 조회 ═══ -->
-<div class="pg" style="display:none" id="pg-srch">
 
-  <!-- 검색 바 -->
-  <div class="srch-hero">
-    <div class="srch-bar">
-      <input id="sq" placeholder="품번 또는 품명으로 검색 (예: 510000106, CONN RECT...)" oninput="srchLive()" onkeydown="if(event.key==='Enter')doSrch()">
-      <button class="bt-btn btn" onclick="doSrch()" style="background:var(--tel);color:#051515">검색</button>
-      <button class="bk-btn btn" onclick="clearSrch()">초기화</button>
-    </div>
-    <div class="srch-hint" id="sq-hint">품번 전체 또는 일부 · 품명 · 제조사 · 보관좌표 검색 가능 &nbsp;|&nbsp; BOM 조회: 상위품번 입력 후 BOM 버튼</div>
-  </div>
-
-  <!-- 불출 요청 패널 (상시 표시) -->
-  <div class="req-panel" id="req-panel" style="display:block">
-    <span class="req-badge">📤 불출 요청</span>
-    <div class="req-grid" style="margin-top:6px">
-      <div><label class="fgl">요청일 *</label><input id="req-dt" type="date"></div>
-      <div><label class="fgl">출고처 *</label><input id="req-dest" list="dl2" placeholder="코링스, 하네스..."><datalist id="dl2"></datalist></div>
-      <div><label class="fgl">인수자</label><input id="req-rec" placeholder="성명"></div>
-      <div class="fgf" style="grid-column:1/-1"><label class="fgl">출고목적</label>
-        <select id="req-pur"><option>자재불출</option><option>납품</option><option>파손</option><option>불량</option><option>기타</option></select>
-      </div>
-    </div>
-    <div class="req-items">
-      <table>
-        <thead><tr><th>품번</th><th>품명</th><th>요청수량</th><th>단위</th><th>비고</th><th></th></tr></thead>
-        <tbody id="req-tbody"></tbody>
-      </table>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:11px;color:var(--text3)">검색결과에서 <b style="color:var(--tel)">+ 불출요청</b> 버튼을 눌러 품목을 추가하세요</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn bk-btn sm" onclick="clearReq()">요청 초기화</button>
-        <button class="btn bt-btn" onclick="submitReq()">✅ 불출 요청 제출</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 검색 결과 -->
-  <div id="srch-results"></div>
-
-  <!-- BOM 조회 결과 -->
-  <div id="bom-results"></div>
-
-</div>
 
 <!-- ═══ 재고 점검 ═══ -->
+<!-- ═══ 매입 대시보드 ═══ -->
+<div class="pg" style="display:none" id="pg-rdash">
+  <div style="display:flex;align-items:center;gap:8px;padding:16px 0 8px">
+    <div id="rdash-year-tabs" style="display:flex;gap:4px"></div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;color:var(--text3)">환율</label>
+      <input id="rdash-exrate" type="number" value="1380" style="width:100px;padding:5px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono)" oninput="renderRecvDash()">
+      <span style="font-size:11px;color:var(--text3)">원/USD</span>
+    </div>
+  </div>
+  <!-- 요약 카드 -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+    <div class="sc t"><div class="sl">실제 매입</div><div class="sv" id="rdash-done">—</div><div class="sd">입고완료 기준</div></div>
+    <div class="sc" style="border-color:var(--purple)"><div class="sl">예상 매입</div><div class="sv" style="color:var(--purple)" id="rdash-pend">—</div><div class="sd">미입고 발주금액</div></div>
+    <div class="sc" style="border-color:var(--tel)"><div class="sl">총 매입</div><div class="sv" style="color:var(--tel)" id="rdash-total">—</div><div class="sd">실제+예상</div></div>
+    <div class="sc" style="border-color:var(--amber)"><div class="sl">매입 건수</div><div class="sv" style="color:var(--amber)" id="rdash-cnt">—</div><div class="sd">발주이력 건수</div></div>
+  </div>
+  <!-- 차트 -->
+  <div class="tw" style="margin-bottom:14px">
+    <div class="th-row">
+      <div class="th-title">월별 매입 현황</div>
+      <div style="display:flex;gap:10px">
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#4f7cff;border-radius:2px;display:inline-block"></span>실제매입(입고)</span>
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#a78bfa;border-radius:2px;display:inline-block"></span>예상매입(미입고)</span>
+      </div>
+    </div>
+    <div id="rdash-chart" style="padding:8px 0;min-height:160px"><div style="text-align:center;padding:40px;color:var(--text3)">매입이력을 업로드하면 차트가 표시됩니다</div></div>
+  </div>
+  <!-- 월별 테이블 -->
+  <div class="tw">
+    <div class="th-row"><div class="th-title">월별 상세</div><div class="th-count" id="rdash-tbl-cnt"></div></div>
+    <div class="tbl-scroll">
+      <table><thead><tr>
+        <th>월</th>
+        <th style="text-align:right;color:var(--accent)">실제매입(₩)</th>
+        <th style="text-align:right;color:var(--purple)">예상매입(₩)</th>
+        <th style="text-align:right;color:var(--tel)">총매입(₩)</th>
+        <th style="text-align:right">입고건수</th>
+        <th style="text-align:right">발주건수</th>
+      </tr></thead>
+      <tbody id="rdash-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="pg" style="display:none" id="pg-chk">
 
   <!-- 모드 선택 + 실시자 -->
@@ -1964,6 +2175,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="po-itab" data-tab="delivered" onclick="poTab('delivered')">✅ 납품 완료 <span class="tab-badge green" id="badge-delivered">0</span></div>
     <div class="po-itab" data-tab="changes" onclick="poTab('changes')">변경이력 <span class="tab-badge" id="badge-changes" style="display:none">0</span></div>
     <div class="po-itab" data-tab="tracking" onclick="poTab('tracking')">CCN B 트레킹</div>
+    <div class="po-itab" data-tab="ordtrend" onclick="poTab('ordtrend')">📈 발주 추이</div>
   </div>
   
 
@@ -2258,7 +2470,7 @@ div#po-inner-tabs .po-itab.active {
 <!-- ══════════════════ 매출 대시보드 ══════════════════ -->
 <div class="page" style="display:none" id="page-sales">
 
-  <!-- 환율 입력 바 -->
+  <!-- 환율 + 연도탭 바 -->
   <div class="exrate-bar">
     <label>💱 CCN B 환율 (USD → KRW)</label>
     <input class="exrate-input" id="exrate-input" type="number" min="1" step="10" placeholder="1350" oninput="onExrateChange()">
@@ -2272,22 +2484,34 @@ div#po-inner-tabs .po-itab.active {
     </div>
   </div>
 
-  <!-- 요약 카드: 합산→CCN K→CCN B(KRW)→CCN B(USD)→건수 -->
+  <!-- ① 납품완료 요약 -->
+  <div style="font-size:11px;color:var(--text3);margin:8px 0 4px;font-weight:600">✅ 납품완료 (납품이력 기준)</div>
   <div class="sales-grid">
-    <div class="sc green"><div class="sc-label">합산 매출 (KRW)</div><div class="sc-val" id="s-total-krw" style="font-size:18px">—</div><div class="sc-sub">B환산 + K 합계</div></div>
-    <div class="sc blue"><div class="sc-label">CCN K 매출 (KRW)</div><div class="sc-val" id="s-k-krw" style="font-size:18px">—</div><div class="sc-sub" id="s-k-krw-sub">선택 연도 합계</div></div>
+    <div class="sc green"><div class="sc-label">합산 매출 (KRW)</div><div class="sc-val" id="s-total-krw" style="font-size:18px">—</div><div class="sc-sub">B환산+K 합계</div></div>
+    <div class="sc blue"><div class="sc-label">CCN K 매출 (KRW)</div><div class="sc-val" id="s-k-krw" style="font-size:18px">—</div><div class="sc-sub" id="s-k-krw-sub">선택 연도</div></div>
     <div class="sc red"><div class="sc-label">CCN B 환산 (KRW)</div><div class="sc-val" id="s-b-krw" style="font-size:18px">—</div><div class="sc-sub">환율 적용</div></div>
-    <div class="sc amber"><div class="sc-label">CCN B 매출 (USD)</div><div class="sc-val" id="s-b-usd" style="font-size:18px">—</div><div class="sc-sub" id="s-b-usd-sub">선택 연도 합계</div></div>
-    <div class="sc purple"><div class="sc-label">납품 건수</div><div class="sc-val" id="s-count">—</div><div class="sc-sub" id="s-count-sub">선택 연도 기준</div></div>
+    <div class="sc amber"><div class="sc-label">CCN B 매출 (USD)</div><div class="sc-val" id="s-b-usd" style="font-size:18px">—</div><div class="sc-sub" id="s-b-usd-sub">선택 연도</div></div>
+    <div class="sc purple"><div class="sc-label">납품 건수</div><div class="sc-val" id="s-count">—</div><div class="sc-sub" id="s-count-sub">선택 연도</div></div>
   </div>
 
-  <!-- 월별 차트 -->
-  <div class="chart-wrap">
+  <!-- ② PO 잔여 요약 -->
+  <div style="font-size:11px;color:var(--text3);margin:12px 0 4px;font-weight:600">📋 현재 PO 잔여금액 (PO 업로드 기준)</div>
+  <div class="sales-grid">
+    <div class="sc" style="border-color:var(--green)"><div class="sc-label">PO 합산 (KRW)</div><div class="sc-val" id="po-total-krw" style="font-size:18px;color:var(--green)">—</div><div class="sc-sub">K + B환산</div></div>
+    <div class="sc" style="border-color:var(--accent)"><div class="sc-label">CCN K 잔여 (KRW)</div><div class="sc-val" id="po-k-krw" style="font-size:18px;color:var(--accent)">—</div><div class="sc-sub" id="po-k-cnt">—건</div></div>
+    <div class="sc" style="border-color:var(--amber)"><div class="sc-label">CCN B 환산 (KRW)</div><div class="sc-val" id="po-b-krw" style="font-size:18px;color:var(--amber)">—</div><div class="sc-sub">환율 적용</div></div>
+    <div class="sc" style="border-color:var(--amber)"><div class="sc-label">CCN B 잔여 (USD)</div><div class="sc-val" id="po-b-usd" style="font-size:18px;color:var(--amber)">—</div><div class="sc-sub" id="po-b-cnt">—건</div></div>
+    <div class="sc" style="border-color:var(--text3)"><div class="sc-label">납품예정 건수</div><div class="sc-val" id="po-total-cnt" style="font-size:18px">—</div><div class="sc-sub">잔여 PO</div></div>
+  </div>
+
+  <!-- ③ 월별 매출 + PO 추이 (통합 차트) -->
+  <div class="chart-wrap" style="margin-top:14px">
     <div class="chart-title">
-      <span>월별 매출 추이</span>
+      <span>월별 매출 추이 (납품완료 + PO 잔여)</span>
       <div class="chart-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:var(--amber)"></div><span>CCN B (원화환산)</span></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:var(--red)"></div><span>CCN K</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:var(--amber)"></div><span>납품 CCN B(원화)</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:var(--red)"></div><span>납품 CCN K</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:#4f7cff;opacity:0.5"></div><span>PO 잔여(원화)</span></div>
       </div>
     </div>
     <div id="sales-chart" style="overflow-x:auto">
@@ -2295,7 +2519,26 @@ div#po-inner-tabs .po-itab.active {
     </div>
   </div>
 
-  <!-- 월별 상세 테이블 -->
+  <!-- ④ 품목군별 월별 현황 -->
+  <div class="chart-wrap" style="margin-top:14px">
+    <div class="chart-title">
+      <span>품목군별 월별 진행 현황</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:11px;color:var(--text3)">기준:</span>
+        <select id="item-group-src" onchange="renderItemGroupChart()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 8px;font-size:11px">
+          <option value="delivered">납품완료</option>
+          <option value="po">PO 잔여</option>
+        </select>
+      </div>
+    </div>
+    <div id="item-group-chart" style="overflow-x:auto;min-height:120px">
+      <div class="no-sales">데이터를 업로드하면 표시됩니다</div>
+    </div>
+    <!-- 품목군 범례 -->
+    <div id="item-group-legend" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;font-size:11px"></div>
+  </div>
+
+  <!-- ⑤ 월별 상세 테이블 -->
   <div class="sales-table-wrap">
     <div class="th-row"><div class="th-title">월별 매출 상세</div><div class="th-count" id="sales-tbl-cnt"></div></div>
     <div style="overflow-x:auto">
@@ -2316,7 +2559,7 @@ div#po-inner-tabs .po-itab.active {
     </div>
   </div>
 
-  <!-- 납품 명세 -->
+  <!-- ⑥ 납품 명세 -->
   <div class="tw">
     <div class="th-row">
       <div class="th-title">납품 명세</div>
@@ -2330,17 +2573,11 @@ div#po-inner-tabs .po-itab.active {
       </div>
     </div>
     <div class="tbl-scroll">
-      <table id="dv-tbl">
+      <table>
         <thead><tr>
-          <th>납품일</th>
-          <th>품번</th>
-          <th>품명</th>
-          <th>CCN</th>
-          <th style="text-align:right">수량</th>
-          <th style="text-align:right">단가</th>
-          <th style="text-align:right">금액</th>
-          <th style="text-align:right">원화환산</th>
-          <th>오더</th>
+          <th>납품일</th><th>품번</th><th>품명</th><th>CCN</th>
+          <th style="text-align:right">수량</th><th style="text-align:right">단가</th>
+          <th style="text-align:right">금액</th><th style="text-align:right">원화환산</th><th>오더</th>
         </tr></thead>
         <tbody id="sales-detail-tbody"></tbody>
       </table>
@@ -2355,6 +2592,7 @@ div#po-inner-tabs .po-itab.active {
   </div>
 </div>
 
+
 <!-- ══════════════════ CCN B 트레킹 ══════════════════ -->
 <div class="page" style="display:none" id="page-tracking">
   <div class="fbar">
@@ -2368,6 +2606,68 @@ div#po-inner-tabs .po-itab.active {
   </div>
   <div id="tracking-body"></div>
 </div>
+
+<!-- ══════════════════ 발주 추이 ══════════════════ -->
+<div class="page" style="display:none" id="page-ordtrend">
+
+  <!-- 필터 바 -->
+  <div class="fbar" style="gap:10px;flex-wrap:wrap">
+    <div class="sw" style="max-width:320px">
+      <span class="si">⌕</span>
+      <input id="otr-q" placeholder="품번 또는 품명 검색..." oninput="renderOrdTrend()">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;color:var(--text3)">기간단위:</span>
+      <div class="chips" id="otr-period-chips">
+        <div class="chip on default" id="otrp-month" onclick="setOtrPeriod('month')">월별</div>
+        <div class="chip" id="otrp-quarter" onclick="setOtrPeriod('quarter')">분기</div>
+        <div class="chip" id="otrp-half" onclick="setOtrPeriod('half')">반기</div>
+        <div class="chip" id="otrp-year" onclick="setOtrPeriod('year')">연도</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;color:var(--text3)">데이터:</span>
+      <div class="chips">
+        <div class="chip on default" id="otrd-po" onclick="setOtrData('po')">현재 PO</div>
+        <div class="chip" id="otrd-delivered" onclick="setOtrData('delivered')">납품이력</div>
+        <div class="chip" id="otrd-both" onclick="setOtrData('both')">둘다</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+      <span style="font-size:11px;color:var(--text3)">표시:</span>
+      <div class="chips">
+        <div class="chip on default" id="otrs-qty" onclick="setOtrShow('qty')">수량</div>
+        <div class="chip" id="otrs-amt" onclick="setOtrShow('amt')">금액</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 안전재고 산출 결과 배너 -->
+  <div id="otr-safety-banner" style="display:none;background:var(--bg2);border:1px solid var(--teal);border-radius:9px;padding:14px 18px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px">📊 안전재고 산출 결과 (클릭한 품목 기준)</div>
+    <div id="otr-safety-content" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>
+  </div>
+
+  <!-- 집계 테이블 -->
+  <div class="tw">
+    <div class="th-row">
+      <div class="th-title">품목별 발주 추이</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="th-count" id="otr-cnt"></div>
+        <button onclick="exportOtrCSV()" style="padding:4px 10px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">⬇ CSV</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;max-height:600px;overflow-y:auto">
+      <table id="otr-table" style="width:100%;border-collapse:collapse;table-layout:auto">
+        <thead id="otr-thead" style="position:sticky;top:0;z-index:10"></thead>
+        <tbody id="otr-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+
 
 
 </div>
@@ -2535,6 +2835,29 @@ function showApp() {
   if(mAdmin) mAdmin.style.display = CURRENT_USER.role === 'admin' ? '' : 'none';
   // 앱 초기화
   initAfterLogin();
+  // viewer 권한이면 자재조회 탭만 표시
+  var role = CURRENT_USER ? CURRENT_USER.role : '';
+  if(role === 'viewer' || role === 'guest'){
+    // 구매관리 하위탭 숨김 (srch만 남김)
+    document.querySelectorAll('#pt-inner-tabs .pt-itab').forEach(function(el){
+      if(el.dataset.tab !== 'srch') el.style.display = 'none';
+    });
+    // 앱 버튼 숨김 (구매관리만 표시, 나머지 숨김)
+    var appBar = document.querySelector('.app-bar');
+    if(appBar){
+      appBar.querySelectorAll('.app-btn, .app-divider').forEach(function(el){
+        var isMain = el.id === 'appbtn-purchase';
+        if(!isMain) el.style.display = 'none';
+      });
+    }
+    // 헤더 버튼들 숨김 (업로드, PO 업로드, 초기화)
+    ['header-recv-upload','header-po-upload','header-reset'].forEach(function(id){
+      var el = document.getElementById(id); if(el) el.style.display = 'none';
+    });
+    // 자재조회 탭으로 이동
+    switchApp('purchase');
+    ptTab('srch');
+  }
 }
 
 function toggleUserMenu() {
@@ -2767,24 +3090,22 @@ function fmtShortDate(v){
 }
 // ══ 앱 전환 ══
 function switchApp(app) {
-  var sp = document.getElementById('sect-purchase');
-  var so = document.getElementById('sect-po');
-  var sa = document.getElementById('sect-agg');
-  sp.style.display = (app === 'purchase') ? 'block' : 'none';
-  so.style.display = (app === 'po')       ? 'block' : 'none';
-  if(sa) sa.style.display = (app === 'agg') ? 'block' : 'none';
-  sp.classList.toggle('on', app === 'purchase');
-  so.classList.toggle('on', app === 'po');
-  if(sa) sa.classList.toggle('on', app === 'agg');
+  var sp  = document.getElementById('sect-purchase');
+  var so  = document.getElementById('sect-po');
+  var ss  = document.getElementById('sect-srch');
+  sp.style.display  = (app==='purchase') ? 'block':'none';
+  so.style.display  = (app==='po')       ? 'block':'none';
+  if(ss) ss.style.display = (app==='srch') ? 'block':'none';
+  sp.classList.toggle('on', app==='purchase');
+  so.classList.toggle('on', app==='po');
+  if(ss) ss.classList.toggle('on', app==='srch');
   document.getElementById('appbtn-purchase').classList.toggle('on', app==='purchase');
   document.getElementById('appbtn-po').classList.toggle('on', app==='po');
-  var ba = document.getElementById('appbtn-agg');
-  if(ba) ba.classList.toggle('on', app==='agg');
-  if(app === 'agg') {
-    // pg-agg 표시
-    var pgAgg = document.getElementById('pg-agg');
-    if(pgAgg){ pgAgg.classList.add('on'); pgAgg.style.display='block'; }
-    renderAgg();
+  var bs = document.getElementById('appbtn-srch');
+  if(bs) bs.classList.toggle('on', app==='srch');
+  if(app==='srch') {
+    srchTab('item');
+    initSrch2();
   }
 }
 
@@ -3115,7 +3436,7 @@ function ptTab(t){
   document.querySelectorAll('#pt-inner-tabs .pt-itab').forEach(function(el){
     el.classList.toggle('on', el.dataset.tab===t);
   });
-  var fns={db:renderDB,recv:renderRecv,out:renderOut,lt:renderLT,bom:initBOM,srch:initSrch,chk:initChk};
+  var fns={db:renderDB,recv:renderRecv,out:renderOut,lt:renderLT,bom:initBOM,rdash:renderRecvDash,srch:initSrch,chk:initChk};
   if(fns[t]) fns[t]();
   var tblMap={db:'db-tbl',recv:'recv-tbl',out:'out-tbl'};
   if(tblMap[t]) { initColResize(tblMap[t]); setTimeout(function(){ initColResize(tblMap[t]); },300); }
@@ -3887,8 +4208,7 @@ function initSrch(){
   if(!document.getElementById('req-dt').value)
     document.getElementById('req-dt').value=new Date().toISOString().split('T')[0];
   // req-panel 항상 표시
-  const panel=document.getElementById('req-panel');
-  if(panel) panel.style.display='block';
+  // req-panel은 srch-pg-req에 있음
   renderReqPanel();
 }
 
@@ -4005,90 +4325,88 @@ const ALT_BADGE={
 };
 
 function showBOM(parentPN){
-  const children=BOM[parentPN];
-  if(!children||!children.length){
-    document.getElementById('bom-results').innerHTML=`<div class="bom-tree"><div style="color:var(--text3);font-size:12px">BOM 데이터 없음: ${parentPN}</div></div>`;
+  var _pn = parentPN;
+  document._currentBOMPN = _pn;
+  var children = BOM[_pn];
+  if(!children || !children.length){
+    document.getElementById('bom-results').innerHTML =
+      '<div class="bom-tree"><div style="color:var(--text3);font-size:12px;padding:20px">BOM 데이터 없음: '+_pn+'</div></div>';
     return;
   }
-  const parent=DB.find(x=>x.pn===parentPN)||{pn:parentPN,d:'',ct:''};
+  var parent = DB.find(function(x){return x.pn===_pn;}) || {pn:_pn, d:'', ct:''};
+  var LV_COLORS = {1:'var(--tel)',2:'var(--pur)',3:'var(--grn)',4:'var(--amb)',5:'var(--red)'};
 
-  // LEVEL 기반 계층 들여쓰기
-  const LV_COLORS={1:'var(--tel)',2:'var(--pur)',3:'var(--grn)',4:'var(--amb)',5:'var(--red)',6:'var(--text3)'};
-  const LV_ICON={1:'└',2:'  └',3:'    └',4:'      └',5:'        └',6:'          └'};
-
-  const tbodyRows=children.map((item,i)=>{
-    const lv=item.lv||1;
-    const r=DB.find(x=>x.pn===item.pn)||{};
-    const inDB=!!r.pn;
-    const col=LV_COLORS[lv]||'var(--text3)';
-    const tin=RECV.filter(x=>x.pn===item.pn).reduce((s,x)=>s+(+x.qty||0),0);
-    const tout=OUT.filter(x=>x.pn===item.pn).reduce((s,x)=>s+(+x.qty||0),0);
-    const stock=tin-tout;
-    const sf=r.sf||0;
-    const stkCls=tin>0||tout>0?(stock>=item.qty?'grn':stock>0?'amb':'red'):'text3';
-    // 정품/대체품
-    let altBadge='<span class="orig-badge" style="font-size:9px">정품</span>';
-    if(item.isAlt) altBadge=ALT_BADGE[item.isAlt]||`<span class="alt-badge" style="font-size:9px">대체</span>`;
-    else if(r.ia) altBadge=ALT_BADGE[r.ay]||`<span class="alt-badge" style="font-size:9px">대체</span>`;
-    const indent=((lv-1)*16);
-    return `<tr>
-      <td style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--text3)">${lv}</td>
-      <td style="padding-left:${8+indent}px;font-family:var(--mono);font-size:11px;color:${col}">
-        <span style="color:var(--text3);margin-right:3px">${lv>1?'└':''}</span>${item.pn}
-        ${!inDB?'<span class="bd ba" style="font-size:9px;margin-left:3px">DB없음</span>':''}
-      </td>
-      <td style="font-size:11px;color:var(--text2);font-family:var(--mono)">${r.ct?`<span class="bd ${catCls[r.ct]||'bk'}" style="font-size:9px">${r.ct}</span>`:'—'}</td>
-      <td style="color:var(--text);font-size:12px" title="${r.d||item.desc||''}">${r.d||item.desc||'—'}</td>
-      <td style="font-size:11px;color:var(--text3)">${r.mg||item.mfg||'—'}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.mp||item.mfgPn||'—'}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.rv||'—'}</td>
-      <td style="font-family:var(--mono);font-weight:700;color:var(--pur);text-align:right">${item.qty}</td>
-      <td style="font-family:var(--mono);text-align:right;color:${item.aqty!==item.qty?'var(--amb)':'var(--text3)'}">${item.aqty??item.qty}</td>
-      <td style="font-size:11px">${item.unit||'EA'}</td>
-      <td style="text-align:center">${altBadge}</td>
-      <td style="font-size:11px;color:var(--text3)">${item.note||r.op?`${item.note||''}${r.op?` 기존:${r.op}`:''}`:' —'}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.lc||item.loc||'—'}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--${stkCls})">${tin>0||tout>0?stock:'—'}</td>
-    </tr>`;
+  var tbodyRows = children.map(function(item, i) {
+    // pn 필드 호환성 - 가능한 모든 키 시도
+    if(!item.pn) {
+      item.pn = item.child || item.item || item.partNumber || item.part_number ||
+                item.childPn || item.child_pn || '';
+    }
+    // 숫자인 경우 문자열 변환
+    if(typeof item.pn === 'number') item.pn = String(item.pn);
+    item.pn = String(item.pn || '').trim().replace(/\.0$/, '');
+    var lv  = item.lv || 1;
+    var r   = DB.find(function(x){return x.pn===item.pn;}) || {};
+    var col = LV_COLORS[lv] || 'var(--tel)';
+    var indent = (lv-1)*16;
+    var noDb = item.pn && !r.pn;
+    var altBadge = (item.isAlt || r.ia)
+      ? '<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--amb-bg,#2a1f00);color:var(--amb);border:1px solid var(--amb)">대체</span>'
+      : '<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--grn);border:1px solid var(--grn)">정품</span>';
+    var noteStr = (item.note||r.op) ? ((item.note||'')+(r.op?' 기존:'+r.op:'')) : '—';
+    var aqtyStr = (item.aqty!==undefined) ? item.aqty : item.qty;
+    var aqtyColor = (item.aqty!==undefined && item.aqty!==item.qty) ? 'var(--amb)' : 'var(--text3)';
+    return '<tr style="border-bottom:1px solid var(--border2)">'
+      + '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;color:'+col+';white-space:nowrap;padding-left:'+(10+indent)+'px">'
+        + (lv>1 ? '<span style="color:var(--text3);margin-right:4px">\u2514</span>' : '')
+        + (item.pn || '—')
+        + (noDb ? '<span style="font-size:9px;margin-left:4px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red)">DB없음</span>' : '')
+      + '</td>'
+      + '<td style="padding:7px 10px;color:var(--text);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(r.d||item.desc||'')+'">'+(r.d||item.desc||'—')+'</td>'
+      + '<td style="padding:7px 10px;font-size:11px;color:var(--text2);white-space:nowrap">'+(r.mg||item.mfg||'—')+'</td>'
+      + '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text2);white-space:nowrap">'+(r.mp||item.mfgPn||'—')+'</td>'
+      + '<td style="padding:7px 10px;font-family:var(--mono);font-weight:700;color:var(--pur);text-align:right;white-space:nowrap">'+item.qty+'</td>'
+      + '<td style="padding:7px 10px;font-family:var(--mono);text-align:right;white-space:nowrap;color:'+aqtyColor+'">'+aqtyStr+'</td>'
+      + '<td style="padding:7px 10px;font-size:11px;color:var(--text3);white-space:nowrap">'+(item.unit||'EA')+'</td>'
+      + '<td style="padding:7px 10px;text-align:center;white-space:nowrap">'+altBadge+'</td>'
+      + '<td style="padding:7px 10px;font-size:11px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis" title="'+(item.note||'')+'">'+noteStr+'</td>'
+      + '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--tel);white-space:nowrap">'+(r.lc||item.loc||'—')+'</td>'
+      + '</tr>';
   }).join('');
 
-  const ayBadge=parent.ia?(ALT_BADGE[parent.ay]||'<span class="alt-badge">대체</span>'):'<span class="orig-badge">정품</span>';
-  document.getElementById('bom-results').innerHTML=`
-    <div class="bom-tree">
-      <div class="bom-tree-title" style="flex-wrap:wrap;gap:6px">
-        <span>🌿 BOM 전개</span>
-        <span style="font-family:var(--mono);color:var(--tel)">${parentPN}</span>
-        ${parent.rv?`<span class="bd bk">REV ${parent.rv}</span>`:''}
-        ${parent.ct?`<span class="bd ${catCls[parent.ct]||'bk'}" style="font-size:10px">${parent.ct}</span>`:''}
-        ${ayBadge}
-        <span style="font-size:12px;font-weight:400;color:var(--text2)">${parent.d||''}</span>
-        <span style="font-size:11px;color:var(--text3);font-weight:400">하위부품 ${children.length}건</span>
-        <button class="btn bk-btn sm" style="margin-left:auto" onclick="addBOMToReq('${parentPN}')">📤 전체 불출요청</button>
-        <button class="btn bk-btn sm" onclick="exportBOMView('${parentPN}')">⬇ CSV</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;min-width:900px">
-          <thead><tr style="background:var(--bg3)">
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);text-align:center;width:36px;border-bottom:1px solid var(--border)">LV</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:130px">하위품번</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:80px">Category</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border)">품명</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:80px">제조사</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:100px">제조사품번</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:45px">REV</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);text-align:right;border-bottom:1px solid var(--border);width:50px">수량</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);text-align:right;border-bottom:1px solid var(--border);width:55px">실수량</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:45px">단위</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);text-align:center;border-bottom:1px solid var(--border);width:75px">정품/대체</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:100px">비고</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);width:70px">보관좌표</th>
-            <th style="padding:7px 8px;font-size:10px;color:var(--text3);text-align:right;border-bottom:1px solid var(--border);width:55px">현재고</th>
-          </tr></thead>
-          <tbody style="font-size:12px">${tbodyRows}</tbody>
-        </table>
-      </div>
-    </div>`;
+  var thead = '<thead><tr style="background:var(--bg3)">'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap">품번</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border)">품명</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap">제조사</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap">제조사품번</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-align:right;white-space:nowrap">수량</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-align:right;white-space:nowrap">실수량</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap">단위</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-align:center;white-space:nowrap">정품/대체</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border)">비고</th>'
+    + '<th style="padding:7px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap">보관장소</th>'
+    + '</tr></thead>';
+
+  document.getElementById('bom-results').innerHTML =
+    '<div class="bom-tree">'
+    + '<div class="bom-tree-title" style="flex-wrap:wrap;gap:6px">'
+      + '<span>\ud83c\udf3f BOM \uc804\uac1c</span>'
+      + '<span style="font-family:var(--mono);color:var(--tel)">'+_pn+'</span>'
+      + '<span style="font-size:12px;font-weight:400;color:var(--text2)">'+(parent.d||'')+'</span>'
+      + '<span style="font-size:11px;color:var(--text3);font-weight:400">\ud558\uc704\ubd80\ud488 '+children.length+'\uac74</span>'
+      + '<button class="btn bk-btn sm" style="margin-left:auto" onclick="addBOMToReq(document._currentBOMPN)">\ud83d\udce4 \uc804\uccb4 \ubd88\ucd9c\uc694\uccad</button>'
+      + '<button class="btn bk-btn sm" onclick="exportBOMView(document._currentBOMPN)">\u2b07 CSV</button>'
+    + '</div>'
+    + '<div style="overflow-x:auto;margin-top:8px">'
+      + '<table style="width:100%;border-collapse:collapse;table-layout:auto">'
+      + thead
+      + '<tbody style="font-size:12px">'+tbodyRows+'</tbody>'
+      + '</table>'
+    + '</div>'
+    + '</div>';
 }
+
+
 
 function exportBOMView(parentPN){
   const children=BOM[parentPN]||[];
@@ -4116,6 +4434,8 @@ function addToReq(pn){
   }
   reqItems.push({pn,d:r.d||'',qty:1,unit:'EA',note:''});
   renderReqPanel();
+  // 자재불출요청 탭으로 자동 이동
+  srchTab("req");
 }
 
 function addBOMToReq(parentPN){
@@ -4175,8 +4495,7 @@ function submitReq(){
     var el=document.getElementById(id);
     if(el){ el.classList.toggle('on',id==='oc-all'); el.classList.toggle('t',id==='oc-all'); }
   });
-  switchApp('purchase');
-  ptTab('out');
+  // 자재불출 처리 완료 - 구매관리 자재불출 탭에서 확인
   alert('✅ '+cnt+'건 불출 요청이 등록됐습니다. 자재불출 탭에서 확인하세요.');
 }
 
@@ -4817,6 +5136,11 @@ function renderBOMChildren(){
   btns.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='';});
 
   const tbody=children.map((c,i)=>{
+    // pn 호환성 처리
+    if(!c.pn&&c.child) c.pn=c.child;
+    if(!c.pn&&c.item)  c.pn=c.item;
+    if(typeof c.pn==='number') c.pn=String(c.pn);
+    c.pn=String(c.pn||'').trim().replace(/\.0$/,'');
     const cdbr=DB.find(x=>x.pn===c.pn)||{};
     const inDB=!!cdbr.pn;
     const lv=c.lv||1;
@@ -4828,8 +5152,8 @@ function renderBOMChildren(){
       ?`<span style="color:var(--amb)">${c.aqty}</span>`
       :`${c.aqty??c.qty}`;
     return `<tr>
-      <td style="text-align:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${lvCol}">${lv}</td>
-      <td style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--text3)">${c.no||i+1}</td>
+      
+      
       <td style="font-family:var(--mono);font-size:11px;color:var(--tel)">${c.pn}${!inDB?` <span class="bd ba" style="font-size:9px">DB없음</span>`:''}</td>
       <td style="color:var(--text)">${cdbr.d||'—'}</td>
       <td style="font-size:11px;color:var(--text3)">${cdbr.mg||'—'}</td>
@@ -4839,6 +5163,7 @@ function renderBOMChildren(){
       <td style="font-size:11px">${c.unit||'EA'}</td>
       <td style="text-align:center">${altBadge}</td>
       <td style="font-size:11px;color:var(--text3)">${c.note||'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--tel);white-space:nowrap">${(DB.find(x=>x.pn===c.pn)||{}).lc||c.loc||'—'}</td>
       <td>
         <div style="display:flex;gap:4px">
           <button class="btn bk-btn sm" style="padding:3px 7px;font-size:10px" onclick="editChildRow(${i})">편집</button>
@@ -4852,18 +5177,17 @@ function renderBOMChildren(){
     <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
       <table class="bom-child-table">
         <thead><tr>
-          <th style="width:30px;text-align:center">LV</th>
-          <th style="width:30px;text-align:center">NO</th>
-          <th style="width:120px">하위품번</th>
+          <th style="white-space:nowrap">품번</th>
           <th>품명</th>
-          <th style="width:85px">제조사</th>
-          <th style="width:100px">제조사품번</th>
-          <th style="width:55px;text-align:right">수량</th>
-          <th style="width:55px;text-align:right">실수량</th>
-          <th style="width:45px">단위</th>
-          <th style="width:75px;text-align:center">정품/대체</th>
-          <th style="width:110px">비고</th>
-          <th style="width:90px">관리</th>
+          <th style="white-space:nowrap">제조사</th>
+          <th style="white-space:nowrap">제조사품번</th>
+          <th style="text-align:right;white-space:nowrap">수량</th>
+          <th style="text-align:right;white-space:nowrap">실수량</th>
+          <th style="white-space:nowrap">단위</th>
+          <th style="text-align:center;white-space:nowrap">정품/대체</th>
+          <th>비고</th>
+          <th style="white-space:nowrap">보관장소</th>
+          <th style="width:70px">관리</th>
         </tr></thead>
         <tbody id="bom-child-tbody">${tbody}</tbody>
       </table>
@@ -5150,7 +5474,7 @@ function renderReqTable(){
   // 헤더 정렬 표시
   document.querySelectorAll('#req-thead-row th').forEach(th=>{th.classList.remove('srt');});
   const ALT_BADGE_MAP={'정품':'<span class="orig-badge" style="font-size:9px">정품</span>',};
-  document.getElementById('req-tbody').innerHTML=data.map(r=>{
+  document.getElementById('req-bom-tbody').innerHTML=data.map(r=>{
     const deptBadge=r.dept==='지원본부'?`<span class="bd dept-jb" style="font-size:9px">지원</span>`
       :r.dept==='하네스'?`<span class="bd dept-hn" style="font-size:9px">하네스</span>`
       :`<span class="bd dept-na" style="font-size:9px">미관리</span>`;
@@ -5261,6 +5585,7 @@ function bomUpLoad(file){
       // 컬럼 감지 — 이 파일 포맷: 상위PN, NO, LEVEL, PN, Desc, MFG, MFG PN, QTY, 실수량, 관리대상, UNIT, 대체품여부, Note, LOCATION
       const fi=(keywords)=>hdr.findIndex(h=>keywords.some(k=>h.includes(k)));
       const pi  = fi(['상위pn','상위 pn','parent','상위품번','상위']);
+      const dci = fi(['품명','description','desc','item desc','itemdesc']);  // 하위품명
       const noi = fi(['no','번호']);
       const lvi = fi(['level','lv','레벨']);
       const ci  = fi(['pn','하위pn','하위','child','부품번']);   // 상위PN보다 뒤에 있는 PN
@@ -5309,7 +5634,8 @@ function bomUpLoad(file){
         if(!BOM[parent]) BOM[parent]=[];
         // 같은 상위+하위 조합: NO 기준 갱신, 없으면 추가
         const idx=BOM[parent].findIndex(c=>c.pn===child&&c.no===no);
-        const entry={no,lv,pn:child,qty,aqty,unit};
+        const desc = dci>=0?toStr(row[dci]):'';
+        const entry={no,lv,pn:child,desc,qty,aqty,unit};
         if(isAlt) entry.isAlt=isAlt;
         if(note)  entry.note=note;
         if(idx>=0){BOM[parent][idx]=entry;updated++;}
@@ -5897,7 +6223,23 @@ function getTrack() { try { return JSON.parse(localStorage.getItem(LS_TRACK)||'{
 function saveHist(h) { localStorage.setItem(LS_HIST, JSON.stringify(h)); }
 function saveTrack(t) { localStorage.setItem(LS_TRACK, JSON.stringify(t)); }
 function getDelivered() { try { return JSON.parse(localStorage.getItem(LS_DELIVERED)||'[]'); } catch{return [];} }
-function saveDelivered(d) { localStorage.setItem(LS_DELIVERED, JSON.stringify(d)); }
+function saveDelivered(d) {
+  try {
+    localStorage.setItem(LS_DELIVERED, JSON.stringify(d));
+  } catch(e) {
+    if(e.name === 'QuotaExceededError' || (e.message && e.message.includes('quota'))) {
+      // 용량 초과 시 오래된 항목 절반 제거 후 재시도
+      var trimmed = d.slice(0, Math.floor(d.length / 2));
+      try {
+        localStorage.setItem(LS_DELIVERED, JSON.stringify(trimmed));
+        console.warn('localStorage 용량 초과: 납품이력 최신 '+trimmed.length+'건만 보관');
+      } catch(e2) {
+        // 그래도 안되면 최신 100건만
+        localStorage.setItem(LS_DELIVERED, JSON.stringify(d.slice(0, 100)));
+      }
+    }
+  }
+}
 
 // ══ 탭 ══
 function poTab(t) {
@@ -5912,6 +6254,7 @@ function poTab(t) {
   });
   if(t==='sales') renderSalesDash();
   if(t==='delivered') renderDelivered();
+  if(t==='ordtrend') renderOrdTrend();
   var tblMap={po:'po-tbl',delivered:'dv-tbl'};
   if(tblMap[t]) { initColResize(tblMap[t]); setTimeout(function(){ initColResize(tblMap[t]); },300); }
 }
@@ -5934,7 +6277,7 @@ function processFile(file) {
     try {
       const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, {defval:'', raw:true, cellDates:true});
+      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true, cellDates:true});
       
       const prev = PO.length > 0 ? [...PO] : (getHist()[0]?.data || []);
       const parsed = parseRows(raw);
@@ -5953,6 +6296,7 @@ function processFile(file) {
       updateTracking(parsed, dateStr);
       
       document.getElementById('last-updated').textContent = '업로드: ' + dateStr;
+      alert('✅ PO 파싱 완료: ' + parsed.length + '건\n업로드: ' + dateStr);
       
       refreshAll();
       buildHistSelect();
@@ -5964,15 +6308,41 @@ function processFile(file) {
         poTab('changes');
       }
     } catch(err) {
-      alert('PO 파싱 오류:\n' + err.message + '\n\n위치: ' + (err.stack||'').split('\n').slice(1,3).join(' '));
+      alert('PO 파싱 오류:\n' + err.message + '\n\n' + (err.stack||'').split('\n').slice(1,3).join('\n'));
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
 // ══ 행 파싱 ══
-function parseRows(raw) {
-  return raw.filter(r => r['Item'] && String(r['Item']).trim()).map(r => {
+function parseRows(rawInput) {
+  // header:1 방식(배열) 또는 header:0 방식(객체) 모두 지원
+  var raw = rawInput;
+  var useObj = !Array.isArray(rawInput[0]);
+
+  if(!useObj) {
+    // header:1 배열 방식 - 첫행이 헤더
+    var hdr = rawInput[0];
+    // 'Item' 컬럼 찾기 (숫자 값이 들어있으면 col3 자리)
+    var itemColIdx = hdr.indexOf('Item');
+    if(itemColIdx < 0) {
+      // 헤더가 없거나 다른 버전 - col3이 품번 데이터 컬럼으로 추정
+      // CCN이 col1이면 col3이 Item
+      if(String(hdr[0]).trim()==='CCN') itemColIdx = 2;
+    }
+    // 객체 배열로 변환
+    raw = rawInput.slice(1).map(function(row) {
+      var obj = {};
+      hdr.forEach(function(h, i) { obj[h] = row[i]; });
+      if(itemColIdx >= 0 && !obj['Item']) obj['Item'] = row[itemColIdx];
+      return obj;
+    });
+  }
+
+  return raw.filter(function(r) {
+    var item = r['Item'];
+    return item && String(item).trim() && String(item).trim() !== 'nan';
+  }).map(r => {
     const rawItem = r['Item']; const item = String(typeof rawItem==='number' ? Math.round(rawItem) : rawItem||'').trim().replace(/\.0$/,'');
     const promise = fmtDate(r['Promise Date']);
     const required = fmtDate(r['Required Date']);
@@ -6005,6 +6375,9 @@ function parseRows(raw) {
       issue_date: r['출도일'] ? fmtDate(r['출도일']) : '',
       trackNum, trackRaw,
       alt: String(r['대체여부']||'').trim(),
+      unit_price: parseFloat(r['Unit Price']||0)||0,
+      extended_price: parseFloat(String(r['Extended Price']||'').replace(/[^\d.]/g,''))||0,
+      amount: parseFloat(String(r['Extended Price']||'').replace(/[^\d.]/g,''))||parseFloat(r['Unit Price']||0)||0,
     };
   }).filter(r => r.item && r.item !== 'nan')
    .filter((r, idx, arr) => arr.findIndex(x => x.item===r.item && x.order===r.order) === idx); // 중복 제거
@@ -6141,6 +6514,7 @@ function refreshAll() {
   renderDash(); renderPO(); renderChanges(); renderTracking();
   buildHistSelect();
   updateDeliveredBadge();
+  if(typeof renderPOAmounts === 'function') renderPOAmounts();
 }
 
 // ══ 대시보드 ══
@@ -6449,6 +6823,7 @@ function confirmDeliver(){
   targets.forEach(r=>{
     const safeKey = getPOKey(r).replace(/[|.]/g,'_');
     const up = parseFloat(document.getElementById('d-price-'+safeKey)?.value) || r.unit_price || 0;
+    const autoAmt = r.amount || (up * (r.qty||1));
     delivered.unshift({
       ...r,
       _id: Date.now() + '_' + Math.random().toString(36).slice(2),
@@ -6456,7 +6831,7 @@ function confirmDeliver(){
       deliveredDate: dt,
       trackNum: track || r.trackNum || '',
       unitPrice: up,
-      amount: up * (r.qty||1),  // CCN B: USD, CCN K: KRW
+      amount: autoAmt || up * (r.qty||1),  // CCN B: USD, CCN K: KRW
       note: note || '',
       _deliveredAt: new Date().toLocaleString('ko-KR'),
     });
@@ -6945,16 +7320,34 @@ function processSalesFile(file){
       if(ext==='csv') wb = XLSX.read(e.target.result, {type:'string'});
       else wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, {defval:'', raw:true, cellDates:true});
+      const sheetName = wb.SheetNames[0];
+      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true, cellDates:true});
+
+      // PO 파일 감지: 시트명이 'Current Data' 이거나 헤더에 '현황' 없는 PO 형식
+      if(raw.length > 0){
+        const hdr0 = raw[0].map(function(h){ return String(h||'').trim(); });
+        const hasPOSign = sheetName === 'Current Data' ||
+                          (hdr0[0]==='CCN' && hdr0[2]!=='Item' && !hdr0.includes('현황'));
+        if(hasPOSign){
+          alert('⚠️ 이 파일은 PO 현황 파일입니다.\n\n납품이력 업로드에는 시트명이 \'Received\'인 납품이력 파일을 사용하세요.\nPO 파일은 헤더의 [↑ PO 업로드] 버튼을 사용하세요.');
+          return;
+        }
+      }
+
       const parsed = parseSalesRows(raw);
-      if(!parsed.length){ alert('파싱된 데이터가 없습니다.\n납품일, 품번, 수량 열을 확인하세요.'); return; }
+      if(!parsed.length){ alert('파싱된 데이터가 없습니다.\n\n[확인사항]\n- 시트명: Received\n- 헤더: CCN, Item, 현황, 정산일 포함\n- 현황 값: \'납품 완료\''); return; }
 
       // LS_DELIVERED에 병합 (중복 키: deliveredDate+item+order+amount)
       const existing = getDelivered();
       const keySet = new Set(existing.map(r=>`${r.deliveredDate}|${r.item}|${r.order}|${r.amount}`));
       const toAdd = parsed.filter(r=>!keySet.has(`${r.deliveredDate}|${r.item}|${r.order}|${r.amount}`));
       const merged = [...toAdd, ...existing].sort((a,b)=>(b.deliveredDate||'').localeCompare(a.deliveredDate||''));
-      saveDelivered(merged);
+      // 납품이력 크기 제한 (localStorage ~5MB 한계 대비)
+      var toSave = merged.length > 2000 ? merged.slice(0, 2000) : merged;
+      saveDelivered(toSave);
+      if(toSave.length < merged.length) {
+        console.warn('납품이력 2000건 초과: 최신 2000건만 보관');
+      }
 
       updateDeliveredBadge();
       buildYearTabs(merged);
@@ -6969,64 +7362,128 @@ function processSalesFile(file){
 
 function parseSalesRows(raw){
   if(!raw.length) return [];
-  const hdr = Object.keys(raw[0]).map(k=>k.toLowerCase().replace(/\s/g,''));
-  const orig = Object.keys(raw[0]);
-  const fi = (kws) => {
-    const i = hdr.findIndex(h=>kws.some(k=>h.includes(k)));
-    return i>=0 ? orig[i] : null;
-  };
-  const dateKey  = fi(['납품일','deliverydate','shipdate','출고일','date','일자']);
-  const itemKey  = fi(['품번','item','partnumber','part']);
-  const descKey  = fi(['품명','description','desc','itemdesc']);
-  const ccnKey   = fi(['ccn','거래처','customer','고객']);
-  const qtyKey   = fi(['수량','qty','quantity']);
-  const upKey    = fi(['단가','unitprice','unit_price','price','u/p']);
-  const amtKey   = fi(['금액','amount','합계','total','매출']);
-  const orderKey = fi(['오더','order','ordernumber','주문번호','po']);
-  const noteKey  = fi(['비고','note','memo','remark']);
 
-  const ts = v => String(v||'').trim();
-  const tn = v => { const n=parseFloat(String(v||'').replace(/,/g,'')); return isNaN(n)?0:n; };
-  const fDate = v => {
+  // header:1 배열방식과 객체방식 모두 지원
+  var isArray = Array.isArray(raw[0]);
+  var rows = raw, hdrOrig = null;
+  if(isArray){
+    hdrOrig = raw[0].map(function(h){ return String(h||''); });
+    rows = raw.slice(1);
+  } else {
+    hdrOrig = Object.keys(raw[0]);
+  }
+
+  var hdrLow = hdrOrig.map(function(h){ return h.toLowerCase().replace(/\s/g,''); });
+  var fi = function(kws){
+    var i = hdrLow.findIndex(function(h){ return kws.some(function(k){ return h.includes(k); }); });
+    return i>=0 ? i : -1;
+  };
+  var fkey = function(kws){ var i=fi(kws); return i>=0 ? hdrOrig[i] : null; };
+
+  // 납품이력 헤더 매핑 (샘플: CCN, Item, 현황, 정산일, 비고1, Unit Price, Extended Price, Order Number...)
+  var ccnIdx    = fi(['ccn']);
+  var itemIdx   = fi(['item','품번','partnumber','품목코드']);
+  var descIdx   = fi(['item desc','itemdesc','품명','description','desc']);
+  var qtyIdx    = fi(['quantity','수량','qty']);
+  var unitIdx   = fi(['buy um','unit','단위']);
+  var upIdx     = fi(['unit price','unitprice','단가','u/p']);
+  var extIdx    = fi(['extended price','extendedprice','금액','amount','매출','합계','total']);
+  var orderIdx  = fi(['order number','ordernumber','오더','order','주문번호']);
+  var statusIdx = fi(['현황','status','결과']);            // '납품 완료' 필터용
+  var dateIdx   = fi(['정산일','납품일','shipdate','deliverydate','출고일']);  // 납품 날짜
+  var promiseIdx= fi(['promise date','promisedate','납기']);
+  var trackIdx  = fi(['비고1','비고','memo','note','remark','trk','track']);   // 트레킹번호
+  var altIdx    = fi(['대체여부','alt']);
+
+  var getCell = function(row, idx){
+    if(idx < 0) return '';
+    if(isArray) return row[idx];
+    return row[hdrOrig[idx]];
+  };
+
+  var ts = function(v){ if(v instanceof Date) return fDate(v); return String(v||'').trim(); };
+  var tn = function(v){ var n=parseFloat(String(v||'').replace(/,/g,'')); return isNaN(n)?0:n; };
+  var fDate = function(v){
     if(!v||v==='') return '';
-    if(v instanceof Date) return v.toISOString().split('T')[0];
-    const s=String(v).trim();
+    if(v instanceof Date){
+      var y=v.getFullYear(), mo=String(v.getMonth()+1).padStart(2,'0'), d=String(v.getDate()).padStart(2,'0');
+      return y+'-'+mo+'-'+d;
+    }
+    var s=String(v).trim();
     if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0,10);
-    const mdy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if(mdy) return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
-    if(/^\d{8}$/.test(s)) return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
-    return s.substring(0,10);
+    var mdy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(mdy) return mdy[3]+'-'+mdy[1].padStart(2,'0')+'-'+mdy[2].padStart(2,'0');
+    if(/^\d{8}$/.test(s)) return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
+    return s.substring(0,10)||'';
   };
 
-  return raw.filter(r=>{
-    const item = itemKey ? ts(r[itemKey]) : '';
-    const date = dateKey ? fDate(r[dateKey]) : '';
-    return item && item!=='nan' && date;
-  }).map(r=>{
-    const item = ts(r[itemKey]||'').replace(/\.0$/,'');
-    const deliveredDate = fDate(r[dateKey]||'');
-    const qty  = tn(r[qtyKey]||0);
-    const up   = tn(r[upKey]||0);
-    const rawAmt = amtKey ? tn(r[amtKey]) : 0;
-    const amount = rawAmt || (qty * up);
-    let ccn = ccnKey ? ts(r[ccnKey]).replace(/^CCN[-\s]*/i,'').toUpperCase() : '';
-    return {
+  var result = [];
+  rows.forEach(function(row){
+    // 빈 행 제외
+    if(!row) return;
+    var isArr = Array.isArray(row);
+    if(isArr && row.every(function(c){return !c;})) return;
+
+    // 현황 필터 - '납품 완료' 또는 필터 없으면 전체
+    if(statusIdx >= 0){
+      var status = ts(getCell(row, statusIdx));
+      if(status && status !== '납품 완료' && status !== '발송 완료') return;
+    }
+
+    // Item (숫자면 정수 변환)
+    var rawItem = getCell(row, itemIdx);
+    if(!rawItem && rawItem !== 0) return;
+    var item = String(typeof rawItem==='number' ? Math.round(rawItem) : rawItem).trim().replace(/\.0$/,'');
+    if(!item || item==='nan' || item==='Item') return;
+
+    // 날짜: 정산일 우선, 없으면 Promise Date
+    var deliveredDate = '';
+    if(dateIdx >= 0) deliveredDate = fDate(getCell(row, dateIdx));
+    if(!deliveredDate && promiseIdx >= 0) deliveredDate = fDate(getCell(row, promiseIdx));
+    if(!deliveredDate) return;
+
+    // CCN: B=USD, K=KRW, 동신/동원 등은 K로 처리
+    var rawCcn = ts(getCell(row, ccnIdx)).toUpperCase();
+    var ccn = rawCcn;
+    if(ccn !== 'B' && ccn !== 'K'){
+      if(ccn) ccn = 'K'; // 동신, 동원 등 국내업체 → K
+      else ccn = '';
+    }
+
+    // 금액: Extended Price 우선, 없으면 Unit Price * Qty
+    var qty = tn(getCell(row, qtyIdx));
+    var up  = tn(getCell(row, upIdx));
+    var ext = extIdx>=0 ? tn(getCell(row, extIdx)) : 0;
+    var amount = ext || (up * qty) || up;
+
+    // 트레킹번호 (비고1)
+    var trackRaw = trackIdx>=0 ? ts(getCell(row, trackIdx)) : '';
+    var trackNum = '';
+    if(trackRaw && trackRaw !== 'nan'){
+      var tm = trackRaw.match(/\d{8,}/);
+      if(tm) trackNum = trackRaw.trim();
+    }
+
+    result.push({
       _id: deliveredDate+'_'+item+'_'+Math.random().toString(36).slice(2),
       _source: 'upload',
       _deliveredAt: new Date().toLocaleString('ko-KR'),
-      deliveredDate,
-      item,
-      desc: descKey ? ts(r[descKey]) : '',
-      ccn,
-      qty,
-      unit: 'EA',
+      deliveredDate: deliveredDate,
+      item: item,
+      desc: descIdx>=0 ? ts(getCell(row, descIdx)) : '',
+      ccn: ccn,
+      qty: qty,
+      unit: unitIdx>=0 ? ts(getCell(row, unitIdx)) : 'EA',
       unitPrice: up,
-      amount,       // CCN B: USD금액, CCN K: KRW금액
-      order: orderKey ? ts(r[orderKey]).replace(/\.0$/,'') : '',
-      note: noteKey ? ts(r[noteKey]) : '',
-    };
-  }).filter(r=>r.deliveredDate && r.item);
+      amount: amount,   // CCN B: USD, CCN K: KRW
+      order: orderIdx>=0 ? ts(getCell(row, orderIdx)).replace(/\.0$/,'') : '',
+      trackNum: trackNum,
+      note: trackIdx>=0 ? trackRaw : '',
+    });
+  });
+  return result;
 }
+
 
 function extractYear(dateStr){
   if(!dateStr) return '';
@@ -7114,6 +7571,42 @@ function renderSalesDash(){
   renderSalesChart(monthly);
   renderSalesTable(monthly, exrate);
   renderSalesDetail();
+  // PO 잔여금액 집계
+  renderPOAmounts();
+  // 품목군별 차트
+  renderItemGroupChart();
+}
+
+function renderPOAmounts(){
+  var exrate = getExrate();
+  var fk = function(n){ if(!n||isNaN(n))return '—'; if(Math.abs(n)>=100000000)return (n/100000000).toFixed(1)+'억'; if(Math.abs(n)>=10000)return Math.round(n/10000).toLocaleString()+'만'; return n.toLocaleString(); };
+  var fu = function(n){ if(!n||isNaN(n))return '—'; return '$'+(n>=1000?n.toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:0}):n.toFixed(0)); };
+
+  var poData = (typeof PO !== 'undefined') ? PO : [];
+  if(!poData.length){
+    ['po-k-krw','po-b-usd','po-b-krw','po-total-krw'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
+    ['po-k-cnt','po-b-cnt','po-total-cnt'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
+    return;
+  }
+
+  var kRows = poData.filter(function(r){ return r.ccn==='K'; });
+  var bRows = poData.filter(function(r){ return r.ccn==='B'; });
+
+  // Extended Price 기준 (없으면 Unit Price × Qty)
+  var getAmt = function(r){ return r.extended_price || r.amount || (r.unit_price||0)*(r.qty||1) || 0; };
+  var kKrw = kRows.reduce(function(s,r){ return s+getAmt(r); }, 0);
+  var bUsd = bRows.reduce(function(s,r){ return s+getAmt(r); }, 0);
+  var bKrw = bUsd * exrate;
+  var total = kKrw + bKrw;
+
+  var el;
+  el=document.getElementById('po-k-krw'); if(el) el.textContent=fk(kKrw);
+  el=document.getElementById('po-k-cnt'); if(el) el.textContent=kRows.length+'건';
+  el=document.getElementById('po-b-usd'); if(el) el.textContent=fu(bUsd);
+  el=document.getElementById('po-b-cnt'); if(el) el.textContent=bRows.length+'건';
+  el=document.getElementById('po-b-krw'); if(el) el.textContent=fk(bKrw);
+  el=document.getElementById('po-total-krw'); if(el) el.textContent=fk(total);
+  el=document.getElementById('po-total-cnt'); if(el) el.textContent=poData.length+'건';
 }
 
 function renderSalesDetail(){
@@ -7177,93 +7670,62 @@ function fmtUsd(n){ if(!n||isNaN(n))return '—'; return '$'+(n<1000?n.toFixed(2
 
 function renderSalesChart(monthly){
   const el = document.getElementById('sales-chart');
-  const hasData = monthly.some(m=>m.bKrw>0||m.kKrw>0);
-  if(!hasData){ el.innerHTML='<div class="no-sales">선택한 연도의 데이터가 없습니다</div>'; return; }
+  const hasDelivered = monthly.some(m=>m.bKrw>0||m.kKrw>0);
+  const exrate = getExrate();
 
-  const CHART_H = 200;   // 바 영역 높이 (px)
-  const Y_LBL_W = 58;    // y축 레이블 너비
-  const BAR_AREA_W = 46; // 월 당 바 영역 너비
-  const BAR_W = 14;      // 바 하나 너비
-  const BAR_GAP = 4;     // 바 사이 간격
-  const BOTTOM_PAD = 28; // 월 레이블 공간
-  const GRID_LINES = 4;
-
-  // 최댓값 계산 (B+K 합계 기준)
-  const maxVal = Math.max(...monthly.map(m=>Math.max(m.bKrw, m.kKrw, m.total)), 1);
-  // 눈금 단위 계산 (깔끔하게 올림)
-  const rawStep = maxVal / GRID_LINES;
-  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const step = Math.ceil(rawStep / mag) * mag;
-  const yMax = step * GRID_LINES;
-
-  // y축 레이블 생성
-  const gridLabels = Array.from({length:GRID_LINES+1},(_,i)=>{
-    const v = i * step;
-    if(v===0) return '0';
-    if(v>=100000000) return (v/100000000).toFixed(v%100000000===0?0:1)+'억';
-    if(v>=10000) return Math.round(v/10000)+'만';
-    return v.toLocaleString();
+  // PO 잔여 월별 집계 (promise date 기준)
+  const poData = (typeof PO !== 'undefined') ? PO : [];
+  const poMonthly = monthly.map(m=>{
+    const poRows = poData.filter(r=>(r.promise||'').startsWith(m.m));
+    const getAmt = r=>r.extended_price||r.amount||(r.unit_price||0)*(r.qty||1)||0;
+    const poBKrw = poRows.filter(r=>r.ccn==='B').reduce((s,r)=>s+getAmt(r),0)*exrate;
+    const poKKrw = poRows.filter(r=>r.ccn==='K').reduce((s,r)=>s+getAmt(r),0);
+    return {m:m.m, label:m.label, total:poBKrw+poKKrw, cnt:poRows.length};
   });
+  const hasPO = poMonthly.some(m=>m.total>0);
 
-  const totalW = Y_LBL_W + monthly.length * BAR_AREA_W + 8;
-
-  let svgBars = '';
-  let svgMonthLabels = '';
-  let svgTotalLabels = '';
-
-  monthly.forEach((m,i)=>{
-    const x = Y_LBL_W + i * BAR_AREA_W + (BAR_AREA_W - BAR_W*2 - BAR_GAP) / 2;
-    const bH = m.bKrw > 0 ? Math.max(2, (m.bKrw/yMax)*CHART_H) : 0;
-    const kH = m.kKrw > 0 ? Math.max(2, (m.kKrw/yMax)*CHART_H) : 0;
-    const bY = CHART_H - bH;
-    const kY = CHART_H - kH;
-    const cx = Y_LBL_W + i * BAR_AREA_W + BAR_AREA_W/2;
-
-    if(bH > 0)
-      svgBars += `<rect x="${x}" y="${bY}" width="${BAR_W}" height="${bH}" rx="2" fill="url(#gradB)" opacity="0.95">
-        <title>CCN B ${m.label}: ${fmtUsd(m.bUsd)} (${fmtKrw(m.bKrw)})</title></rect>`;
-    if(kH > 0)
-      svgBars += `<rect x="${x+BAR_W+BAR_GAP}" y="${kY}" width="${BAR_W}" height="${kH}" rx="2" fill="url(#gradK)" opacity="0.95">
-        <title>CCN K ${m.label}: ${fmtKrw(m.kKrw)}</title></rect>`;
-
-    // 월 레이블
-    svgMonthLabels += `<text x="${cx}" y="${CHART_H+18}" text-anchor="middle" font-size="9" fill="#5a6180">${m.label}</text>`;
-
-    // 합계 레이블 (값 있는 달만)
-    if(m.total > 0){
-      svgTotalLabels += `<text x="${cx}" y="${Math.min(bY,kY)-5}" text-anchor="middle" font-size="8" fill="#8b93ab">${fmtKrw(m.total)}</text>`;
-    }
-  });
-
-  // 그리드라인 + y축 레이블
-  let svgGrid = '';
-  for(let i=0; i<=GRID_LINES; i++){
-    const y = CHART_H - (i/GRID_LINES)*CHART_H;
-    svgGrid += `<line x1="${Y_LBL_W}" y1="${y}" x2="${totalW}" y2="${y}" stroke="#2e3448" stroke-width="${i===0?1.5:0.5}" stroke-dasharray="${i===0?'none':'4,3'}"/>`;
-    svgGrid += `<text x="${Y_LBL_W-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#5a6180">${gridLabels[i]}</text>`;
+  if(!hasDelivered && !hasPO){
+    el.innerHTML='<div class="no-sales">데이터 없음</div>'; return;
   }
 
-  el.innerHTML = `<div style="overflow-x:auto;padding-bottom:4px">
-    <svg width="${Math.max(totalW, 500)}" height="${CHART_H+BOTTOM_PAD+4}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible">
-      <defs>
-        <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffb547"/>
-          <stop offset="100%" stop-color="#e09030"/>
-        </linearGradient>
-        <linearGradient id="gradK" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ff6b6b"/>
-          <stop offset="100%" stop-color="#cc3333"/>
-        </linearGradient>
-      </defs>
-      <g transform="translate(0,4)">
-        ${svgGrid}
-        ${svgBars}
-        ${svgTotalLabels}
-        ${svgMonthLabels}
-      </g>
-    </svg>
-  </div>`;
+  const CHART_H=200, Y_LBL_W=58, BAR_AREA_W=46, BAR_W=10, BAR_GAP=2, BOTTOM_PAD=28, GRID_LINES=4;
+  const maxVal=Math.max(...monthly.map(m=>Math.max(m.bKrw,m.kKrw,m.total)),...poMonthly.map(m=>m.total),1);
+  const rawStep=maxVal/GRID_LINES, mag=Math.pow(10,Math.floor(Math.log10(rawStep)));
+  const step=Math.ceil(rawStep/mag)*mag, yMax=step*GRID_LINES;
+  const gridLabels=Array.from({length:GRID_LINES+1},(_,i)=>{
+    const v=i*step; if(!v)return '0';
+    if(v>=100000000)return (v/100000000).toFixed(1)+'억';
+    if(v>=10000)return Math.round(v/10000)+'만'; return v.toLocaleString();
+  });
+  const totalW=Y_LBL_W+monthly.length*BAR_AREA_W+8;
+  let svgBars='',svgMonthLabels='',svgGrid='';
+
+  for(let i=0;i<=GRID_LINES;i++){
+    const y=CHART_H-(i/GRID_LINES)*CHART_H;
+    svgGrid+=`<line x1="${Y_LBL_W}" y1="${y}" x2="${totalW}" y2="${y}" stroke="#2e3448" stroke-width="${i===0?1.5:0.5}" stroke-dasharray="${i===0?'none':'4,3'}"/>`;
+    svgGrid+=`<text x="${Y_LBL_W-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#5a6180">${gridLabels[i]}</text>`;
+  }
+
+  monthly.forEach((m,i)=>{
+    const x=Y_LBL_W+i*BAR_AREA_W+(BAR_AREA_W-BAR_W*3-BAR_GAP*2)/2;
+    const cx=Y_LBL_W+i*BAR_AREA_W+BAR_AREA_W/2;
+    svgMonthLabels+=`<text x="${cx}" y="${CHART_H+18}" text-anchor="middle" font-size="9" fill="#5a6180">${m.label}</text>`;
+
+    const bH=m.bKrw>0?Math.max(2,(m.bKrw/yMax)*CHART_H):0;
+    const kH=m.kKrw>0?Math.max(2,(m.kKrw/yMax)*CHART_H):0;
+    const poH=poMonthly[i].total>0?Math.max(2,(poMonthly[i].total/yMax)*CHART_H):0;
+
+    if(bH>0) svgBars+=`<rect x="${x}" y="${CHART_H-bH}" width="${BAR_W}" height="${bH}" rx="2" fill="#ffb547" opacity="0.9"><title>납품 CCN B ${m.label}: ${fmtKrw(m.bKrw)}</title></rect>`;
+    if(kH>0) svgBars+=`<rect x="${x+BAR_W+BAR_GAP}" y="${CHART_H-kH}" width="${BAR_W}" height="${kH}" rx="2" fill="#ff5555" opacity="0.9"><title>납품 CCN K ${m.label}: ${fmtKrw(m.kKrw)}</title></rect>`;
+    if(poH>0) svgBars+=`<rect x="${x+BAR_W*2+BAR_GAP*2}" y="${CHART_H-poH}" width="${BAR_W}" height="${poH}" rx="2" fill="#4f7cff" opacity="0.45"><title>PO잔여 ${m.label}: ${fmtKrw(poMonthly[i].total)} (${poMonthly[i].cnt}건)</title></rect>`;
+  });
+
+  el.innerHTML=`<div style="overflow-x:auto;padding-bottom:4px">
+    <svg width="${Math.max(totalW,500)}" height="${CHART_H+BOTTOM_PAD+4}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible">
+      <g transform="translate(0,4)">${svgGrid}${svgBars}${svgMonthLabels}</g>
+    </svg></div>`;
 }
+
 
 function renderSalesTable(monthly, exrate){
   const active = monthly.filter(m=>m.bKrw>0||m.kKrw>0);
@@ -7420,7 +7882,7 @@ function renderAggChart(elId, months, type, exrate) {
   exrate = exrate || 1380;
   var el = document.getElementById(elId);
   if(!el) return;
-  var hasData = months.some(function(m){ return type==='recv'?m.recvAmt>0:m.salesTotal>0; });
+  var hasData = months.some(function(m){ return type==='recv'?(m.doneAmt>0||m.pendAmt>0):m.salesTotal>0; });
   if(!hasData){ el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">데이터 없음</div>'; return; }
 
   var CHART_H=160, Y_W=58, BAR_W=type==='recv'?20:14, BAR_GAP=4, AREA_W=46, BOT=24, GRID=4;
@@ -7509,6 +7971,564 @@ function renderAggIfOpen(){
 }
 
 
+// ══════════════════════════════════════════
+//  매입 대시보드
+// ══════════════════════════════════════════
+var rdashYear = new Date().getFullYear();
+
+function renderRecvDash() {
+  var exrate = parseFloat(document.getElementById('rdash-exrate')?.value) || 1380;
+  var recvAll = ld(K.RECV, []);
+  var recvDone = recvAll.filter(function(r){ return r.recv_date && r.recv_date.trim(); });
+  var recvPend = recvAll.filter(function(r){ return !r.recv_date || !r.recv_date.trim(); });
+
+  // 연도 수집
+  var yearSet = new Set();
+  recvDone.forEach(function(r){ var y=(r.recv_date||'').substring(0,4); if(/^\d{4}$/.test(y)) yearSet.add(y); });
+  recvPend.forEach(function(r){ var y=(r.order_date||'').substring(0,4); if(/^\d{4}$/.test(y)) yearSet.add(y); });
+  if(!yearSet.size) yearSet.add(String(rdashYear));
+  var years = Array.from(yearSet).sort(function(a,b){return b-a;});
+  if(!years.includes(String(rdashYear))) rdashYear = parseInt(years[0]);
+
+  // 연도 탭
+  var ytEl = document.getElementById('rdash-year-tabs');
+  if(ytEl) ytEl.innerHTML = years.map(function(y){
+    var on = y==rdashYear;
+    return '<button onclick="setRdashYear('+y+')" style="padding:5px 14px;border-radius:6px;border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'var(--accent)':'var(--bg3)')+';color:'+(on?'#fff':'var(--text3)')+';font-size:12px;cursor:pointer">'+y+'년</button>';
+  }).join('');
+
+  var yrDone = recvDone.filter(function(r){ return (r.recv_date||'').startsWith(String(rdashYear)); });
+  var yrPend = recvPend.filter(function(r){ return (r.order_date||'').startsWith(String(rdashYear)); });
+
+  // 월별 집계
+  var fk = function(n){ if(!n||isNaN(n))return '—'; if(Math.abs(n)>=100000000) return (n/100000000).toFixed(1)+'억'; if(Math.abs(n)>=10000) return Math.round(n/10000)+'만'; return n.toLocaleString(); };
+  var months = [];
+  for(var mn=1;mn<=12;mn++){
+    var mStr = String(rdashYear)+'-'+String(mn).padStart(2,'0');
+    var mDone = yrDone.filter(function(r){ return (r.recv_date||'').startsWith(mStr); });
+    var mPend = yrPend.filter(function(r){ return (r.order_date||'').startsWith(mStr); });
+    var doneAmt = mDone.reduce(function(s,r){ return s+(parseFloat(r.total)||0); },0);
+    var pendAmt = mPend.reduce(function(s,r){ return s+(parseFloat(r.total)||0); },0);
+    months.push({ label:mn+'월', mStr:mStr, doneAmt:doneAmt, pendAmt:pendAmt, doneCnt:mDone.length, pendCnt:mPend.length });
+  }
+
+  var totDone = months.reduce(function(s,m){return s+m.doneAmt;},0);
+  var totPend = months.reduce(function(s,m){return s+m.pendAmt;},0);
+  var el_done  = document.getElementById('rdash-done');  if(el_done)  el_done.textContent  = fk(totDone);
+  var el_pend  = document.getElementById('rdash-pend');  if(el_pend)  el_pend.textContent  = fk(totPend);
+  var el_total = document.getElementById('rdash-total'); if(el_total) el_total.textContent = fk(totDone+totPend);
+  var el_cnt   = document.getElementById('rdash-cnt');   if(el_cnt)   el_cnt.textContent   = (yrDone.length+yrPend.length).toLocaleString()+'건';
+
+  // 차트
+  var chartEl = document.getElementById('rdash-chart');
+  var hasData = months.some(function(m){return m.doneAmt>0||m.pendAmt>0;});
+  if(!hasData||!chartEl){ if(chartEl) chartEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">데이터 없음</div>'; }
+  else {
+    var CH=160, YW=58, BW=14, BG=4, AW=46, BOT=24, GRID=4;
+    var maxV=Math.max.apply(null,months.map(function(m){return Math.max(m.doneAmt,m.pendAmt);}).concat([1]));
+    var rawStep=maxV/GRID, mag=Math.pow(10,Math.floor(Math.log10(rawStep)));
+    var step=Math.ceil(rawStep/mag)*mag, yMax=step*GRID;
+    var gridLbls=[]; for(var gi=0;gi<=GRID;gi++){var v=gi*step;gridLbls.push(v===0?'0':v>=100000000?(v/100000000).toFixed(1)+'억':v>=10000?Math.round(v/10000)+'만':v.toLocaleString());}
+    var W=YW+months.length*AW+8, bars='', xls='', grid='';
+    for(var gi2=0;gi2<=GRID;gi2++){var y2=CH-(gi2/GRID)*CH;grid+='<line x1="'+YW+'" y1="'+y2+'" x2="'+W+'" y2="'+y2+'" stroke="#2e3448" stroke-width="'+(gi2===0?1.5:0.5)+'" stroke-dasharray="'+(gi2===0?'none':'4,3')+'"/><text x="'+(YW-6)+'" y="'+(y2+4)+'" text-anchor="end" font-size="9" fill="#5a6180">'+gridLbls[gi2]+'</text>';}
+    months.forEach(function(m,i){
+      var cx=YW+i*AW+AW/2;
+      xls+='<text x="'+cx+'" y="'+(CH+18)+'" text-anchor="middle" font-size="9" fill="#5a6180">'+m.label+'</text>';
+      var xd=YW+i*AW+(AW-BW*2-BG)/2;
+      var dH=m.doneAmt>0?Math.max(2,(m.doneAmt/yMax)*CH):0;
+      var pH=m.pendAmt>0?Math.max(2,(m.pendAmt/yMax)*CH):0;
+      if(dH>0) bars+='<rect x="'+xd+'" y="'+(CH-dH)+'" width="'+BW+'" height="'+dH+'" rx="2" fill="#4f7cff" opacity="0.9"><title>'+m.label+' 실제매입: '+m.doneAmt.toLocaleString()+'원</title></rect>';
+      if(pH>0) bars+='<rect x="'+(xd+BW+BG)+'" y="'+(CH-pH)+'" width="'+BW+'" height="'+pH+'" rx="2" fill="#a78bfa" opacity="0.85"><title>'+m.label+' 예상매입: '+m.pendAmt.toLocaleString()+'원</title></rect>';
+    });
+    chartEl.innerHTML='<div style="overflow-x:auto"><svg width="'+Math.max(W,500)+'" height="'+(CH+BOT+4)+'" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible"><g transform="translate(0,4)">'+grid+bars+xls+'</g></svg></div>';
+  }
+
+  // 테이블
+  var active = months.filter(function(m){return m.doneCnt>0||m.pendCnt>0;});
+  var cntEl = document.getElementById('rdash-tbl-cnt'); if(cntEl) cntEl.textContent=active.length+'개월';
+  var totR=0,totP=0,totRC=0,totPC=0;
+  months.forEach(function(m){totR+=m.doneAmt;totP+=m.pendAmt;totRC+=m.doneCnt;totPC+=m.pendCnt;});
+  var rows = active.map(function(m){
+    return '<tr><td>'+m.label+'</td><td style="text-align:right;font-family:var(--mono);color:var(--accent)">'+(m.doneAmt>0?fk(m.doneAmt):'—')+'</td><td style="text-align:right;font-family:var(--mono);color:var(--purple)">'+(m.pendAmt>0?fk(m.pendAmt):'—')+'</td><td style="text-align:right;font-family:var(--mono);color:var(--tel)">'+(m.doneAmt+m.pendAmt>0?fk(m.doneAmt+m.pendAmt):'—')+'</td><td style="text-align:right">'+(m.doneCnt||'—')+'</td><td style="text-align:right">'+(m.pendCnt||'—')+'</td></tr>';
+  });
+  rows.push('<tr class="total-row"><td>합계</td><td style="text-align:right;font-family:var(--mono);color:var(--accent)">'+fk(totR)+'</td><td style="text-align:right;font-family:var(--mono);color:var(--purple)">'+fk(totP)+'</td><td style="text-align:right;font-family:var(--mono);color:var(--tel)">'+fk(totR+totP)+'</td><td style="text-align:right">'+totRC+'</td><td style="text-align:right">'+totPC+'</td></tr>');
+  var tbody = document.getElementById('rdash-tbody'); if(tbody) tbody.innerHTML=rows.join('');
+}
+function setRdashYear(y){ rdashYear=y; renderRecvDash(); }
+
+// ══════════════════════════════════════════
+//  자재조회 섹션 탭 전환
+// ══════════════════════════════════════════
+function srchTab(t){
+  ['item','req','bom'].forEach(function(tab){
+    var pg=document.getElementById('srch-pg-'+tab); if(pg) pg.style.display=tab===t?'block':'none';
+  });
+  document.querySelectorAll('#srch-inner-tabs .pt-itab').forEach(function(el){
+    el.classList.toggle('on', el.dataset.tab===t);
+  });
+  if(t==='item') initSrch();
+  if(t==='req'){
+    // req-dt 기본값
+    var dt=document.getElementById('req-dt');
+    if(dt&&!dt.value) dt.value=new Date().toISOString().split('T')[0];
+    // 출고처 datalist
+    var dests=[...new Set(OUT.map(function(r){return r.dest;}).filter(Boolean))];
+    var dl2=document.getElementById('dl2');
+    if(dl2) dl2.innerHTML=dests.map(function(v){return '<option value="'+v+'">';}).join('');
+    renderReqPanel();
+  }
+}
+
+function initSrch2(){
+  var dests=[...new Set(OUT.map(function(r){return r.dest;}).filter(Boolean))];
+  var dl3=document.getElementById('dl3');
+  if(dl3) dl3.innerHTML=dests.map(function(v){return '<option value="'+v+'">';}).join('');
+  var dt2=document.getElementById('req-dt-2');
+  if(dt2 && !dt2.value) dt2.value=new Date().toISOString().split('T')[0];
+  renderReqPanel2();
+}
+
+var reqItems2 = [];
+function addToReq2(pn){
+  var r=DB.find(function(x){return x.pn===pn;})||{pn:pn};
+  if(reqItems2.find(function(x){return x.pn===pn;})){alert(pn+'은 이미 요청 목록에 있습니다');return;}
+  reqItems2.push({pn:pn,d:r.d||'',qty:1,unit:'EA',note:''});
+  switchApp('srch'); srchTab('req');
+  renderReqPanel2();
+}
+function renderReqPanel2(){
+  var tbody=document.getElementById('req-tbody-2');
+  if(!tbody) return;
+  tbody.innerHTML=reqItems2.length
+    ? reqItems2.map(function(r,i){return '<tr><td style="font-family:var(--mono);font-size:11px;color:var(--tel)">'+r.pn+'</td><td style="font-size:12px">'+( r.d||'—')+'</td><td><input type="number" min="1" value="'+r.qty+'" style="width:60px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text)" onchange="reqItems2['+i+'].qty=+this.value"></td><td>'+r.unit+'</td><td><input type="text" placeholder="비고" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text);font-size:12px" onchange="reqItems2['+i+'].note=this.value"></td><td><button class="btn br-btn sm" style="padding:2px 7px" onclick="reqItems2.splice('+i+',1);renderReqPanel2()">✕</button></td></tr>';}).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:16px;font-size:12px">품번조회 탭에서 + 불출요청 버튼을 눌러 추가하세요</td></tr>';
+}
+function clearReq2(){
+  if(!confirm('요청 목록을 초기화하시겠습니까?')) return;
+  reqItems2=[];renderReqPanel2();
+}
+function submitReq2(){
+  if(!reqItems2.length){alert('요청 품목이 없습니다');return;}
+  var dt=document.getElementById('req-dt-2')?.value;
+  var dest=document.getElementById('req-dest-2')?.value.trim();
+  var rec=document.getElementById('req-rec-2')?.value.trim()||'';
+  var pur=document.getElementById('req-pur-2')?.value||'자재불출';
+  if(!dt||!dest){alert('요청일과 출고처를 입력하세요');return;}
+  reqItems2.forEach(function(r){
+    var dbr=DB.find(function(x){return x.pn===r.pn;})||{};
+    OUT.unshift({date:dt,pn:r.pn,mfg_pn:dbr.mp||'',qty:r.qty,unit:r.unit,purpose:pur,dest:dest,receiver:rec,note:'[불출요청]'+(r.note||''),_added:new Date().toLocaleString('ko-KR')});
+  });
+  sv(K.OUT,OUT);
+  var cnt=reqItems2.length;
+  reqItems2=[];renderReqPanel2();
+  updateStat();
+  oF=new Set(['all']);
+  alert('✅ '+cnt+'건 불출 요청 등록됨. 구매관리 → 자재불출 탭에서 확인하세요.');
+}
+
+function doSrchBOM(){
+  var pn=document.getElementById('bom-srch-pn')?.value.trim();
+  var el=document.getElementById('bom-srch-results');
+  if(!pn||!el){alert('품번을 입력하세요');return;}
+  var bom=BOM[pn];
+  if(!bom||!bom.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3)">BOM 데이터가 없습니다 (품번: '+pn+')</div>';return;}
+  el.innerHTML='<div class="tw"><div class="th-row"><div class="th-title">BOM — '+pn+'</div><div class="th-count">'+bom.length+'개 부품</div></div><div class="tbl-scroll"><table><thead><tr><th>품번</th><th>품명</th><th>수량</th><th>단위</th><th>비고</th></tr></thead><tbody>'+bom.map(function(b){return '<tr><td style="font-family:var(--mono);font-size:11px;color:var(--tel)">'+b.cpn+'</td><td>'+( b.cdesc||'—')+'</td><td style="text-align:right">'+( b.qty||1)+'</td><td>'+(b.unit||'EA')+'</td><td style="font-size:11px;color:var(--text3)">'+( b.note||'—')+'</td></tr>';}).join('')+'</tbody></table></div></div>';
+}
+
+// ── 품목군별 월별 현황 ──
+var ITEM_GROUP_COLORS = [
+  '#4f7cff','#ffb547','#ff5555','#34d399','#a78bfa',
+  '#fb923c','#38bdf8','#f472b6','#a3e635','#fbbf24',
+  '#60a5fa','#f87171','#818cf8','#4ade80','#e879f9'
+];
+
+function getItemGroup(item){
+  var s = String(item||'').trim();
+  if(/^11[0-9]/.test(s)) return '110*';
+  if(/^16[0-9]/.test(s)) return '16*';
+  if(/^17[0-9]/.test(s)) return '17*';
+  if(/^51[0-9]/.test(s)) return '51*';
+  if(/^54[0-9]/.test(s)) return '54*';
+  if(/^19[0-9]/.test(s)) return '19*';
+  if(/^12[0-9]/.test(s)) return '12*';
+  return '기타';
+}
+
+function renderItemGroupChart(){
+  var el = document.getElementById('item-group-chart');
+  var legendEl = document.getElementById('item-group-legend');
+  if(!el) return;
+
+  var src = (document.getElementById('item-group-src')||{value:'delivered'}).value;
+  var months = Array.from({length:12}, function(_,i){
+    return String(salesYear)+'-'+String(i+1).padStart(2,'0');
+  });
+
+  // 데이터 소스
+  var rows = [];
+  if(src === 'po'){
+    rows = (typeof PO !== 'undefined' ? PO : []).map(function(r){
+      return {item: r.item, month: (r.promise||'').substring(0,7), qty: r.qty||1};
+    });
+  } else {
+    rows = getDelivered().filter(function(r){
+      return (r.deliveredDate||'').startsWith(String(salesYear));
+    }).map(function(r){
+      return {item: r.item, month: (r.deliveredDate||'').substring(0,7), qty: r.qty||1};
+    });
+  }
+
+  // 품목군 집계
+  var groupSet = {};
+  rows.forEach(function(r){
+    var g = getItemGroup(r.item);
+    var m = r.month;
+    if(!groupSet[g]) groupSet[g] = {};
+    if(!groupSet[g][m]) groupSet[g][m] = 0;
+    groupSet[g][m] += r.qty||1;
+  });
+
+  var groups = Object.keys(groupSet).sort(function(a,b){
+    var ta = Object.values(groupSet[a]).reduce(function(s,v){return s+v;},0);
+    var tb = Object.values(groupSet[b]).reduce(function(s,v){return s+v;},0);
+    return tb-ta;
+  });
+
+  if(!groups.length){
+    el.innerHTML='<div class="no-sales">데이터를 업로드하면 표시됩니다</div>';
+    if(legendEl) legendEl.innerHTML='';
+    return;
+  }
+
+  // SVG 바 차트 (그룹 × 월)
+  var CHART_H=140, Y_LBL_W=44, AREA_W=44, BOT=22, GRID=4;
+  var maxVal=1;
+  months.forEach(function(m){
+    var sum=groups.reduce(function(s,g){return s+(groupSet[g][m]||0);},0);
+    if(sum>maxVal) maxVal=sum;
+  });
+  var step=Math.ceil(maxVal/GRID), yMax=step*GRID;
+  var totalW=Y_LBL_W+months.length*AREA_W+8;
+  var barW=Math.max(3,Math.floor((AREA_W-2)/(groups.length||1)));
+  var svgG='',svgB='',svgL='';
+
+  for(var gi=0;gi<=GRID;gi++){
+    var y=CHART_H-(gi/GRID)*CHART_H;
+    svgG+='<line x1="'+Y_LBL_W+'" y1="'+y+'" x2="'+totalW+'" y2="'+y+'" stroke="#2e3448" stroke-width="'+(gi===0?1.5:0.5)+'" stroke-dasharray="'+(gi===0?'none':'4,3')+'"/>';
+    svgG+='<text x="'+(Y_LBL_W-4)+'" y="'+(y+4)+'" text-anchor="end" font-size="9" fill="#5a6180">'+(gi*step)+'</text>';
+  }
+
+  months.forEach(function(m,mi){
+    var cx=Y_LBL_W+mi*AREA_W+AREA_W/2;
+    svgL+='<text x="'+cx+'" y="'+(CHART_H+16)+'" text-anchor="middle" font-size="9" fill="#5a6180">'+(mi+1)+'월</text>';
+    var stackY=CHART_H;
+    groups.forEach(function(g,gi){
+      var cnt=groupSet[g][m]||0;
+      if(!cnt) return;
+      var h=Math.max(2,(cnt/yMax)*CHART_H);
+      stackY-=h;
+      var color=ITEM_GROUP_COLORS[gi%ITEM_GROUP_COLORS.length];
+      svgB+='<rect x="'+(Y_LBL_W+mi*AREA_W+4)+'" y="'+stackY+'" width="'+(AREA_W-8)+'" height="'+h+'" fill="'+color+'" opacity="0.85"><title>'+g+' '+m.substring(5)+'월: '+cnt+'건</title></rect>';
+    });
+  });
+
+  el.innerHTML='<div style="overflow-x:auto"><svg width="'+Math.max(totalW,500)+'" height="'+(CHART_H+BOT+4)+'" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible"><g transform="translate(0,4)">'+svgG+svgB+svgL+'</g></svg></div>';
+
+  // 범례
+  if(legendEl){
+    legendEl.innerHTML=groups.map(function(g,i){
+      var total=Object.values(groupSet[g]).reduce(function(s,v){return s+v;},0);
+      var color=ITEM_GROUP_COLORS[i%ITEM_GROUP_COLORS.length];
+      return '<span style="display:flex;align-items:center;gap:4px;padding:2px 8px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">'+
+        '<span style="width:10px;height:10px;border-radius:2px;background:'+color+';display:inline-block"></span>'+
+        '<span>'+g+'</span><span style="color:var(--text3)">'+total+'건</span></span>';
+    }).join('');
+  }
+}
+
+
+// ── 자재조회 하위탭 ──
+function srchSubTab(tab){
+  var panels = {item:'srch-panel-item', bom:'srch-panel-bom'};
+  var tabs = {item:'srch-tab-item', bom:'srch-tab-bom'};
+  Object.keys(panels).forEach(function(k){
+    var p = document.getElementById(panels[k]);
+    var t = document.getElementById(tabs[k]);
+    if(p) p.style.display = k===tab ? 'block' : 'none';
+    if(t){
+      t.style.borderBottomColor = k===tab ? 'var(--tel)' : 'transparent';
+      t.style.color = k===tab ? 'var(--tel)' : 'var(--text3)';
+    }
+  });
+  if(tab==='item'){
+    var sq = document.getElementById('sq');
+    if(sq) sq.focus();
+  }
+}
+
+// ── BOM 조회 (자재조회 탭) ──
+function lookupBOM(){
+  var pn = (document.getElementById('bom-lookup-pn')||{value:''}).value.trim();
+  if(!pn){ alert('상위품번을 입력하세요'); return; }
+  showBOM(pn);
+  // bom-results 가 srch-panel-bom 안에 있으므로 자동 표시
+}
+
+
+// ══════════════════════════════════════════════
+//  발주 추이 분석
+// ══════════════════════════════════════════════
+var otrPeriod = 'month';  // month | quarter | half | year
+var otrData   = 'po';     // po | delivered | both
+var otrShow   = 'qty';    // qty | amt
+
+function setOtrPeriod(v){
+  otrPeriod = v;
+  ['month','quarter','half','year'].forEach(function(k){
+    var el = document.getElementById('otrp-'+k);
+    if(el){ el.classList.toggle('on', k===v); el.classList.toggle('default', k===v); }
+  });
+  renderOrdTrend();
+}
+
+function setOtrData(v){
+  otrData = v;
+  ['po','delivered','both'].forEach(function(k){
+    var el = document.getElementById('otrd-'+k);
+    if(el){ el.classList.toggle('on', k===v); el.classList.toggle('default', k===v); }
+  });
+  renderOrdTrend();
+}
+
+function setOtrShow(v){
+  otrShow = v;
+  ['qty','amt'].forEach(function(k){
+    var el = document.getElementById('otrs-'+k);
+    if(el){ el.classList.toggle('on', k===v); el.classList.toggle('default', k===v); }
+  });
+  renderOrdTrend();
+}
+
+// 날짜 → 기간 레이블
+function getPeriodKey(dateStr){
+  if(!dateStr || dateStr.length < 7) return null;
+  var y = dateStr.substring(0,4);
+  var m = parseInt(dateStr.substring(5,7));
+  if(otrPeriod === 'month')   return y + '-' + String(m).padStart(2,'0');
+  if(otrPeriod === 'quarter') return y + '-Q' + Math.ceil(m/3);
+  if(otrPeriod === 'half')    return y + '-H' + (m <= 6 ? 1 : 2);
+  if(otrPeriod === 'year')    return y;
+  return y + '-' + String(m).padStart(2,'0');
+}
+
+function renderOrdTrend(){
+  var q = (document.getElementById('otr-q')||{value:''}).value.trim().toLowerCase();
+
+  // ── 데이터 수집 ──
+  var rows = [];
+
+  if(otrData === 'po' || otrData === 'both'){
+    var poRows = (typeof PO !== 'undefined' ? PO : []);
+    poRows.forEach(function(r){
+      var dateKey = getPeriodKey(r.promise || r.placed || '');
+      if(!dateKey) return;
+      var getAmt = function(x){ return x.extended_price || x.amount || (x.unit_price||0)*(x.qty||1) || 0; };
+      rows.push({
+        pn: r.item||'', desc: r.desc||'', ccn: r.ccn||'',
+        qty: r.qty||0, amt: getAmt(r),
+        period: dateKey, src: 'po'
+      });
+    });
+  }
+
+  if(otrData === 'delivered' || otrData === 'both'){
+    var dvRows = getDelivered();
+    dvRows.forEach(function(r){
+      var dateKey = getPeriodKey(r.deliveredDate || '');
+      if(!dateKey) return;
+      rows.push({
+        pn: r.item||'', desc: r.desc||'', ccn: r.ccn||'',
+        qty: r.qty||0, amt: r.amount||((r.unitPrice||0)*(r.qty||1)),
+        period: dateKey, src: 'delivered'
+      });
+    });
+  }
+
+  // ── 품번별 집계 ──
+  var itemMap = {};
+  rows.forEach(function(r){
+    var pn = r.pn;
+    if(!pn) return;
+    if(!itemMap[pn]) itemMap[pn] = {pn:pn, desc:r.desc, ccn:r.ccn, periods:{}};
+    if(!itemMap[pn].periods[r.period]) itemMap[pn].periods[r.period] = {qty:0, amt:0};
+    itemMap[pn].periods[r.period].qty += r.qty;
+    itemMap[pn].periods[r.period].amt += r.amt;
+  });
+
+  // 검색 필터
+  var items = Object.values(itemMap).filter(function(it){
+    if(!q) return true;
+    return it.pn.toLowerCase().includes(q) || it.desc.toLowerCase().includes(q);
+  });
+
+  // 기간 컬럼 목록 (정렬)
+  var periodSet = {};
+  rows.forEach(function(r){ if(r.period) periodSet[r.period] = 1; });
+  var periods = Object.keys(periodSet).sort();
+
+  // ── 테이블 렌더링 ──
+  var thead = document.getElementById('otr-thead');
+  var tbody = document.getElementById('otr-tbody');
+  var cntEl = document.getElementById('otr-cnt');
+  if(!thead || !tbody) return;
+
+  var TH_STYLE = 'padding:7px 10px;font-size:10px;font-weight:600;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap;text-align:right;position:sticky;top:0';
+  var TH_LEFT  = TH_STYLE + ';text-align:left';
+
+  var headerHTML = '<tr>'
+    + '<th style="'+TH_LEFT+';min-width:110px">품번</th>'
+    + '<th style="'+TH_LEFT+';min-width:150px">품명</th>'
+    + '<th style="'+TH_LEFT+';width:50px">CCN</th>'
+    + '<th style="'+TH_STYLE+';width:60px">합계</th>';
+  periods.forEach(function(p){
+    headerHTML += '<th style="'+TH_STYLE+'">' + p + '</th>';
+  });
+  headerHTML += '<th style="'+TH_STYLE+';color:var(--teal);width:80px">평균/기간</th>'
+    + '<th style="'+TH_STYLE+';color:var(--green);width:80px">안전재고</th>'
+    + '</tr>';
+  thead.innerHTML = headerHTML;
+
+  // 합계 기준 정렬
+  items.sort(function(a,b){
+    var sa = Object.values(a.periods).reduce(function(s,v){return s+(otrShow==='qty'?v.qty:v.amt);},0);
+    var sb = Object.values(b.periods).reduce(function(s,v){return s+(otrShow==='qty'?v.qty:v.amt);},0);
+    return sb - sa;
+  });
+
+  var fv = function(v){
+    if(otrShow === 'qty') return v > 0 ? v.toLocaleString() : '';
+    if(!v) return '';
+    if(Math.abs(v)>=10000) return '$'+(v/10000).toFixed(1)+'만';
+    return '$'+v.toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:0});
+  };
+
+  var fkrw = function(v){
+    if(!v) return '';
+    if(Math.abs(v)>=100000000) return (v/100000000).toFixed(1)+'억';
+    if(Math.abs(v)>=10000) return Math.round(v/10000)+'만';
+    return v.toLocaleString();
+  };
+
+  var TD = 'padding:6px 10px;font-size:12px;border-bottom:1px solid var(--border2);text-align:right;font-family:var(--mono);white-space:nowrap';
+  var TD_L = 'padding:6px 10px;font-size:12px;border-bottom:1px solid var(--border2);text-align:left;white-space:nowrap';
+
+  var bodyHTML = items.map(function(it){
+    var total = 0;
+    var nonZeroCnt = 0;
+    var cells = periods.map(function(p){
+      var val = it.periods[p] ? (otrShow==='qty' ? it.periods[p].qty : it.periods[p].amt) : 0;
+      if(val > 0){ total += val; nonZeroCnt++; }
+      var heat = val > 0 ? 'color:var(--text);font-weight:600' : 'color:var(--text3)';
+      return '<td style="'+TD+';'+heat+'">' + fv(val) + '</td>';
+    }).join('');
+
+    var avg = nonZeroCnt > 0 ? (total / periods.length) : 0; // 전체 기간 기준 평균
+    // 안전재고: 평균 × (LT/4.3 + 1)
+    var dbItem = DB.find(function(x){return x.pn===it.pn;})||{};
+    var lt = dbItem.lt || 0;
+    var safetyStock = avg > 0 ? Math.ceil(avg * (lt/4.3 + 1)) : 0;
+
+    var ccnColor = it.ccn==='B' ? 'color:var(--amber)' : it.ccn==='K' ? 'color:var(--red)' : 'color:var(--text3)';
+
+    return '<tr style="cursor:pointer;transition:background .1s" data-otr-pn="'+encodeURIComponent(it.pn)+'" onclick="showOtrSafety(decodeURIComponent(this.dataset.otrPn))" title="클릭: 안전재고 상세">';
+      + '<td style="'+TD_L+';color:var(--accent);font-family:var(--mono);font-size:11px">'+it.pn+'</td>'
+      + '<td style="'+TD_L+';max-width:180px;overflow:hidden;text-overflow:ellipsis" title="'+it.desc+'">'+it.desc+'</td>'
+      + '<td style="'+TD_L+';'+ccnColor+';font-weight:700;font-size:11px">'+it.ccn+'</td>'
+      + '<td style="'+TD+';color:var(--text);font-weight:700">'+fv(total)+'</td>'
+      + cells
+      + '<td style="'+TD+';color:var(--teal);font-weight:600">'+(avg>0?fv(Math.round(avg)):'—')+'</td>'
+      + '<td style="'+TD+';color:var(--green);font-weight:700;background:var(--green-bg)">'+(safetyStock>0?safetyStock.toLocaleString():'—')+'</td>'
+      + '</tr>';
+  }).join('');
+
+  if(!items.length){
+    bodyHTML = '<tr><td colspan="'+(periods.length+6)+'" style="text-align:center;padding:30px;color:var(--text3)">PO 또는 납품이력을 업로드하면 표시됩니다</td></tr>';
+  }
+
+  tbody.innerHTML = bodyHTML;
+  if(cntEl) cntEl.textContent = items.length + '개 품목 · ' + periods.length + '개 기간';
+}
+
+function showOtrSafety(pn){
+  var banner = document.getElementById('otr-safety-banner');
+  var content = document.getElementById('otr-safety-content');
+  if(!banner || !content) return;
+
+  var itemMap = {};
+  var rows = [];
+
+  if(otrData === 'po' || otrData === 'both'){
+    (typeof PO !== 'undefined' ? PO : []).forEach(function(r){
+      var dk = getPeriodKey(r.promise||r.placed||'');
+      if(!dk || r.item !== pn) return;
+      rows.push({qty:r.qty||0, period:dk});
+    });
+  }
+  if(otrData === 'delivered' || otrData === 'both'){
+    getDelivered().filter(function(r){return r.item===pn;}).forEach(function(r){
+      var dk = getPeriodKey(r.deliveredDate||'');
+      if(!dk) return;
+      rows.push({qty:r.qty||0, period:dk});
+    });
+  }
+
+  var periodSet = {};
+  rows.forEach(function(r){ periodSet[r.period] = (periodSet[r.period]||0) + r.qty; });
+  var periods = Object.keys(periodSet).sort();
+  var totalQty = Object.values(periodSet).reduce(function(s,v){return s+v;},0);
+  var avgPerPeriod = periods.length > 0 ? totalQty / periods.length : 0;
+  var maxQty = periods.length > 0 ? Math.max.apply(null, Object.values(periodSet)) : 0;
+
+  var dbItem = DB.find(function(x){return x.pn===pn;})||{};
+  var lt = dbItem.lt || 0;
+  var safetyStock = Math.ceil(avgPerPeriod * (lt/4.3 + 1));
+
+  var periodLabel = {month:'월', quarter:'분기', half:'반기', year:'년'}[otrPeriod]||'기간';
+
+  content.innerHTML = [
+    {label:'품번', val:pn, color:'var(--accent)'},
+    {label:'품명', val:dbItem.d||'—', color:'var(--text)'},
+    {label:'LT (주)', val: lt>0 ? lt+'주' : '미입력', color: lt>0?'var(--text)':'var(--red)'},
+    {label:'집계 기간 수', val:periods.length+periodLabel, color:'var(--text)'},
+    {label:'총 발주수량', val:totalQty.toLocaleString(), color:'var(--amber)'},
+    {label:'평균/'+periodLabel, val:avgPerPeriod.toFixed(1), color:'var(--teal)'},
+    {label:'최대 발주량', val:maxQty.toLocaleString(), color:'var(--purple)'},
+    {label:'✅ 권장 안전재고', val:safetyStock>0?safetyStock.toLocaleString():'LT 필요', color:'var(--green)', bold:true},
+  ].map(function(c){
+    return '<div style="background:var(--bg3);border-radius:7px;padding:10px 14px;border:1px solid var(--border)">'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:4px">'+c.label+'</div>'
+      + '<div style="font-size:'+(c.bold?'18':'15')+'px;font-weight:'+(c.bold?'800':'600')+';color:'+c.color+';font-family:var(--mono)">'+c.val+'</div>'
+      + '</div>';
+  }).join('');
+
+  banner.style.display = 'block';
+  banner.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function exportOtrCSV(){
+  var table = document.getElementById('otr-table');
+  if(!table) return;
+  var rows = Array.from(table.querySelectorAll('tr'));
+  var csv = '﻿' + rows.map(function(r){
+    return Array.from(r.querySelectorAll('th,td')).map(function(c){ return '"'+c.innerText.replace(/"/g,'""')+'"'; }).join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = '발주추이_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+
 function resetAllData(){
   if(CURRENT_USER && CURRENT_USER.role !== 'admin'){
     alert('관리자만 초기화할 수 있습니다.');
@@ -7538,7 +8558,7 @@ function resetAllData(){
   // 초기 섹션 상태
   document.getElementById('sect-purchase').style.display = 'block';
   document.getElementById('sect-po').style.display = 'none';
-  var _sa=document.getElementById('sect-agg'); if(_sa) _sa.style.display='none';
+  var _ss=document.getElementById('sect-srch'); if(_ss) _ss.style.display='none';
 
   // sv 함수를 동기화 버전으로 교체
   // (기존 sv = localStorage만 저장, svWithSync = 서버도 동기화)
@@ -7632,78 +8652,76 @@ function initAfterLogin() {
 </html>
 
 <!-- ══ 매입/매출 집계 섹션 ══ -->
-<div class="sect-wrap" id="sect-agg" style="display:none">
-<!-- ═══ 매입/매출 집계 ═══ -->
-<div class="pg" style="display:none" id="pg-agg">
-  <!-- 연도 탭 -->
-  <div style="display:flex;align-items:center;gap:8px;padding:16px 0 8px">
-    <div id="agg-year-tabs" style="display:flex;gap:4px"></div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <label style="font-size:12px;color:var(--text3)">환율</label>
-      <input id="agg-exrate" type="number" value="1380" placeholder="환율(원/USD)"
-        style="width:110px;padding:5px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono)"
-        oninput="renderAgg()">
-      <span id="agg-exrate-label" style="font-size:11px;color:var(--text3)"></span>
+
+<!-- ══ 자재조회 섹션 ══ -->
+<div class="sect-wrap" id="sect-srch" style="display:none">
+
+  <!-- 자재조회 내부 탭 -->
+  <div id="srch-inner-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 20px;position:sticky;top:97px;z-index:140">
+    <div class="pt-itab on" data-tab="item" onclick="srchTab('item')" style="padding:10px 20px">🔍 품번 조회</div>
+    <div class="pt-itab" data-tab="req" onclick="srchTab('req')" style="padding:10px 20px">📤 자재불출요청</div>
+    <div class="pt-itab" data-tab="bom" onclick="srchTab('bom')" style="padding:10px 20px">🌿 BOM 조회</div>
+  </div>
+
+  <!-- ① 품번 조회 -->
+  <div id="srch-pg-item" style="display:block;padding:16px 20px">
+    <div class="srch-hero">
+      <div class="srch-bar">
+        <input id="sq" placeholder="품번 또는 품명으로 검색 (예: 510000106, CONN RECT...)"
+          oninput="srchLive()" onkeydown="if(event.key==='Enter')doSrch()">
+        <button class="bt-btn btn" onclick="doSrch()" style="background:var(--tel);color:#051515">검색</button>
+        <button class="bk-btn btn" onclick="clearSrch()">초기화</button>
+      </div>
+      <div class="srch-hint" id="sq-hint">품번 전체 또는 일부 · 품명 · 제조사 · 보관좌표 검색 가능</div>
     </div>
+    <div id="srch-results"></div>
+    <div id="bom-results-item"></div>
   </div>
 
-  <!-- 요약 카드 -->
-  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px">
-    <div class="sc t"><div class="sl">실제 매입</div><div class="sv" id="agg-total-recv">—</div><div class="sd">입고완료 기준</div></div>
-    <div class="sc" style="border-color:var(--purple)"><div class="sl">예상 매입</div><div class="sv" style="color:var(--purple)" id="agg-total-recv-pend">—</div><div class="sd">미입고 발주금액</div></div>
-    <div class="sc" style="border-color:var(--tel)"><div class="sl">총 매입</div><div class="sv" style="color:var(--tel)" id="agg-total-recv-all">—</div><div class="sd">실제+예상 합계</div></div>
-    <div class="sc" style="border-color:var(--amber)"><div class="sl">매출 CCN B</div><div class="sv" style="color:var(--amber)" id="agg-total-b">—</div><div class="sd" id="agg-total-b-usd">USD 기준</div></div>
-    <div class="sc" style="border-color:var(--red)"><div class="sl">매출 CCN K</div><div class="sv" style="color:var(--red)" id="agg-total-k">—</div><div class="sd">KRW 기준</div></div>
-    <div class="sc" style="border-color:var(--green)"><div class="sl">매출 합계</div><div class="sv" style="color:var(--green)" id="agg-total-sales">—</div><div class="sd">B환산+K 합계</div></div>
-  </div>
-
-  <!-- 차트 영역 -->
-  <div class="tw" style="margin-bottom:16px">
-    <div class="th-row">
-      <div class="th-title">월별 매입 현황</div>
-      <div style="display:flex;gap:10px">
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#4f7cff;border-radius:2px;display:inline-block"></span>실제매입(입고완료)</span>
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#a78bfa;border-radius:2px;display:inline-block"></span>예상매입(미입고)</span>
+  <!-- ② 자재불출요청 -->
+  <div id="srch-pg-req" style="display:none;padding:16px 20px">
+    <div class="req-panel" id="req-panel" style="display:block">
+      <span class="req-badge">📤 불출 요청</span>
+      <div class="req-grid" style="margin-top:6px">
+        <div><label class="fgl">요청일 *</label><input id="req-dt" type="date"></div>
+        <div><label class="fgl">출고처 *</label><input id="req-dest" list="dl2" placeholder="코링스, 하네스..."><datalist id="dl2"></datalist></div>
+        <div><label class="fgl">인수자</label><input id="req-rec" placeholder="성명"></div>
+        <div class="fgf" style="grid-column:1/-1"><label class="fgl">출고목적</label>
+          <select id="req-pur"><option>자재불출</option><option>납품</option><option>파손</option><option>불량</option><option>기타</option></select>
+        </div>
+      </div>
+      <div class="req-items">
+        <table>
+          <thead><tr><th>품번</th><th>품명</th><th>요청수량</th><th>단위</th><th>비고</th><th></th></tr></thead>
+          <tbody id="req-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+        <span style="font-size:11px;color:var(--text3)">품번 조회 탭에서 <b style="color:var(--tel)">+ 불출요청</b> 버튼을 눌러 품목을 추가하세요</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn bk-btn sm" onclick="clearReq()">요청 초기화</button>
+          <button class="btn bt-btn" onclick="submitReq()">✅ 불출 요청 제출</button>
+        </div>
       </div>
     </div>
-    <div id="agg-recv-chart" style="padding:12px 0;min-height:160px">
-      <div style="text-align:center;padding:40px;color:var(--text3)">매입이력 데이터를 업로드하면 차트가 표시됩니다</div>
-    </div>
   </div>
 
-  <div class="tw" style="margin-bottom:16px">
-    <div class="th-row">
-      <div class="th-title">월별 매출 현황</div>
-      <div style="display:flex;gap:10px">
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#ffb547;border-radius:2px;display:inline-block"></span>CCN B(₩환산)</span>
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#ff5555;border-radius:2px;display:inline-block"></span>CCN K(₩)</span>
-      </div>
+  <!-- ③ BOM 조회 -->
+  <div id="srch-pg-bom" style="display:none;padding:16px 20px">
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input id="bom-lookup-pn" placeholder="상위품번 입력 (예: 110153030)"
+        style="flex:1;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono)"
+        onkeydown="if(event.key==='Enter')lookupBOM()">
+      <button onclick="lookupBOM()"
+        style="padding:10px 24px;background:var(--tel);color:#051515;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+        BOM 조회
+      </button>
     </div>
-    <div id="agg-sales-chart" style="padding:12px 0;min-height:160px">
-      <div style="text-align:center;padding:40px;color:var(--text3)">납품완료 데이터가 있으면 차트가 표시됩니다</div>
-    </div>
+    <div id="bom-results"></div>
   </div>
 
-  <!-- 월별 상세 테이블 -->
-  <div class="tw">
-    <div class="th-row"><div class="th-title">월별 상세</div><div class="th-count" id="agg-tbl-cnt"></div></div>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr>
-          <th>월</th>
-          <th style="text-align:right;color:var(--accent)">실제매입(₩)</th>
-          <th style="text-align:right;color:var(--purple)">예상매입(₩)</th>
-          <th style="text-align:right;color:var(--amber)">매출 B(USD)</th>
-          <th style="text-align:right;color:var(--amber)">매출 B(₩)</th>
-          <th style="text-align:right;color:var(--red)">매출 K(₩)</th>
-          <th style="text-align:right;color:var(--green)">매출합계(₩)</th>
-          <th style="text-align:right">입고건수</th>
-          <th style="text-align:right">매출건수</th>
-        </tr></thead>
-        <tbody id="agg-tbody"></tbody>
-      </table>
-    </div>
-  </div>
 </div>
-</div>
+
+
+
 
