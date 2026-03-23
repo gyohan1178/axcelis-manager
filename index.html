@@ -757,45 +757,58 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
 
 
 <style id="mobile-responsive">
-/* ══════════════════════════════════════
-   모바일 반응형 (max-width: 768px)
-══════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* ── 헤더 ── */
+  /* ── 헤더 2줄 레이아웃 ── */
   header {
     height: auto !important;
-    padding: 8px 12px !important;
-    flex-wrap: wrap !important;
+    min-height: 50px !important;
+    padding: 6px 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
     gap: 6px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 200 !important;
   }
-  header > div:first-child { /* 로고 영역 */
-    flex: 1 !important;
-    min-width: 0 !important;
-  }
-  header > div:first-child .logo-text,
-  header > div:first-child div[style*="font-size:14px"] {
-    font-size: 13px !important;
-  }
-  header > div:last-child { /* 버튼 영역 */
+  /* 1행: 로고 + 관리자 버튼 나란히 */
+  header > div:first-child {
     display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 5px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     width: 100% !important;
   }
-  /* 헤더 통계 텍스트 숨김 */
-  #hstat { display: none !important; }
-  #last-updated { font-size: 10px !important; }
+  /* 2행: 업로드 버튼들 */
+  header > div:last-child {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 2px !important;
+  }
+  header > div:last-child::-webkit-scrollbar { display: none !important; }
+  header > div:last-child > label,
+  header > div:last-child > button {
+    flex-shrink: 0 !important;
+    font-size: 11px !important;
+    padding: 5px 9px !important;
+    white-space: nowrap !important;
+  }
+  /* 통계 텍스트 숨김 */
+  #hstat, #last-updated { display: none !important; }
 
-  /* ── 앱 전환바 ── */
+  /* ── 앱바 & 서브탭: sticky로 자연스럽게 흐름 ── */
   .app-bar {
-    top: auto !important;
     position: sticky !important;
+    top: 0 !important; /* header 아래 자연스럽게 */
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
     padding: 0 8px !important;
-    gap: 0 !important;
+    z-index: 150 !important;
   }
   .app-bar::-webkit-scrollbar { display: none !important; }
   .app-btn {
@@ -806,18 +819,20 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
   }
   .app-divider { display: none !important; }
 
-  /* ── 내부 탭바 ── */
   div#pt-inner-tabs,
-  div#po-inner-tabs {
-    top: auto !important;
+  div#po-inner-tabs,
+  div#srch-inner-tabs {
+    position: sticky !important;
+    top: 0 !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
     padding: 0 8px !important;
-    position: sticky !important;
+    z-index: 140 !important;
   }
   div#pt-inner-tabs::-webkit-scrollbar,
-  div#po-inner-tabs::-webkit-scrollbar { display: none !important; }
+  div#po-inner-tabs::-webkit-scrollbar,
+  div#srch-inner-tabs::-webkit-scrollbar { display: none !important; }
   div#pt-inner-tabs .pt-itab,
   div#po-inner-tabs .po-itab {
     padding: 10px 12px !important;
@@ -830,16 +845,12 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
   .login-box {
     width: calc(100vw - 24px) !important;
     padding: 28px 20px !important;
-    border-radius: 12px !important;
   }
-  .login-title { font-size: 16px !important; }
 
   /* ── 페이지 패딩 ── */
-  .pg, .page {
-    padding: 12px 10px !important;
-  }
+  .pg, .page { padding: 12px 10px !important; }
 
-  /* ── 요약 카드 ── */
+  /* ── 요약 카드 2열 ── */
   .sum { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .sum-row { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .sales-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
@@ -847,7 +858,7 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
   .bom-sum { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .sc-val { font-size: 18px !important; }
 
-  /* ── 필터바 ── */
+  /* ── 필터바 세로 ── */
   .fbar, .fb {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -856,27 +867,16 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
   }
   .fbar .sw, .fb .sw { min-width: 0 !important; width: 100% !important; }
   .chips { flex-wrap: wrap !important; gap: 4px !important; }
-  .chip { font-size: 11px !important; padding: 4px 10px !important; }
 
-  /* ── 테이블 ── */
+  /* ── 테이블 스크롤 ── */
   .tbl-scroll, .tsc {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     max-height: 400px !important;
   }
-  th, td {
-    padding: 7px 8px !important;
-    font-size: 11px !important;
-  }
+  th, td { padding: 7px 8px !important; font-size: 11px !important; }
   .tw { border-radius: 8px !important; }
   .th-row { padding: 10px 12px !important; }
-
-  /* ── 헤더 업로드 버튼 ── */
-  label[style*="납품이력"],
-  label[style*="PO 업로드"] {
-    padding: 5px 8px !important;
-    font-size: 11px !important;
-  }
 
   /* ── 모달 ── */
   .mbox {
@@ -891,73 +891,37 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
 
   /* ── 자재조회 ── */
   .srch-hero { padding: 12px 14px !important; }
-  .srch-bar { flex-direction: row !important; gap: 6px !important; }
-  .srch-bar input { font-size: 13px !important; }
-  .req-panel { padding: 12px 14px !important; }
   .req-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-  .item-card { padding: 12px 14px !important; }
 
   /* ── BOM ── */
   .bom-layout { flex-direction: column !important; }
   .bom-left { width: 100% !important; max-width: none !important; border-right: none !important; border-bottom: 1px solid var(--border) !important; }
-  .bom-right { width: 100% !important; }
 
   /* ── PO 액션바 ── */
-  .po-action-bar {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    padding: 8px 10px !important;
-  }
+  .po-action-bar { flex-wrap: wrap !important; gap: 6px !important; padding: 8px 10px !important; }
   .po-act-btn { padding: 5px 10px !important; font-size: 11px !important; }
 
-  /* ── 차트 ── */
-  .chart-wrap { padding: 12px 10px !important; }
-
-  /* ── 발주 추이 탭 ── */
-  #otr-safety-content {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* ── 매입/매출 집계 ── */
-  #sect-agg .pg { padding: 10px 8px !important; }
-
-  /* ── 사용자 메뉴 ── */
-  #user-menu { right: 8px !important; min-width: 160px !important; }
-  .user-badge { padding: 4px 8px !important; }
-  #user-name-display { font-size: 11px !important; }
+  /* ── 발주추이 안전재고 ── */
+  #otr-safety-content { grid-template-columns: repeat(2, 1fr) !important; }
 
   /* ── 전체 스크롤 ── */
   body { overflow-x: hidden !important; }
 }
 
-/* ── 아주 작은 화면 (max-width: 420px) ── */
 @media (max-width: 420px) {
   .sum { grid-template-columns: 1fr 1fr !important; }
   .sales-grid { grid-template-columns: 1fr 1fr !important; }
-  header > div:last-child label,
-  header > div:last-child button {
-    font-size: 10px !important;
-    padding: 4px 7px !important;
-  }
   .app-btn { font-size: 11px !important; padding: 9px 10px !important; }
   .sc-val { font-size: 16px !important; }
-  .login-title { font-size: 15px !important; }
-  #otr-safety-content { grid-template-columns: 1fr 1fr !important; }
   .req-grid { grid-template-columns: 1fr !important; }
 }
 
-/* ── 터치 디바이스 개선 ── */
 @media (hover: none) and (pointer: coarse) {
   th, td, .chip, .app-btn, .pt-itab, .po-itab, .btn, button {
     -webkit-tap-highlight-color: transparent !important;
   }
-  .chip, .app-btn, .btn {
-    min-height: 36px !important;
-  }
-  input, select {
-    font-size: 16px !important; /* iOS 줌 방지 */
-  }
+  .chip, .app-btn, .btn { min-height: 36px !important; }
+  input, select, textarea { font-size: 16px !important; }
 }
 </style>
 </head>
@@ -3051,27 +3015,52 @@ function loadAllFromServer() {
 var _origSv = null;
 function svWithSync(k, v) {
   localStorage.setItem(k, JSON.stringify(v));
-  // 서버 동기
   var sheetName = KEY_TO_SHEET[k];
   if(!sheetName || !CURRENT_TOKEN) return;
+
   var rows;
   if(k === 'jst_bom2') {
     rows = bomToRows(v);
   } else if(k === 'jst_chkhist2') {
     rows = chkhistToRows(v);
   } else if(k === 'po_history') {
-    // po_history 는 JSON이 크므로 전체 재저장
     rows = v.map(function(entry) {
       return { upload_date: entry.date, changes_count: (entry.changes||[]).length, data_json: JSON.stringify(entry.data||[]) };
     });
   } else {
     rows = Array.isArray(v) ? v : Object.values(v);
   }
+
   setSyncStatus('syncing');
-  apiPost({ action:'setSheet', sheet: sheetName, data: rows }).then(function(res) {
-    setSyncStatus(res.ok ? 'ok' : 'error');
-  }).catch(function(){ setSyncStatus('error'); });
+
+  // 청크 크기: 큰 데이터(DB 5000+건)는 200건씩 나눠 전송
+  var CHUNK = 200;
+  if(rows.length <= CHUNK) {
+    // 소량 데이터는 한번에
+    apiPost({ action:'setSheet', sheet: sheetName, data: rows }).then(function(res) {
+      setSyncStatus(res.ok ? 'ok' : 'error');
+    }).catch(function(){ setSyncStatus('error'); });
+  } else {
+    // 대량 데이터: 첫 청크는 전체 삭제 후 삽입, 이후 청크는 추가
+    var chunks = [];
+    for(var i=0; i<rows.length; i+=CHUNK) chunks.push(rows.slice(i, i+CHUNK));
+    var idx = 0;
+    function sendChunk(){
+      if(idx >= chunks.length){ setSyncStatus('ok'); return; }
+      var action = idx===0 ? 'setSheet' : 'appendRows';
+      var body = idx===0
+        ? { action:action, sheet:sheetName, data:chunks[idx] }
+        : { action:action, sheet:sheetName, rows:chunks[idx] };
+      idx++;
+      apiPost(body).then(function(res){
+        if(!res.ok){ setSyncStatus('error'); return; }
+        sendChunk();
+      }).catch(function(){ setSyncStatus('error'); });
+    }
+    sendChunk();
+  }
 }
+
 
 // ──────────────────────────────────────────────────────────
 //  작업 히스토리 모달
@@ -3482,6 +3471,13 @@ function upImport(){
   });
 
   sv(K.DB,DB);
+  // 엑셀 업로드 완료 후 서버에 DB 저장 (실시간 동기화 제외이므로 여기서 한번에)
+  if(CURRENT_TOKEN) {
+    setSyncStatus('syncing');
+    apiPost({ action:'setSheet', sheet:'db_items', data: DB }).then(function(r){
+      setSyncStatus(r.ok ? 'ok' : 'error');
+    }).catch(function(){ setSyncStatus('error'); });
+  }
   document.getElementById('up-s2').classList.remove('on');
   document.getElementById('up-s3').classList.add('on');
   document.getElementById('up-next').style.display='none';
@@ -3740,7 +3736,7 @@ function saveItem(){
     DB.unshift(nd);
     HIST.unshift({pn,date:dt,action:'신규 등록',changes:[]});
   }
-  sv(K.DB,DB);sv(K.HIST,HIST);
+  svDBItem(nd, false);sv(K.HIST,HIST);
   closeM('m-db');renderDB();
   syncDBtoCHK(); // DB 변경 시 CHK 자동 연동
 }
@@ -3749,7 +3745,7 @@ function delItem(){
   if(!editPN||!confirm(`${editPN} 품목을 삭제하시겠습니까?`))return;
   HIST.unshift({pn:editPN,date:new Date().toLocaleString('ko-KR'),action:'삭제',changes:[]});
   DB=DB.filter(x=>x.pn!==editPN);
-  sv(K.DB,DB);sv(K.HIST,HIST);
+  svDBItem(nd, false);sv(K.HIST,HIST);
   closeM('m-db');renderDB();
   syncDBtoCHK();
 }
@@ -5720,6 +5716,9 @@ function bomUpLoad(file){
         else{BOM[parent].push(entry);added++;}
       }
       sv(K.BOM,BOM);
+      if(CURRENT_TOKEN) {
+        apiPost({ action:'setSheet', sheet:'bom_data', data: bomToRows(BOM) }).catch(function(){});
+      }
       const resEl=document.getElementById('bom-up-result');
       resEl.textContent=`✅ 완료 — 신규 ${added}건 추가, ${updated}건 갱신, ${skipped}건 건너뜀 (시트: ${sheetName})`;
       resEl.style.display='';
@@ -8923,6 +8922,30 @@ function applyTabPerms(perms, role){
     var editBtns = document.querySelectorAll('[data-edit-tab="'+t.key+'"]');
     editBtns.forEach(function(b){ b.style.display='none'; });
   });
+}
+
+
+// DB 아이템 단위 서버 동기화 (전체 재전송 없이 해당 행만)
+function svDBItem(item, isDelete) {
+  localStorage.setItem(K.DB, JSON.stringify(DB));
+  if(!CURRENT_TOKEN) return;
+  setSyncStatus('syncing');
+  if(isDelete) {
+    apiPost({ action:'deleteRow', sheet:'db_items', keyField:'pn', keyValue:item.pn })
+      .then(function(r){ setSyncStatus(r.ok?'ok':'error'); })
+      .catch(function(){ setSyncStatus('error'); });
+  } else {
+    // updateRow 먼저 시도, 없으면 appendRows
+    apiPost({ action:'updateRow', sheet:'db_items', keyField:'pn', keyValue:item.pn, updates:item })
+      .then(function(r){
+        if(r.ok) { setSyncStatus('ok'); return; }
+        // 행이 없으면 추가
+        apiPost({ action:'appendRows', sheet:'db_items', rows:[item] })
+          .then(function(r2){ setSyncStatus(r2.ok?'ok':'error'); })
+          .catch(function(){ setSyncStatus('error'); });
+      })
+      .catch(function(){ setSyncStatus('error'); });
+  }
 }
 
 
