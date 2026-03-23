@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리 v23.01</title>
+<title>AXCELIS 통합 관리 v23.02</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1012,7 +1012,7 @@ div#po-inner-tabs .po-itab.active {
       <div class="login-logo-mark">JS</div>
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v23.01 — 진선테크</div>
+        <div class="login-sub">v23.02 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -1027,7 +1027,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <div style="font-size:11px;color:var(--text3)">v23.01 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:11px;color:var(--text3)">v23.02 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
       <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
     </div>
   </div>
@@ -1041,7 +1041,7 @@ div#po-inner-tabs .po-itab.active {
   <div style="display:flex;align-items:center;gap:8px">
     <div style="width:26px;height:26px;background:var(--accent);border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;font-family:var(--mono)">JS</div>
     <div style="font-size:14px;font-weight:600">AXCELIS 통합 관리</div>
-    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23.01</div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23.02</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <div id="hstat" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></div>
@@ -3167,13 +3167,6 @@ function switchApp(app) {
   // 업무탭에서 구매관리 서브탭 숨기기
   var ptTabs = document.getElementById('pt-inner-tabs');
   if(ptTabs) ptTabs.style.display = (app==='purchase') ? '' : 'none';
-  // viewer 권한
-  var role = CURRENT_USER ? CURRENT_USER.role : '';
-  if(role === 'viewer' || role === 'guest') {
-    ['appbtn-purchase','appbtn-po'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.style.display='none';
-    });
-  }
 }
 
 // ══ 구매관리 JS ══
@@ -3477,13 +3470,24 @@ function upImport(){
     else{DB.push(obj);added++;}
   });
 
-  sv(K.DB,DB);
-  // 엑셀 업로드 완료 후 서버에 DB 저장 (실시간 동기화 제외이므로 여기서 한번에)
+  try { sv(K.DB,DB); } catch(e) {
+    // localStorage 용량 초과 시 서버에만 저장, 로컬은 스킵
+    console.warn('localStorage DB 저장 실패:', e.message);
+  }
+  // 서버 동기화 (청크 방식)
   if(CURRENT_TOKEN) {
     setSyncStatus('syncing');
-    apiPost({ action:'setSheet', sheet:'db_items', data: DB }).then(function(r){
-      setSyncStatus(r.ok ? 'ok' : 'error');
-    }).catch(function(){ setSyncStatus('error'); });
+    var dbChunks = [];
+    for(var _i=0; _i<DB.length; _i+=200) dbChunks.push(DB.slice(_i,_i+200));
+    var _ci = 0;
+    function _sendDB(){
+      if(_ci>=dbChunks.length){ setSyncStatus('ok'); return; }
+      var _act = _ci===0 ? 'setSheet' : 'appendRows';
+      var _body = _ci===0 ? {action:_act,sheet:'db_items',data:dbChunks[_ci]} : {action:_act,sheet:'db_items',rows:dbChunks[_ci]};
+      _ci++;
+      apiPost(_body).then(function(r){ if(r.ok) _sendDB(); else setSyncStatus('error'); }).catch(function(){ setSyncStatus('error'); });
+    }
+    _sendDB();
   }
   document.getElementById('up-s2').classList.remove('on');
   document.getElementById('up-s3').classList.add('on');
