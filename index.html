@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리 v23.04</title>
+<title>AXCELIS 통합 관리 v23.05</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1012,7 +1012,7 @@ div#po-inner-tabs .po-itab.active {
       <div class="login-logo-mark">JS</div>
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v23.04 — 진선테크</div>
+        <div class="login-sub">v23.05 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -1027,7 +1027,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <div style="font-size:11px;color:var(--text3)">v23.04 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:11px;color:var(--text3)">v23.05 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
       <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
     </div>
   </div>
@@ -1041,7 +1041,7 @@ div#po-inner-tabs .po-itab.active {
   <div style="display:flex;align-items:center;gap:8px">
     <div style="width:26px;height:26px;background:var(--accent);border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;font-family:var(--mono)">JS</div>
     <div style="font-size:14px;font-weight:600">AXCELIS 통합 관리</div>
-    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23.04</div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23.05</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <div id="hstat" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></div>
@@ -3478,7 +3478,7 @@ function upImport(){
   if(CURRENT_TOKEN) {
     setSyncStatus('syncing');
     var dbChunks = [];
-    for(var _i=0; _i<DB.length; _i+=300) dbChunks.push(DB.slice(_i,_i+300));
+    for(var _i=0; _i<DB.length; _i+=100) dbChunks.push(DB.slice(_i,_i+100));
     var _ci = 0;
     var _hdrs = DB.length>0 ? Object.keys(DB[0]) : [];
     // 1단계: 기존 데이터 삭제만 먼저
