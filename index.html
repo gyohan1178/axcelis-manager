@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리 v23.02</title>
+<title>AXCELIS 통합 관리 v23.03</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1012,7 +1012,7 @@ div#po-inner-tabs .po-itab.active {
       <div class="login-logo-mark">JS</div>
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v23.02 — 진선테크</div>
+        <div class="login-sub">v23.03 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -1027,7 +1027,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <div style="font-size:11px;color:var(--text3)">v23.02 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:11px;color:var(--text3)">v23.03 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
       <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
     </div>
   </div>
@@ -1041,7 +1041,7 @@ div#po-inner-tabs .po-itab.active {
   <div style="display:flex;align-items:center;gap:8px">
     <div style="width:26px;height:26px;background:var(--accent);border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;font-family:var(--mono)">JS</div>
     <div style="font-size:14px;font-weight:600">AXCELIS 통합 관리</div>
-    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23.02</div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23.03</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <div id="hstat" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></div>
@@ -8929,10 +8929,26 @@ function applyTabPerms(perms, role){
 
   // 수정 권한 없는 탭 - 버튼들 숨김
   TAB_DEFS.filter(function(t){ return t.canEdit && !edit.includes(t.key); }).forEach(function(t){
-    // 수정버튼 숨김 (각 탭의 추가/편집/삭제 버튼)
     var editBtns = document.querySelectorAll('[data-edit-tab="'+t.key+'"]');
     editBtns.forEach(function(b){ b.style.display='none'; });
   });
+
+  // 접근 가능한 첫 상위탭으로 이동
+  var topOrder = ['todo','purchase','po','srch'];
+  var firstApp = topOrder.find(function(k){ return access.includes(k); });
+  if(firstApp) {
+    switchApp(firstApp);
+    // 해당 섹션의 접근 가능한 첫 서브탭으로 이동
+    if(firstApp === 'purchase') {
+      var ptOrder = ['db','recv','out','lt','bom','rdash','chk'];
+      var firstPt = ptOrder.find(function(k){ return access.includes(k); });
+      if(firstPt) ptTab(firstPt);
+    } else if(firstApp === 'po') {
+      var poOrder = ['dash','po','delivered','changes','tracking','sales','ordtrend'];
+      var firstPo = poOrder.find(function(k){ return access.includes('po-'+k) || access.includes(k); });
+      if(firstPo) poTab(firstPo);
+    }
+  }
 }
 
 
