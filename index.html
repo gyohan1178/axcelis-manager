@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리 v22</title>
+<title>AXCELIS 통합 관리 v23</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1051,7 +1051,7 @@ div#po-inner-tabs .po-itab.active {
       <div class="login-logo-mark">JS</div>
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v22 — 진선테크</div>
+        <div class="login-sub">v23 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -1066,7 +1066,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <div style="font-size:11px;color:var(--text3)">v22 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:11px;color:var(--text3)">v23 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
       <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
     </div>
   </div>
@@ -1080,7 +1080,7 @@ div#po-inner-tabs .po-itab.active {
   <div style="display:flex;align-items:center;gap:8px">
     <div style="width:26px;height:26px;background:var(--accent);border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;font-family:var(--mono)">JS</div>
     <div style="font-size:14px;font-weight:600">AXCELIS 통합 관리</div>
-    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v22</div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:2px">v23</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <div id="hstat" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></div>
@@ -1089,7 +1089,7 @@ div#po-inner-tabs .po-itab.active {
       📊 납품이력 업로드
       <input type="file" style="display:none" id="sales-file-input" accept=".xlsx,.xls,.csv" onchange="handleSalesUpload(this)">
     </label>
-    <label style="display:flex;align-items:center;gap:6px;padding:5px 11px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+    <label style="display:flex;align-items:center;gap:6px;padding:5px 11px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
       ↑ PO 업로드
       <input type="file" style="display:none" id="file-input" accept=".xlsx,.xls" onchange="handleUpload(this)">
     </label>
@@ -1119,6 +1119,8 @@ div#po-inner-tabs .po-itab.active {
 </div>
 
 <div class="app-bar">
+  <button class="app-btn todo" id="appbtn-todo" onclick="switchApp('todo')" style="color:var(--teal)">📋 업무</button>
+  <div class="app-divider"></div>
   <button class="app-btn on purchase" id="appbtn-purchase" onclick="switchApp('purchase')">📦 구매관리</button>
   <div class="app-divider"></div>
   <button class="app-btn po" id="appbtn-po" onclick="switchApp('po')">📋 PO 관리</button>
@@ -1128,7 +1130,7 @@ div#po-inner-tabs .po-itab.active {
 
 <div class="sect-wrap on" id="sect-purchase">
   <div id="pt-inner-tabs">
-    <div class="pt-itab on" data-tab="db" onclick="ptTab('db')">품목 DB <span class="sbdg" id="b-db">0</span></div>
+<div class="pt-itab on" data-tab="db" onclick="ptTab('db')">품목 DB <span class="sbdg" id="b-db">0</span></div>
     <div class="pt-itab" data-tab="recv" onclick="ptTab('recv')">매입 이력 <span class="sbdg" id="b-recv">0</span></div>
     <div class="pt-itab" data-tab="out" onclick="ptTab('out')">자재 불출 <span class="sbdg" id="b-out">0</span></div>
     <div class="pt-itab" data-tab="lt" onclick="ptTab('lt')">LT 미입력 <span class="sbdg r" id="b-lt">0</span></div>
@@ -1138,6 +1140,52 @@ div#po-inner-tabs .po-itab.active {
   </div>
 
 <!-- ═══ 품목 DB ═══ -->
+
+
+<!-- ── To-Do 추가/편집 모달 ── -->
+<div class="mbg" id="m-todo">
+  <div class="mbox" style="width:480px">
+    <h3>📋 업무 <span id="todo-modal-title">추가</span> <button class="mx" onclick="closeM('m-todo')">✕</button></h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <span class="mfl">업무 내용 *</span>
+        <input class="minput" id="todo-title" placeholder="업무 내용 입력">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <span class="mfl">마감일</span>
+          <input class="minput" id="todo-due" type="date">
+        </div>
+        <div>
+          <span class="mfl">우선순위</span>
+          <select class="minput" id="todo-priority">
+            <option value="high">🔴 높음</option>
+            <option value="mid" selected>🟡 보통</option>
+            <option value="low">🟢 낮음</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <span class="mfl">상태</span>
+        <select class="minput" id="todo-status">
+          <option value="todo">📌 미완료</option>
+          <option value="wip">🔄 진행중</option>
+          <option value="done">✅ 완료</option>
+        </select>
+      </div>
+      <div>
+        <span class="mfl">메모</span>
+        <textarea class="minput" id="todo-memo" placeholder="메모 (선택)" rows="2" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <input type="hidden" id="todo-edit-id">
+    <div class="mact">
+      <button class="mbtn cancel" onclick="closeM('m-todo')">취소</button>
+      <button class="mbtn" style="background:var(--teal);color:#051515" onclick="saveTodo()">✅ 저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="pg on" style="display:block" id="pg-db">
   <div class="sum">
     <div class="sc t"><div class="sl">전체 품목</div><div class="sv" id="d0">—</div><div class="ss">관리대상 Y</div></div>
@@ -2170,11 +2218,11 @@ div#po-inner-tabs .po-itab.active {
 <div class="sect-wrap" id="sect-po">
   <div id="po-inner-tabs">
     <div class="po-itab active" data-tab="dash" onclick="poTab('dash')">대시보드</div>
-    <div class="po-itab" data-tab="sales" onclick="poTab('sales')">📊 매출 대시보드</div>
     <div class="po-itab" data-tab="po" onclick="poTab('po')">PO 현황</div>
     <div class="po-itab" data-tab="delivered" onclick="poTab('delivered')">✅ 납품 완료 <span class="tab-badge green" id="badge-delivered">0</span></div>
     <div class="po-itab" data-tab="changes" onclick="poTab('changes')">변경이력 <span class="tab-badge" id="badge-changes" style="display:none">0</span></div>
     <div class="po-itab" data-tab="tracking" onclick="poTab('tracking')">CCN B 트레킹</div>
+    <div class="po-itab" data-tab="sales" onclick="poTab('sales')" style="border-left:1px solid var(--border);margin-left:auto">📊 매출 대시보드</div>
     <div class="po-itab" data-tab="ordtrend" onclick="poTab('ordtrend')">📈 발주 추이</div>
   </div>
   
@@ -2628,9 +2676,9 @@ div#po-inner-tabs .po-itab.active {
     <div style="display:flex;align-items:center;gap:6px">
       <span style="font-size:11px;color:var(--text3)">데이터:</span>
       <div class="chips">
-        <div class="chip on default" id="otrd-po" onclick="setOtrData('po')">현재 PO</div>
+        <div class="chip" id="otrd-po" onclick="setOtrData('po')">현재 PO</div>
         <div class="chip" id="otrd-delivered" onclick="setOtrData('delivered')">납품이력</div>
-        <div class="chip" id="otrd-both" onclick="setOtrData('both')">둘다</div>
+        <div class="chip on default" id="otrd-both" onclick="setOtrData('both')">둘다</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
@@ -2695,7 +2743,7 @@ div#po-inner-tabs .po-itab.active {
 
 <!-- ══ 계정 관리 모달 ══ -->
 <div class="mbg" id="m-usermgmt">
-  <div class="mbox" style="width:420px">
+  <div class="mbox" style="width:560px">
     <h3>👥 계정 관리 <button class="mx" onclick="closeModal('m-usermgmt')">✕</button></h3>
     <div style="background:var(--gbg);border:1px solid var(--grn,#34d399);border-radius:7px;padding:10px 14px;font-size:12px;color:var(--grn,#34d399);margin-bottom:16px">
       💡 새 계정을 만들어 직원에게 아이디/비밀번호를 알려주세요
@@ -2705,13 +2753,23 @@ div#po-inner-tabs .po-itab.active {
       <div><span class="mfl">비밀번호 *</span><input class="minput" id="nu-pw" placeholder="비밀번호"></div>
       <div><span class="mfl">이름 *</span><input class="minput" id="nu-name" placeholder="홍길동"></div>
       <div>
-        <span class="mfl">권한</span>
-        <select class="minput" id="nu-role" style="width:100%">
+        <span class="mfl">기본 권한</span>
+        <select class="minput" id="nu-role" style="width:100%" onchange="updateTabPermUI()">
           <option value="user">일반 사용자</option>
           <option value="admin">관리자</option>
+          <option value="viewer">조회 전용 (viewer)</option>
         </select>
       </div>
     </div>
+
+    <!-- 탭 접근 권한 -->
+    <div style="margin-top:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📋 탭 접근 권한</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px" id="nu-tab-perms">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+
     <div class="mact">
       <button class="mbtn cancel" onclick="closeModal('m-usermgmt')">취소</button>
       <button class="mbtn" onclick="saveNewUser()">✅ 계정 생성</button>
@@ -2835,6 +2893,11 @@ function showApp() {
   if(mAdmin) mAdmin.style.display = CURRENT_USER.role === 'admin' ? '' : 'none';
   // 앱 초기화
   initAfterLogin();
+  // 탭 권한 적용
+  if(CURRENT_USER && CURRENT_USER.role !== 'admin'){
+    var up = CURRENT_USER.perms;
+    if(up && (up.access||up.edit)) applyTabPerms(up, CURRENT_USER.role);
+  }
   // viewer 권한이면 자재조회 탭만 표시
   var role = CURRENT_USER ? CURRENT_USER.role : '';
   if(role === 'viewer' || role === 'guest'){
@@ -3039,6 +3102,7 @@ function openUserMgmt() {
   var modal = document.getElementById('m-usermgmt');
   if(!modal) return;
   modal.classList.add('on');
+  updateTabPermUI();
 }
 
 function saveNewUser() {
@@ -3046,8 +3110,9 @@ function saveNewUser() {
   var pw   = document.getElementById('nu-pw').value.trim();
   var name = document.getElementById('nu-name').value.trim();
   var role = document.getElementById('nu-role').value;
+  var perms = getTabPerms();
   if(!id||!pw||!name){ alert('모두 입력하세요'); return; }
-  apiPost({ action:'addUser', id:id, password:pw, name:name, role:role, company:CURRENT_COMPANY }).then(function(res) {
+  apiPost({ action:'addUser', id:id, password:pw, name:name, role:role, perms:perms, company:CURRENT_COMPANY }).then(function(res) {
     if(res.ok){ alert('✅ 계정 생성 완료\n아이디: '+id+'\n비밀번호: '+pw); document.getElementById('m-usermgmt').classList.remove('on'); }
     else{ alert('오류: '+(res.error||'실패')); }
   }).catch(function(){ alert('서버 연결 실패'); });
@@ -3093,19 +3158,32 @@ function switchApp(app) {
   var sp  = document.getElementById('sect-purchase');
   var so  = document.getElementById('sect-po');
   var ss  = document.getElementById('sect-srch');
+  var st  = document.getElementById('sect-todo');
   sp.style.display  = (app==='purchase') ? 'block':'none';
   so.style.display  = (app==='po')       ? 'block':'none';
   if(ss) ss.style.display = (app==='srch') ? 'block':'none';
+  if(st) { st.style.display = (app==='todo') ? 'block':'none'; if(app==='todo') { st.style.cssText='display:block!important'; } }
   sp.classList.toggle('on', app==='purchase');
   so.classList.toggle('on', app==='po');
   if(ss) ss.classList.toggle('on', app==='srch');
+  if(st) st.classList.toggle('on', app==='todo');
   document.getElementById('appbtn-purchase').classList.toggle('on', app==='purchase');
   document.getElementById('appbtn-po').classList.toggle('on', app==='po');
   var bs = document.getElementById('appbtn-srch');
   if(bs) bs.classList.toggle('on', app==='srch');
-  if(app==='srch') {
-    srchTab('item');
-    initSrch2();
+  var bt = document.getElementById('appbtn-todo');
+  if(bt) bt.classList.toggle('on', app==='todo');
+  if(app==='srch') { srchTab('item'); initSrch2(); }
+  if(app==='todo') renderTodo();
+  // 업무탭에서 구매관리 서브탭 숨기기
+  var ptTabs = document.getElementById('pt-inner-tabs');
+  if(ptTabs) ptTabs.style.display = (app==='purchase') ? '' : 'none';
+  // viewer 권한
+  var role = CURRENT_USER ? CURRENT_USER.role : '';
+  if(role === 'viewer' || role === 'guest') {
+    ['appbtn-purchase','appbtn-po'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display='none';
+    });
   }
 }
 
@@ -7353,6 +7431,10 @@ function processSalesFile(file){
       buildYearTabs(merged);
       renderSalesDash();
       renderAggIfOpen();
+      // CCN B 트레킹 업데이트 (비고1 트레킹번호 반영)
+      const trackDateStr = new Date().toLocaleString('ko-KR');
+      updateTrackFromDelivered(merged, trackDateStr);
+      if(typeof renderTracking === 'function') renderTracking();
       poTab('sales');
       alert(`✅ ${toAdd.length}건 추가됨 (전체 납품완료 ${merged.length}건)\n파일: ${file.name}`);
     }catch(err){ alert('파일 파싱 오류: '+err.message); }
@@ -7389,10 +7471,14 @@ function parseSalesRows(raw){
   var upIdx     = fi(['unit price','unitprice','단가','u/p']);
   var extIdx    = fi(['extended price','extendedprice','금액','amount','매출','합계','total']);
   var orderIdx  = fi(['order number','ordernumber','오더','order','주문번호']);
-  var statusIdx = fi(['현황','status','결과']);            // '납품 완료' 필터용
+  // '현황' 컬럼 우선 검색 (한글), 없으면 'status' 영문 컬럼
+  var statusIdx = fi(['현황']);
+  if(statusIdx < 0) statusIdx = fi(['status','결과']);
   var dateIdx   = fi(['정산일','납품일','shipdate','deliverydate','출고일']);  // 납품 날짜
   var promiseIdx= fi(['promise date','promisedate','납기']);
-  var trackIdx  = fi(['비고1','비고','memo','note','remark','trk','track']);   // 트레킹번호
+  // 비고1 우선 (납품이력 파일의 트레킹번호 컬럼)
+  var trackIdx  = fi(['비고1']);
+  if(trackIdx < 0) trackIdx = fi(['비고','memo','note','remark','trk','track']);
   var altIdx    = fi(['대체여부','alt']);
 
   var getCell = function(row, idx){
@@ -7427,7 +7513,10 @@ function parseSalesRows(raw){
     // 현황 필터 - '납품 완료' 또는 필터 없으면 전체
     if(statusIdx >= 0){
       var status = ts(getCell(row, statusIdx));
+      // '현황' 컬럼: '납품 완료'/'발송 완료'만 허용
+      // 'Status'(영문) 컬럼: 비어있으면 건너뜀, 있으면 필터 적용
       if(status && status !== '납품 완료' && status !== '발송 완료') return;
+      if(!status && statusIdx < 20) return; // 영문 Status가 비어있으면 건너뜀
     }
 
     // Item (숫자면 정수 변환)
@@ -7459,9 +7548,12 @@ function parseSalesRows(raw){
     // 트레킹번호 (비고1)
     var trackRaw = trackIdx>=0 ? ts(getCell(row, trackIdx)) : '';
     var trackNum = '';
-    if(trackRaw && trackRaw !== 'nan'){
+    if(trackRaw && trackRaw !== 'nan' && trackRaw !== '-' && trackRaw !== '—'){
+      // 숫자 8자리 이상 포함하면 트레킹번호로 인식 (원문 전체 보관)
       var tm = trackRaw.match(/\d{8,}/);
       if(tm) trackNum = trackRaw.trim();
+      // 그 외에도 영문+숫자 조합이면 트레킹번호로
+      else if(/[A-Z]{2}\d{6,}/.test(trackRaw.toUpperCase())) trackNum = trackRaw.trim();
     }
 
     result.push({
@@ -8279,7 +8371,7 @@ function lookupBOM(){
 //  발주 추이 분석
 // ══════════════════════════════════════════════
 var otrPeriod = 'month';  // month | quarter | half | year
-var otrData   = 'po';     // po | delivered | both
+var otrData   = 'both';     // po | delivered | both
 var otrShow   = 'qty';    // qty | amt
 
 function setOtrPeriod(v){
@@ -8333,8 +8425,10 @@ function renderOrdTrend(){
       var dateKey = getPeriodKey(r.promise || r.placed || '');
       if(!dateKey) return;
       var getAmt = function(x){ return x.extended_price || x.amount || (x.unit_price||0)*(x.qty||1) || 0; };
+      var pn = r.item || r.pn || '';
+      if(!pn) return;
       rows.push({
-        pn: r.item||'', desc: r.desc||'', ccn: r.ccn||'',
+        pn: pn, desc: r.desc||'', ccn: r.ccn||'',
         qty: r.qty||0, amt: getAmt(r),
         period: dateKey, src: 'po'
       });
@@ -8440,7 +8534,7 @@ function renderOrdTrend(){
 
     var ccnColor = it.ccn==='B' ? 'color:var(--amber)' : it.ccn==='K' ? 'color:var(--red)' : 'color:var(--text3)';
 
-    return '<tr style="cursor:pointer;transition:background .1s" data-otr-pn="'+encodeURIComponent(it.pn)+'" onclick="showOtrSafety(decodeURIComponent(this.dataset.otrPn))" title="클릭: 안전재고 상세">';
+    var rowHtml = '<tr style="cursor:pointer;transition:background .1s" data-otr-pn="'+encodeURIComponent(it.pn)+'" onclick="showOtrSafety(decodeURIComponent(this.dataset.otrPn))" title="클릭: 안전재고 상세">'
       + '<td style="'+TD_L+';color:var(--accent);font-family:var(--mono);font-size:11px">'+it.pn+'</td>'
       + '<td style="'+TD_L+';max-width:180px;overflow:hidden;text-overflow:ellipsis" title="'+it.desc+'">'+it.desc+'</td>'
       + '<td style="'+TD_L+';'+ccnColor+';font-weight:700;font-size:11px">'+it.ccn+'</td>'
@@ -8449,6 +8543,7 @@ function renderOrdTrend(){
       + '<td style="'+TD+';color:var(--teal);font-weight:600">'+(avg>0?fv(Math.round(avg)):'—')+'</td>'
       + '<td style="'+TD+';color:var(--green);font-weight:700;background:var(--green-bg)">'+(safetyStock>0?safetyStock.toLocaleString():'—')+'</td>'
       + '</tr>';
+    return rowHtml;
   }).join('');
 
   if(!items.length){
@@ -8470,7 +8565,8 @@ function showOtrSafety(pn){
   if(otrData === 'po' || otrData === 'both'){
     (typeof PO !== 'undefined' ? PO : []).forEach(function(r){
       var dk = getPeriodKey(r.promise||r.placed||'');
-      if(!dk || r.item !== pn) return;
+      var rpn = r.item || r.pn || '';
+      if(!dk || rpn !== pn) return;
       rows.push({qty:r.qty||0, period:dk});
     });
   }
@@ -8526,6 +8622,307 @@ function exportOtrCSV(){
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = '발주추이_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
+}
+
+
+// 납품이력 업로드 시 CCN B 트레킹 업데이트
+function updateTrackFromDelivered(deliveredRows, dateStr) {
+  var track = getTrack();
+  deliveredRows.filter(function(r){ return r.ccn === 'B'; }).forEach(function(r) {
+    var pn  = r.item || r.pn || '';
+    var ord = r.order || '';
+    if(!pn) return;
+    var key = pn + '|' + ord;
+    if(!track[key]) track[key] = {item: pn, desc: r.desc||'', order: ord, history: []};
+    var last = track[key].history[0];
+    // trackNum 또는 날짜가 변경된 경우 이력 추가
+    if(!last || last.trackNum !== (r.trackNum||'') || last.deliveredDate !== (r.deliveredDate||'')) {
+      track[key].history.unshift({
+        date:          dateStr,
+        trackNum:      r.trackNum || '',
+        trackRaw:      r.note || r.trackNum || '',
+        chuldo:        r.chuldo || '',
+        promise:       r.deliveredDate || '',
+        deliveredDate: r.deliveredDate || ''
+      });
+    }
+    track[key].desc = r.desc || track[key].desc;
+  });
+  saveTrack(track);
+}
+
+
+// ══════════════════════════════════════════════
+//  업무 To-Do List
+// ══════════════════════════════════════════════
+var K_TODO = 'jst_todo';
+var todoEditId = null;
+
+function ldTodo(){ try{ return JSON.parse(localStorage.getItem(K_TODO)||'[]'); }catch{ return []; } }
+function svTodo(d){ localStorage.setItem(K_TODO, JSON.stringify(d)); }
+
+function openTodoModal(id){
+  todoEditId = id || null;
+  document.getElementById('todo-modal-title').textContent = id ? '수정' : '추가';
+  if(id){
+    var item = ldTodo().find(function(t){ return t.id===id; });
+    if(item){
+      document.getElementById('todo-title').value = item.title||'';
+      document.getElementById('todo-due').value = item.due||'';
+      document.getElementById('todo-priority').value = item.priority||'mid';
+      document.getElementById('todo-status').value = item.status||'todo';
+      document.getElementById('todo-memo').value = item.memo||'';
+    }
+  } else {
+    document.getElementById('todo-title').value = '';
+    document.getElementById('todo-due').value = '';
+    document.getElementById('todo-priority').value = 'mid';
+    document.getElementById('todo-status').value = 'todo';
+    document.getElementById('todo-memo').value = '';
+  }
+  document.getElementById('m-todo').classList.add('on');
+}
+
+function saveTodo(){
+  var title = document.getElementById('todo-title').value.trim();
+  if(!title){ alert('업무 내용을 입력하세요'); return; }
+  var todos = ldTodo();
+  var now = new Date().toLocaleString('ko-KR');
+  if(todoEditId){
+    var idx = todos.findIndex(function(t){ return t.id===todoEditId; });
+    if(idx>=0){
+      todos[idx].title    = title;
+      todos[idx].due      = document.getElementById('todo-due').value;
+      todos[idx].priority = document.getElementById('todo-priority').value;
+      todos[idx].status   = document.getElementById('todo-status').value;
+      todos[idx].memo     = document.getElementById('todo-memo').value.trim();
+      todos[idx].updatedAt = now;
+    }
+  } else {
+    todos.unshift({
+      id: 'td_'+Date.now(),
+      title:    title,
+      due:      document.getElementById('todo-due').value,
+      priority: document.getElementById('todo-priority').value,
+      status:   'todo',
+      memo:     document.getElementById('todo-memo').value.trim(),
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+  svTodo(todos);
+  closeM('m-todo');
+  renderTodo();
+}
+
+function deleteTodo(id){
+  if(!confirm('이 업무를 삭제하시겠습니까?')) return;
+  svTodo(ldTodo().filter(function(t){ return t.id!==id; }));
+  renderTodo();
+}
+
+function toggleTodoStatus(id){
+  var todos = ldTodo();
+  var item = todos.find(function(t){ return t.id===id; });
+  if(!item) return;
+  var cycle = {todo:'wip', wip:'done', done:'todo'};
+  item.status = cycle[item.status]||'todo';
+  item.updatedAt = new Date().toLocaleString('ko-KR');
+  svTodo(todos);
+  renderTodo();
+}
+
+function renderTodo(){
+  var todos = ldTodo();
+  var filter = (document.getElementById('todo-filter')||{value:'all'}).value;
+  var filtered = filter==='all' ? todos
+    : todos.filter(function(t){ return filter==='done' ? t.status==='done' : t.status!=='done'; });
+
+  var el = function(id){ return document.getElementById(id); };
+  if(el('ts-total')) el('ts-total').textContent = todos.length;
+  if(el('ts-done'))  el('ts-done').textContent  = todos.filter(function(t){return t.status==='done';}).length;
+  if(el('ts-wip'))   el('ts-wip').textContent   = todos.filter(function(t){return t.status==='wip';}).length;
+  if(el('ts-todo'))  el('ts-todo').textContent  = todos.filter(function(t){return t.status==='todo';}).length;
+  var di = el('todo-date-info');
+  if(di) di.textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+
+  var prioVal={high:0,mid:1,low:2}, statusOrd={todo:0,wip:1,done:2};
+  filtered.sort(function(a,b){
+    if(statusOrd[a.status]!==statusOrd[b.status]) return statusOrd[a.status]-statusOrd[b.status];
+    if(prioVal[a.priority]!==prioVal[b.priority]) return prioVal[a.priority]-prioVal[b.priority];
+    if(a.due&&b.due) return a.due.localeCompare(b.due);
+    if(a.due) return -1; if(b.due) return 1;
+    return 0;
+  });
+
+  var listEl = el('todo-list');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  if(!filtered.length){
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">'+(filter==='done'?'완료된 업무 없음':'할 일 없음 \uD83C\uDF89')+'</div>';
+    return;
+  }
+
+  var today = new Date().toISOString().split('T')[0];
+  var PRI_C={high:'var(--red)',mid:'var(--amber)',low:'var(--grn,#34d399)'};
+  var PRI_L={high:'\uD83D\uDD34',mid:'\uD83D\uDFE1',low:'\uD83D\uDFE2'};
+  var ST_L={todo:'\uD83D\uDCCC',wip:'\uD83D\uDD04',done:'\u2705'};
+  var ST_F={todo:'\uD83D\uDCCC \uBBF8\uC644\uB8CC',wip:'\uD83D\uDD04 \uC9C4\uD589\uC911',done:'\u2705 \uC644\uB8CC'};
+  var ST_C={todo:'var(--red)',wip:'var(--amber)',done:'var(--grn,#34d399)'};
+
+  filtered.forEach(function(t){
+    var isDone=t.status==='done';
+    var isOD=t.due&&t.due<today&&!isDone;
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--bg2);border:1px solid '+(isOD?'var(--red)':'var(--border)')+';border-left:3px solid '+PRI_C[t.priority||'mid']+';border-radius:9px;padding:14px 16px;opacity:'+(isDone?'0.65':'1');
+
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:flex-start;gap:12px';
+
+    var togBtn=document.createElement('button');
+    togBtn.title='\uC0C1\uD0DC \uBCC0\uACBD';
+    togBtn.style.cssText='flex-shrink:0;background:none;border:none;cursor:pointer;font-size:20px;padding:0;margin-top:1px';
+    togBtn.textContent=ST_L[t.status||'todo'];
+    togBtn.addEventListener('click',function(){toggleTodoStatus(t.id);});
+
+    var info=document.createElement('div');
+    info.style.cssText='flex:1;min-width:0';
+    info.innerHTML='<div style="font-size:13px;font-weight:600;color:var(--text);text-decoration:'+(isDone?'line-through':'none')+';margin-bottom:5px">'+t.title+'</div>'
+      +(t.memo?'<div style="font-size:11px;color:var(--text3);margin-bottom:5px">'+t.memo+'</div>':'')
+      +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
+      +'<span style="font-size:10px;color:'+ST_C[t.status||'todo']+'">'+ST_F[t.status||'todo']+'</span>'
+      +(t.due?'<span style="font-size:10px;color:'+(isOD?'var(--red)':'var(--text3)')+'">'+( isOD?'\u26A0\uFE0F ':'📅 ')+t.due+(isOD?' \uAE30\uD55C\uCD08\uACFC':'')+'</span>':'')
+      +'<span style="font-size:10px;color:var(--text3)">'+PRI_L[t.priority||'mid']+' '+(t.priority==='high'?'\uB192\uC74C':t.priority==='low'?'\uB099\uC74C':'\uBCF4\uD1B5')+'</span>'
+      +'</div>';
+
+    var btns=document.createElement('div');
+    btns.style.cssText='display:flex;gap:4px;flex-shrink:0';
+    var editBtn=document.createElement('button');
+    editBtn.style.cssText='padding:4px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text2);cursor:pointer';
+    editBtn.textContent='\uD3B8\uC9D1';
+    editBtn.addEventListener('click',function(){openTodoModal(t.id);});
+    var delBtn=document.createElement('button');
+    delBtn.style.cssText='padding:4px 9px;background:var(--red-bg);border:1px solid var(--red);border-radius:5px;font-size:11px;color:var(--red);cursor:pointer';
+    delBtn.textContent='\uC0AD\uC81C';
+    delBtn.addEventListener('click',function(){deleteTodo(t.id);});
+    btns.appendChild(editBtn);
+    btns.appendChild(delBtn);
+
+    row.appendChild(togBtn);
+    row.appendChild(info);
+    row.appendChild(btns);
+    card.appendChild(row);
+    listEl.appendChild(card);
+  });
+}
+
+
+// ══ 탭 접근/수정 권한 정의 ══
+var TAB_DEFS = [
+  // [key, 레이블, 섹션, 기본접근, 수정가능여부]
+  {key:'todo',    label:'📋 업무',          sect:'top',      default:true,  canEdit:true},
+  {key:'purchase',label:'📦 구매관리',      sect:'top',      default:true,  canEdit:false},
+  {key:'po',      label:'📋 PO 관리',       sect:'top',      default:true,  canEdit:false},
+  {key:'srch',    label:'🔍 자재조회',       sect:'top',      default:true,  canEdit:false},
+  // 구매관리 서브탭
+  {key:'db',      label:'품목 DB',          sect:'purchase', default:true,  canEdit:true},
+  {key:'recv',    label:'매입 이력',         sect:'purchase', default:true,  canEdit:true},
+  {key:'out',     label:'자재 불출',         sect:'purchase', default:true,  canEdit:true},
+  {key:'lt',      label:'LT 미입력',        sect:'purchase', default:true,  canEdit:false},
+  {key:'bom',     label:'BOM 관리',         sect:'purchase', default:true,  canEdit:true},
+  {key:'rdash',   label:'매입 대시보드',     sect:'purchase', default:true,  canEdit:false},
+  {key:'chk',     label:'재고점검',          sect:'purchase', default:true,  canEdit:true},
+  // PO 서브탭
+  {key:'po-dash', label:'PO 대시보드',      sect:'po',       default:true,  canEdit:false},
+  {key:'po-po',   label:'PO 현황',          sect:'po',       default:true,  canEdit:true},
+  {key:'po-deliv',label:'납품 완료',         sect:'po',       default:true,  canEdit:true},
+  {key:'po-sales',label:'매출 대시보드',     sect:'po',       default:true,  canEdit:false},
+  {key:'po-track',label:'CCN B 트레킹',     sect:'po',       default:false, canEdit:false},
+];
+
+var SECT_LABELS = {top:'상위 탭', purchase:'구매관리 탭', po:'PO 관리 탭'};
+
+function updateTabPermUI(){
+  var role = (document.getElementById('nu-role')||{value:'user'}).value;
+  var isAdmin = role === 'admin';
+  var isViewer = role === 'viewer';
+  var container = document.getElementById('nu-tab-perms');
+  if(!container) return;
+
+  // 섹션별 그룹
+  var sects = ['top','purchase','po'];
+  var html = '';
+  sects.forEach(function(sect){
+    var tabs = TAB_DEFS.filter(function(t){ return t.sect===sect; });
+    html += '<div style="grid-column:1/-1;font-size:10px;font-weight:700;color:var(--text3);margin-top:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">'
+          + SECT_LABELS[sect] + '</div>';
+    tabs.forEach(function(t){
+      var defAccess = isAdmin ? true : isViewer ? (t.key==='srch'||t.key==='todo') : t.default;
+      var defEdit   = isAdmin ? true : isViewer ? false : (t.canEdit ? t.default : false);
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg3);border-radius:6px;gap:8px">'
+            + '<span style="font-size:12px;color:var(--text2)">' + t.label + '</span>'
+            + '<div style="display:flex;gap:12px;align-items:center">'
+            + '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);cursor:pointer">'
+            + '<input type="checkbox" id="nu-acc-'+t.key+'" '+(defAccess?'checked':'')+(isAdmin?' disabled':'')
+            + ' style="accent-color:var(--teal);width:13px;height:13px"> 접근'
+            + '</label>';
+      if(t.canEdit){
+        html += '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);cursor:pointer">'
+              + '<input type="checkbox" id="nu-edit-'+t.key+'" '+(defEdit?'checked':'')+(isAdmin?' disabled':'')
+              + ' style="accent-color:var(--amber);width:13px;height:13px"> 수정'
+              + '</label>';
+      } else {
+        html += '<span style="font-size:10px;color:var(--text3);width:52px"></span>';
+      }
+      html += '</div></div>';
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+function getTabPerms(){
+  var perms = {access:[], edit:[]};
+  TAB_DEFS.forEach(function(t){
+    var accEl  = document.getElementById('nu-acc-'+t.key);
+    var editEl = document.getElementById('nu-edit-'+t.key);
+    if(accEl  && accEl.checked)  perms.access.push(t.key);
+    if(editEl && editEl.checked) perms.edit.push(t.key);
+  });
+  return perms;
+}
+
+// 권한에 따라 탭 적용
+function applyTabPerms(perms, role){
+  if(!perms || role==='admin') return; // admin은 모두 허용
+  var access = perms.access || [];
+  var edit   = perms.edit   || [];
+
+  // 상위탭
+  ['todo','purchase','po','srch'].forEach(function(key){
+    var btn = document.getElementById('appbtn-'+key);
+    if(btn) btn.style.display = access.includes(key) ? '' : 'none';
+  });
+
+  // 구매관리 서브탭
+  document.querySelectorAll('#pt-inner-tabs .pt-itab').forEach(function(el){
+    var tab = el.dataset.tab;
+    if(tab && !access.includes(tab)) el.style.display = 'none';
+  });
+
+  // PO 서브탭
+  document.querySelectorAll('#po-inner-tabs .po-itab').forEach(function(el){
+    var tab = el.dataset.tab;
+    var key = 'po-'+tab;
+    if(tab && !access.includes(key) && !access.includes(tab)) el.style.display = 'none';
+  });
+
+  // 수정 권한 없는 탭 - 버튼들 숨김
+  TAB_DEFS.filter(function(t){ return t.canEdit && !edit.includes(t.key); }).forEach(function(t){
+    // 수정버튼 숨김 (각 탭의 추가/편집/삭제 버튼)
+    var editBtns = document.querySelectorAll('[data-edit-tab="'+t.key+'"]');
+    editBtns.forEach(function(b){ b.style.display='none'; });
+  });
 }
 
 
@@ -8663,6 +9060,8 @@ function initAfterLogin() {
     <div class="pt-itab" data-tab="bom" onclick="srchTab('bom')" style="padding:10px 20px">🌿 BOM 조회</div>
   </div>
 
+
+
   <!-- ① 품번 조회 -->
   <div id="srch-pg-item" style="display:block;padding:16px 20px">
     <div class="srch-hero">
@@ -8720,6 +9119,41 @@ function initAfterLogin() {
     <div id="bom-results"></div>
   </div>
 
+</div>
+
+<div class="sect-wrap" id="sect-todo">
+<div class="pg" style="display:block;padding:20px" id="pg-todo">
+  <div style="max-width:700px;margin:0 auto;padding:8px 0">
+
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--teal)">📋 업무 To-Do List</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="todo-date-info"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select id="todo-filter" onchange="renderTodo()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 10px;font-size:12px;font-family:var(--font)">
+          <option value="all">전체</option>
+          <option value="todo">미완료</option>
+          <option value="done">완료</option>
+        </select>
+        <button onclick="openTodoModal()" style="padding:6px 14px;background:var(--teal);color:#051515;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ 업무 추가</button>
+      </div>
+    </div>
+
+    <!-- 진행 요약 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="todo-summary">
+      <div class="sc" style="border-color:var(--teal)"><div class="sl">전체</div><div class="sv" id="ts-total" style="color:var(--teal);font-size:20px">0</div></div>
+      <div class="sc" style="border-color:var(--amber)"><div class="sl">진행중</div><div class="sv" id="ts-wip" style="color:var(--amber);font-size:20px">0</div></div>
+      <div class="sc" style="border-color:var(--red)"><div class="sl">미완료</div><div class="sv" id="ts-todo" style="color:var(--red);font-size:20px">0</div></div>
+      <div class="sc" style="border-color:var(--grn,#34d399)"><div class="sl">완료</div><div class="sv" id="ts-done" style="color:var(--grn,#34d399);font-size:20px">0</div></div>
+    </div>
+
+    <!-- 업무 목록 -->
+    <div id="todo-list" style="display:flex;flex-direction:column;gap:8px"></div>
+
+  </div>
+</div>
 </div>
 
 
