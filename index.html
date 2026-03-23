@@ -802,13 +802,10 @@ div.app-bar { display: flex !important; flex-direction: row !important; }
 
   /* ── 앱바 & 서브탭: sticky로 자연스럽게 흐름 ── */
   .app-bar {
-    position: sticky !important;
-    top: 0 !important; /* header 아래 자연스럽게 */
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
     padding: 0 8px !important;
-    z-index: 150 !important;
   }
   .app-bar::-webkit-scrollbar { display: none !important; }
   .app-btn {
@@ -1051,13 +1048,13 @@ div#po-inner-tabs .po-itab.active {
     <div id="last-updated" style="font-size:11px;color:var(--text3);font-family:var(--mono)">PO 없음</div>
     <label style="display:flex;align-items:center;gap:6px;padding:5px 11px;background:var(--abg);color:var(--amb);border:1px solid var(--amb);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
       📊 납품이력 업로드
-      <input type="file" style="display:none" id="sales-file-input" accept=".xlsx,.xls,.csv" onchange="handleSalesUpload(this)">
+      <input type="file" style="display:none" id="sales-file-input" data-role-hide="true" accept=".xlsx,.xls,.csv" onchange="handleSalesUpload(this)">
     </label>
     <label style="display:flex;align-items:center;gap:6px;padding:5px 11px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
       ↑ PO 업로드
-      <input type="file" style="display:none" id="file-input" accept=".xlsx,.xls" onchange="handleUpload(this)">
+      <input type="file" style="display:none" id="file-input" data-role-hide="true" accept=".xlsx,.xls" onchange="handleUpload(this)">
     </label>
-    <button onclick="resetAllData()" style="padding:4px 10px;background:var(--rbg);color:var(--red);border:1px solid var(--red);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑 전체초기화</button>
+    <button onclick="resetAllData()" data-role-hide="true" style="padding:4px 10px;background:var(--rbg);color:var(--red);border:1px solid var(--red);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑 전체초기화</button>
     <div class="user-badge" id="user-badge" onclick="toggleUserMenu()" style="display:none">
       <span class="sync-dot" id="sync-dot"></span>
       <span id="user-name-display">—</span>
@@ -2841,51 +2838,54 @@ function doLogout() {
 function showApp() {
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-wrap').style.display = 'block';
-  // 사용자 배지 표시
+
+  // 사용자 배지
   var badge = document.getElementById('user-badge');
   var nameEl = document.getElementById('user-name-display');
-  if(badge){ badge.style.display = 'flex'; }
-  if(nameEl){ nameEl.textContent = CURRENT_USER.name || CURRENT_USER.id; }
-  // 사용자 메뉴 정보
+  if(badge) badge.style.display = 'flex';
+  if(nameEl) nameEl.textContent = CURRENT_USER.name || CURRENT_USER.id;
   var mName = document.getElementById('user-menu-name');
   var mRole = document.getElementById('user-menu-role');
   var mComp = document.getElementById('user-menu-company');
   var mAdmin = document.getElementById('user-menu-admin');
+  var role = (CURRENT_USER ? CURRENT_USER.role : '') || 'user';
   if(mName) mName.textContent = CURRENT_USER.name;
-  if(mRole) mRole.textContent = CURRENT_USER.role === 'admin' ? '🔑 관리자' : '👤 일반 사용자';
+  if(mRole) mRole.textContent = role==='admin' ? '🔑 관리자' : role==='viewer'||role==='guest' ? '👁 조회 전용' : '👤 일반 사용자';
   if(mComp) mComp.textContent = CURRENT_COMPANY;
-  if(mAdmin) mAdmin.style.display = CURRENT_USER.role === 'admin' ? '' : 'none';
+  if(mAdmin) mAdmin.style.display = role==='admin' ? '' : 'none';
+
   // 앱 초기화
   initAfterLogin();
-  // 탭 권한 적용
-  if(CURRENT_USER && CURRENT_USER.role !== 'admin'){
-    var up = CURRENT_USER.perms;
-    if(up && (up.access||up.edit)) applyTabPerms(up, CURRENT_USER.role);
-  }
-  // viewer 권한이면 자재조회 탭만 표시
-  var role = CURRENT_USER ? CURRENT_USER.role : '';
-  if(role === 'viewer' || role === 'guest'){
-    // 구매관리 하위탭 숨김 (srch만 남김)
-    document.querySelectorAll('#pt-inner-tabs .pt-itab').forEach(function(el){
-      if(el.dataset.tab !== 'srch') el.style.display = 'none';
-    });
-    // 앱 버튼 숨김 (구매관리만 표시, 나머지 숨김)
+
+  // ── 권한별 UI 제한 ──
+  if(role === 'viewer' || role === 'guest') {
+    // viewer: 자재조회 탭만
     var appBar = document.querySelector('.app-bar');
-    if(appBar){
+    if(appBar) {
       appBar.querySelectorAll('.app-btn, .app-divider').forEach(function(el){
-        var isMain = el.id === 'appbtn-purchase';
-        if(!isMain) el.style.display = 'none';
+        var show = el.id === 'appbtn-srch';
+        if(!show) el.style.display = 'none';
       });
     }
-    // 헤더 버튼들 숨김 (업로드, PO 업로드, 초기화)
-    ['header-recv-upload','header-po-upload','header-reset'].forEach(function(id){
-      var el = document.getElementById(id); if(el) el.style.display = 'none';
-    });
-    // 자재조회 탭으로 이동
+    // 헤더 업로드/초기화 버튼 숨김
+    document.querySelectorAll('[data-role-hide]').forEach(function(el){ el.style.display='none'; });
+    // 자재조회로 시작
+    switchApp('srch');
+
+  } else if(role === 'user') {
+    // 일반 사용자: perms 있으면 적용, 없으면 전체 허용 (업무 탭으로 시작)
+    var up = CURRENT_USER.perms;
+    if(up && (up.access && up.access.length > 0)) {
+      applyTabPerms(up, role);
+    }
     switchApp('purchase');
-    ptTab('srch');
+
+  } else {
+    // admin: 모든 탭 표시, 구매관리로 시작
+    switchApp('purchase');
   }
 }
+
 
 function toggleUserMenu() {
   var m = document.getElementById('user-menu');
@@ -9178,7 +9178,3 @@ function initAfterLogin() {
   </div>
 </div>
 </div>
-
-
-
-
