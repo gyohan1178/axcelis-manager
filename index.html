@@ -4815,7 +4815,7 @@ function reloadRecvFromServer() {
         RECV = res.data['recv_items'];
         var _2y=(new Date().getFullYear()-2)+'-01-01';
         try { localStorage.setItem(K.RECV, JSON.stringify(RECV.filter(function(r){return (r.order_date||'')>=_2y;}))); } catch(e){}
-        renderRecv(); renderAgg(); renderRecvDash();
+        renderRecv(); renderAggIfOpen(); renderRecvDash();
         changed = true;
       }
       if(res.data['out_items'] && res.data['out_items'].length) {
