@@ -3038,7 +3038,7 @@ div#po-inner-tabs .po-itab.active {
 // ══════════════════════════════════════════════════════════
 //  API 설정
 // ══════════════════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbwKA1u86fSiMq0xoy46a5ugRPU5SOldYp4cpl0JpyJwNRixMbbU4qjIZm_tTamd4JSFxA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzwlkW_m9f0dtmkMBN7KKy9YOsrFeSYM6iokicA4YWcOokN0hUFl8K-L1-PZbLD_DL-wQ/exec';
 
 // 현재 로그인 사용자 (메모리)
 var CURRENT_USER = null;
@@ -3302,21 +3302,25 @@ function loadAllFromServer() {
 
   setSyncStatus('syncing', '서버 연결 중...');
 
-  // ── DB 즉시 단독 로드 (가장 먼저, 독립 요청) ──
-  apiGet({ action:'getSheet', sheet:'db_items' })
-    .then(function(r) {
-      if(r && r.ok && r.data && r.data.length) {
-        DB = gSheetToDB(r.data);
-        try { localStorage.setItem('jst_db2', JSON.stringify(DB)); } catch(e){}
-        renderDB(); updateStat();
-        setSyncStatus('ok', 'DB ' + DB.length + '건 로드됨');
-        var hint = document.getElementById('sq-hint');
-        if(hint) hint.textContent = 'DB ' + DB.length + '건 · 검색하세요';
-        var sq = document.getElementById('sq');
-        if(sq && sq.value.trim().length >= 2) doSrch();
-      }
-    })
-    .catch(function(e){ console.warn('DB 로드 실패:', e.message); });
+  // ── DB 페이지네이션 로드 (1000행씩, 첫 배치 즉시 표시) ──
+  (function _loadDBPage(offset){
+    apiGet({ action:'getSheet', sheet:'db_items', limit:1000, offset:offset })
+      .then(function(r){
+        if(!r || !r.ok) return;
+        var rows = r.data || [];
+        if(rows.length){
+          DB = DB.concat(gSheetToDB(rows));
+          try { localStorage.setItem('jst_db2', JSON.stringify(DB)); } catch(e){}
+          renderDB(); updateStat();
+          var hint = document.getElementById('sq-hint');
+          if(hint) hint.textContent = 'DB ' + DB.length + '건' + (r.hasMore ? ' 로드 중...' : ' · 검색하세요');
+          if(!offset && document.getElementById('sq') && document.getElementById('sq').value.trim().length >= 2) doSrch();
+        }
+        if(r.hasMore) setTimeout(function(){ _loadDBPage(offset + 1000); }, 200);
+        else setSyncStatus('ok', 'DB ' + DB.length + '건 로드 완료');
+      })
+      .catch(function(e){ console.warn('DB 로드 실패:', e.message); });
+  })(0);
 
   // ── BOM 단독 로드 ──
   apiGet({ action:'getSheet', sheet:'bom_data' })
@@ -4066,17 +4070,18 @@ function updateStat(){
   const alt=DB.filter(r=>r.ia);
   const saved=DB.filter(r=>r.k5>0&&r.k6>0&&r.k6<r.k5);
   const hasSafe=DB.filter(r=>r.sf>0);
-  document.getElementById('d0').textContent=DB.length.toLocaleString();
-  document.getElementById('d1').textContent=noLT.length.toLocaleString();
-  document.getElementById('d2').textContent=alt.length.toLocaleString();
-  document.getElementById('d3').textContent=saved.length.toLocaleString();
-  document.getElementById('d4').textContent=hasSafe.length.toLocaleString();
-  document.getElementById('b-db').textContent=DB.length;
-  document.getElementById('b-recv').textContent=RECV.length;
-  document.getElementById('b-out').textContent=OUT.length;
-  document.getElementById('b-lt').textContent=noLT.length;
-  if(document.getElementById('b-bom'))document.getElementById('b-bom').textContent=Object.keys(BOM).length;
-  document.getElementById('hstat').textContent=`DB ${DB.length}건 · 매입 ${RECV.length}건 · 불출 ${OUT.length}건 · BOM ${Object.keys(BOM).length}건`;
+  const _set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  _set('d0',DB.length.toLocaleString());
+  _set('d1',noLT.length.toLocaleString());
+  _set('d2',alt.length.toLocaleString());
+  _set('d3',saved.length.toLocaleString());
+  _set('d4',hasSafe.length.toLocaleString());
+  _set('b-db',DB.length);
+  _set('b-recv',RECV.length);
+  _set('b-out',OUT.length);
+  _set('b-lt',noLT.length);
+  _set('b-bom',Object.keys(BOM).length);
+  _set('hstat',`DB ${DB.length}건 · 매입 ${RECV.length}건 · BOM ${Object.keys(BOM).length}건`);
 }
 
 // ══ 품목 DB ══
@@ -4122,36 +4127,33 @@ function filtDB(){
 
 function reloadDBFromServer(){
   if(!CURRENT_TOKEN){ alert('로그인 필요'); return; }
+  DB = [];
+  var PAGE = 1000; // 한 번에 1000행씩
+  var offset = 0;
   setSyncStatus('syncing', 'DB 로드 중...');
-  apiGet({ action:'getSheets', sheets:'db_items,bom_data' })
-    .then(function(res){
-      if(!res || !res.ok || !res.data){ setSyncStatus('error','DB 로드 실패'); return; }
-      if(res.data['db_items'] && res.data['db_items'].length){
-        DB = gSheetToDB(res.data['db_items']);
-        try{ localStorage.setItem('jst_db2', JSON.stringify(DB)); }catch(e){}
-        renderDB(); updateStat();
-        setSyncStatus('ok', 'DB '+DB.length+'건 로드됨');
-      }
-      if(res.data['bom_data'] && res.data['bom_data'].length){
-        var bomObj = rowsToBom(res.data['bom_data']);
-        try{ localStorage.setItem('jst_bom2', JSON.stringify(bomObj)); }catch(e){}
-        BOM = bomObj;
-      }
-    })
-    .catch(function(e){
-      // 폴백: getSheet 개별 호출
-      apiGet({ action:'getSheet', sheet:'db_items' })
-        .then(function(r){
-          if(r && r.ok && r.data && r.data.length){
-            DB = gSheetToDB(r.data);
-            try{ localStorage.setItem('jst_db2', JSON.stringify(DB)); }catch(e2){}
-            renderDB(); updateStat();
-            setSyncStatus('ok', 'DB '+DB.length+'건 로드됨');
-          } else {
-            setSyncStatus('error', 'DB 로드 실패');
-          }
-        }).catch(function(){ setSyncStatus('error', 'DB 로드 실패'); });
-    });
+
+  function _loadPage(){
+    apiGet({ action:'getSheet', sheet:'db_items', limit:PAGE, offset:offset })
+      .then(function(res){
+        if(!res || !res.ok){ setSyncStatus('error','DB 로드 실패'); return; }
+        var rows = res.data || [];
+        if(rows.length){
+          DB = DB.concat(gSheetToDB(rows));
+          renderDB(); updateStat();
+          setSyncStatus('syncing', 'DB ' + DB.length + '건 로드 중...');
+        }
+        if(res.hasMore){
+          offset += PAGE;
+          setTimeout(_loadPage, 100);
+        } else {
+          try{ localStorage.setItem('jst_db2', JSON.stringify(DB)); }catch(e){}
+          setSyncStatus('ok', 'DB ' + DB.length + '건 로드 완료');
+          renderDB(); updateStat();
+        }
+      })
+      .catch(function(e){ setSyncStatus('error', e.message); });
+  }
+  _loadPage();
 }
 
 function resetDB(){
