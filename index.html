@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리 v26.13</title>
+<title>AXCELIS 통합 관리 v26.14</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -39,6 +39,141 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16p
 .app-btn:hover{color:var(--text);background:var(--bg3)}
 .app-btn.on.purchase{color:var(--tel);border-bottom-color:var(--tel)}
 .app-btn.on.po{color:var(--amb);border-bottom-color:var(--amb)}
+.app-btn.on.quote{color:var(--amb);border-bottom-color:var(--amb)}
+/* ── 견적 섹션 ── */
+#sect-quote .q-page{max-width:1500px;margin:0 auto;padding:18px 20px 60px}
+#sect-quote .q-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:15px 18px;margin-bottom:14px}
+#sect-quote .q-ct{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+#sect-quote .q-ctl{display:flex;align-items:center;gap:8px}
+#sect-quote .q-ctb{width:3px;height:13px;border-radius:2px;background:var(--amb);flex-shrink:0}
+#sect-quote .q-stabs{display:flex;gap:2px;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:50px;z-index:90}
+#sect-quote .q-stab{padding:10px 16px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
+#sect-quote .q-stab:hover{color:var(--text)}
+#sect-quote .q-stab.on{color:var(--amb);border-bottom-color:var(--amb)}
+#sect-quote .q-tp{display:none}
+#sect-quote .q-tp.on{display:block}
+/* grids */
+#sect-quote .q-ga{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:11px}
+#sect-quote .q-g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#sect-quote .q-g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+/* forms */
+#sect-quote .qfg label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+#sect-quote .qfg input,#sect-quote .qfg select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:var(--font);transition:border-color .15s}
+#sect-quote .qfg input:focus,#sect-quote .qfg select:focus{outline:none;border-color:var(--amb)}
+/* buttons */
+#sect-quote .qbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:var(--font);white-space:nowrap}
+#sect-quote .qbp{background:var(--amb);color:#1a0800}
+#sect-quote .qbp:hover{background:#e0a030}
+#sect-quote .qbs{background:var(--bg3);border:1px solid var(--border2);color:var(--text)}
+#sect-quote .qbs:hover{border-color:var(--amb);color:var(--amb)}
+#sect-quote .qbg{background:rgba(52,211,153,.12);border:1px solid var(--green);color:var(--green)}
+#sect-quote .qbsm{padding:4px 10px;font-size:11px}
+#sect-quote .qbrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+/* tables */
+#sect-quote .q-tw{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+#sect-quote table{width:100%;border-collapse:collapse;font-size:12px}
+#sect-quote thead tr{background:var(--bg3);border-bottom:1px solid var(--border2)}
+#sect-quote th{padding:7px 10px;text-align:left;font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;background:var(--bg3)}
+#sect-quote th.r,#sect-quote td.r{text-align:right}
+#sect-quote th.c,#sect-quote td.c{text-align:center}
+#sect-quote td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+#sect-quote tbody tr:hover{background:rgba(255,255,255,.02)}
+#sect-quote tbody tr:last-child td{border-bottom:none}
+#sect-quote tr.q-ru{background:rgba(255,85,85,.08)}
+#sect-quote tr.q-rn{background:rgba(79,124,255,.07)}
+/* stat cards */
+#sect-quote .q-sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+#sect-quote .q-sc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+#sect-quote .q-scl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+#sect-quote .q-scv{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--text);line-height:1}
+#sect-quote .q-scs{font-size:10.5px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+/* ASSY sections */
+#sect-quote .q-assy{margin-bottom:12px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+#sect-quote .q-ahdr{background:var(--bg3);border-bottom:1px solid var(--border2);padding:9px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#sect-quote .q-apn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amb)}
+#sect-quote .q-adesc{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sect-quote .q-arev{font-family:var(--mono);font-size:10px;color:var(--text2);background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:1px 7px}
+#sect-quote .q-abd{font-size:10px;font-weight:700;border-radius:4px;padding:1px 7px;font-family:var(--mono)}
+#sect-quote .q-abd-a{background:rgba(255,181,71,.18);color:var(--amb);border:1px solid rgba(255,181,71,.3)}
+#sect-quote .q-abd-n{background:var(--bg2);color:var(--text2);border:1px solid var(--border2)}
+#sect-quote .q-aqty-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
+#sect-quote .q-aqty-in{background:var(--bg2);border:1px solid var(--amb);border-radius:5px;padding:3px 8px;color:var(--amb);font-family:var(--mono);font-size:13px;font-weight:700;width:65px;text-align:center}
+#sect-quote .q-aqty-in:focus{outline:none;border-color:var(--amb)}
+#sect-quote .q-labor-in{background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:3px 8px;color:var(--amb);font-family:var(--mono);font-size:12px;font-weight:600;width:105px;text-align:right}
+#sect-quote .q-labor-in:focus{outline:none;border-color:var(--amb)}
+#sect-quote .q-aftr{background:var(--bg3);border-top:1px solid var(--border2);padding:7px 14px;display:flex;align-items:center;gap:18px;justify-content:flex-end;flex-wrap:wrap}
+#sect-quote .q-astat{font-size:11.5px;display:flex;align-items:center;gap:5px}
+#sect-quote .q-astl{color:var(--text2)}
+#sect-quote .q-astv{font-family:var(--mono);font-weight:600}
+/* pn, badge, price cells */
+#sect-quote .q-pn{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)}
+#sect-quote .q-dm{line-height:1.4}
+#sect-quote .q-ds{font-size:10.5px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+#sect-quote .qbdg{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--mono);line-height:1.4}
+#sect-quote .qbdg-g{background:var(--bg3);color:var(--text2)}
+#sect-quote .qbdg-r{background:rgba(255,85,85,.18);color:var(--red)}
+#sect-quote .qbdg-a{background:rgba(255,181,71,.18);color:var(--amb)}
+#sect-quote .qbdg-b{background:rgba(79,124,255,.15);color:var(--accent)}
+#sect-quote .q-pkrw{font-family:var(--mono);font-size:12px;color:var(--text2);text-align:right}
+#sect-quote .q-pusd{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--amb);text-align:right}
+#sect-quote .q-mval{font-family:var(--mono);font-size:11px;text-align:center}
+#sect-quote .q-epr{background:var(--bg4,var(--bg3));border:1px solid var(--border2);border-radius:4px;padding:3px 6px;color:var(--amb);font-family:var(--mono);font-size:12px;font-weight:600;width:84px;text-align:right}
+#sect-quote .q-epr:focus{outline:none;border-color:var(--amb)}
+/* bom input */
+#sect-quote .q-bpni{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;color:var(--text);font-family:var(--mono);font-size:11px;width:130px}
+#sect-quote .q-bni{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;color:var(--text);font-family:var(--mono);font-size:12px;width:55px;text-align:right}
+#sect-quote .q-bsi{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:4px 6px;color:var(--text2);font-size:12px;width:50px;text-align:center}
+#sect-quote .q-bpni:focus,#sect-quote .q-bni:focus,#sect-quote .q-bsi:focus{outline:none;border-color:var(--amb)}
+#sect-quote .q-rdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px}
+#sect-quote .q-rdel:hover{color:var(--red);background:rgba(255,85,85,.1)}
+#sect-quote .q-paste-ta{width:100%;min-height:72px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px;color:var(--text);font-family:var(--mono);font-size:12px;resize:vertical;line-height:1.8}
+#sect-quote .q-paste-ta:focus{outline:none;border-color:var(--amb)}
+#sect-quote .q-lvc{display:inline-block;width:22px;height:22px;border-radius:5px;text-align:center;line-height:22px;font-size:10px;font-weight:700;font-family:var(--mono)}
+#sect-quote .q-lv0{background:rgba(255,181,71,.2);color:var(--amb)}
+#sect-quote .q-lv1{background:rgba(79,124,255,.15);color:var(--accent)}
+/* margin tier table */
+#sect-quote .q-mtt{width:100%;border-collapse:collapse}
+#sect-quote .q-mtt td{padding:6px 10px;border-bottom:1px solid var(--border)}
+#sect-quote .q-mtt tr:last-child td{border-bottom:none}
+#sect-quote .q-mtt input[type=number]{width:65px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:4px 8px;color:var(--amb);font-family:var(--mono);font-size:12px;text-align:right}
+#sect-quote .q-mtt input:focus{outline:none;border-color:var(--amb)}
+/* history */
+#sect-quote .q-hstat{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--mono)}
+#sect-quote .q-hs-s{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+/* QUOTE DOC */
+#sect-quote .qdoc{font-family:var(--font);font-size:11px;line-height:1.5;color:#111;padding:26px 30px;background:#fff}
+#sect-quote .qdoc-title{font-size:22px;font-weight:900;letter-spacing:4px;text-align:center;margin-bottom:4px}
+#sect-quote .qdoc-no{text-align:center;font-size:12px;color:#555;margin-bottom:18px}
+#sect-quote .qdoc-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;border:1px solid #ddd;border-radius:4px;overflow:hidden}
+#sect-quote .qdoc-party{padding:11px 14px}
+#sect-quote .qdoc-party.issued{background:#f8f8f8;border-right:1px solid #ddd}
+#sect-quote .qdoc-party-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px}
+#sect-quote .qdoc-party-name{font-size:13px;font-weight:700;margin-bottom:3px}
+#sect-quote .qdoc-party-sub{font-size:10px;color:#555;line-height:1.7}
+#sect-quote .qdoc-meta{display:flex;gap:0;border:1px solid #ddd;border-radius:4px;margin-bottom:12px;overflow:hidden}
+#sect-quote .qdoc-meta-item{flex:1;padding:7px 11px;border-right:1px solid #ddd}
+#sect-quote .qdoc-meta-item:last-child{border-right:none}
+#sect-quote .qdoc-meta-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;margin-bottom:1px}
+#sect-quote .qdoc-meta-val{font-size:12px;font-weight:600}
+#sect-quote .qdoc-tbl{width:100%;border-collapse:collapse;margin-bottom:12px}
+#sect-quote .qdoc-tbl th{background:#1a1a1a;color:#fff;padding:6px 9px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+#sect-quote .qdoc-tbl th.r,#sect-quote .qdoc-tbl td.r{text-align:right}
+#sect-quote .qdoc-tbl th.c,#sect-quote .qdoc-tbl td.c{text-align:center}
+#sect-quote .qdoc-tbl td{padding:5px 9px;border-bottom:1px solid #eee;font-size:11px}
+#sect-quote .qdoc-tbl .qa-row td{background:#f5f0e0;font-weight:700;font-size:10.5px}
+#sect-quote .qdoc-tbl .qtot td{background:#1a1a1a;color:#fff;font-weight:700;padding:7px 9px}
+#sect-quote .qdoc-tbl .qsub td{background:#f5f5f5;font-size:10.5px}
+#sect-quote .qdoc-terms{border:1px solid #ddd;border-radius:4px;padding:9px 12px;font-size:10px;color:#555;line-height:1.7;margin-bottom:12px}
+#sect-quote .qdoc-sig{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+#sect-quote .qdoc-sig-box{border:1px solid #ddd;border-radius:4px;padding:11px 13px}
+#sect-quote .qdoc-sig-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;margin-bottom:18px}
+#sect-quote .qdoc-sig-line{border-top:1px solid #999;margin-top:14px;padding-top:4px;font-size:10px;color:#555}
+#sect-quote .qdoc-warn{background:#fff8e0;border:1px solid #f0a825;border-radius:4px;padding:7px 11px;font-size:10px;color:#7a5a00;margin-bottom:10px}
+/* toast */
+#q-toast{position:fixed;bottom:22px;right:22px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:11px 16px;font-size:12.5px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;display:none;max-width:300px}
+#q-toast.ok{border-color:var(--green);color:var(--green)}
+#q-toast.err{border-color:var(--red);color:var(--red)}
+#q-toast.info{border-color:var(--amb);color:var(--amb)}
 .app-divider{width:1px;height:28px;background:var(--border2);margin:0 4px}
 
 
@@ -1020,7 +1155,7 @@ div#po-inner-tabs .po-itab.active {
       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFUAAAArCAYAAAAJ3cTrAAAa3ElEQVR4nK2bebBlV3Xef2vvfc6545u7X6sHzRISCIlBCCGEsBnKmMkmhsSEcgjGCgkmDnEFO3GRcmKoMnYlccp2quLClKlU7KLicmIDxgmGMgQbMQgwZtIs1FIPr/u9fsMdzrT3XvnjnHvf6zZDivbuuv1en77n7rW/s8ZvrStc1nJABkRsUhJCJEmFulQSu6bBC5FSoAY8EJrbJIJpPyIC+gNuL4A6IJIQse1HaftfHgjGgbHN+9WAmOYNMTbXTKqEIFBjRHEotdbt2QRthRNAxGKMw6uF6BS8QE5zvotRuYwV6XU6mldj0VbIulLEQO0nwvyY8cDPFs0fFMiDSw0YASw+RiLt4dtdrIFAPLBXAJUWeZ1dktlZGggjFmnuA1KX4L1HUNBICIHmXEEQ3f+cA0su/2QO8Fg710MSB3UJietSe09zCn/5W126xIAkze8a2wNGhIih1dYDJ5T2/LaVWoEoBhWLiYHYAqm0zwqI2nyOba8Zmm0C+69LYb1sUKUFNc3ABzAGak+jlJj25fd30tn1Fgzq2Zt/gGXAuua0rZpKVFQDaLjocDOQZz9bh0BodxdpADxoV9BoO3H/3tlrdpSKfWWarcsyf8HQsX0NoRZfThshbIaPkX5nWafFVJSyEeDgCRUaUFuJf2BQI8TqotsV5r5TiYjug9DeMXvM82UAjEERFIOKmWt+IIJRRASI2BZ1+R5SX6ZPNVTBi6A4Az5C1AqDpSqmonMDuXQd9LGX6VxnD0tmOtRekAQEtJ7ODz8D96BUnSyhrDwaLRhHa+itU7ZKqAVAVfF4vAYQj9P9k3w3kX7A8zh6ZlHruCsYTzSAwmCAjnabz44Hd9FWYxX2n+dlaKoA1oJYMB0Qp2iA2Bq4BggTQWtmkAoRpfXF0oKnBkxH6Q6ht9C4lMRAmjafX1UwzWEygnIMsQbNBROhmjmQ/XWZmgplnMqw5/V1//AGfvwn7mFp5Qoyt8bP/fNf1vu/sNvAOVPK2e8A4i/+9w+yJOFZP/QKLdMBMVtAbYKEmrIoKPIKKUac+cInG3Ax8wAW5k4yAUmUtA/HruH4TbeyfOQEtUaqokQJxBhxSYZxCb4q2d08w4WTj8KTjyj5NpiJzNOzmViXcaTW4VuOXx30Q3/6Vnamf02WDkjsMpm7iirv8cv/7tf5y08FyjFiATEJdV3jkiawiYKIIbaCNb6rMTfnHN5/j6zBDrj1H7xNd5MVCtMliiGNJU49RGWhHvO1P/qvSL0nhplhRzzgkwzoKoev46YXv4KpHVJISkh6lFXFQj9jd3eHbrfH7mTKwuo6ofaU4x3W+ilxdI7q9EOMH/wc+bmTApCmKVVVXb6mKgGbwbT6NulwE2t2GU9OU/odrKzy7l95E3sXEn7un35An3gE0dAAKtLm7gqqDaAzEI0xWGu/N6AAxumYARdkkanpEwW6mpNohSFiqWiMsTF9YwyJ1CAGrwYOHeX4HfcQFo+xMxUKycBkVKYCFTRborAOuzBk6/wUu3aIbGnIqe1zHF08xqpVjpopJ+uRbm9vS1VVzT6XB2hj1UEhLwvqWFPWBbnfo4jnqMwTVPIAR64e8Tsf/Cfc/dJMxTZuylcOqz3AYIyZgwoQY8Ra+133PYAq3qTUpkewfdT2KVyHynWoXQ9vu6CCFYeSUUbDKAhFdLByXJ/x8tfRWb+ezSphJEOqbInKDcB2mBYeNcJ4ZxcRS3LoCKGMFNHRXz3CqFCCpDzy2ONsb2/LxVJd7hKhrMC4FaaThNHEINrBOqXy2wTZYHPnG/SWLvArv/ozvPYnDmnVhl7VVI0kc1CbaqUBtyzL7w+sNtpnjGlKUbGIcahtXmItKAQNTb1kOortQX9N5cTNTLJlNgvYHtdo2gWbgYLLUjoSWLCe46t9wu4GphzjJJIEj06n1KNdFnoZk9OnAEiShH6//3cBqiHrDBiNwHIMXxwHfyXqjxDDAB+Efr+HuDEbW39Df3mLd7zzR3nO7eiwZ+exa2bmdV3PTR8gy7Lvs3/E1gXWT8GXECrE50goIfqmvpdZ2uYUEpCu0ltlcNUzOTU1lCaBNCHJMvAVhJJF5+nVF7A7T6AbD3FNr2aYbzAoztOdnGFZRxztVHzpo38Iqcxlz/McEblMnyqRopiQZbC75/HSI0sSynoXLUaknZRTT20wHA4ZLnTIq7Pk3vOe993La374/RgQ1QZQEUG1SbLLsikYptPp9xdBY1sKtVSKBoSAqMEQIdaS4PGJI3rTOPK1IywfvYrz3iEBHKbJEGJFSkncu8DuI18hbjwK589BEFi7ipVnPIdDh9YZGhhtPQF7Z6CYzk0/xvh3ACqAjTzjtjXqUOCloNaaaHK8H5HZLuuHr2d3Z4Iai4Yp/QWhY6esraNbG6WoghxIQmZZwPr6um5sbHyf7MSgJiVK2ibu2rgAAkYM1kTQkgSo64kgHaXT4647n8vJUJKPp/SSDKuWKh/RsdAJOdtPfBO++QUoNoRYAxbGRi98+kkuLK1w3TVXcv7Rr8HkvECYW1SMkRgj5qIiBLCY9uWQmXe4tPA9WEhbuOdlz6e3kBE1kFcjrBOCJhRlwub5ijRdYZJHijpQ+MAon0La5OhN2ShYVXoWOqokwO23P4eVtVWdbT+rdeY0VHMMvASCackUNWhMkJhgojZabJpEOBUPWgnTCZ1un42tHboLy5i02/jhukIIaDWBs6egmoBGJHh6KbB3Xqh3YOskj37+E1JuPikZNZZIXZWUZUld14QQMFjm7ILFkGDJSNo/lsSm+wxEBnZoFQtJ3815kefd/Qw2d87iupa6LsnzgDOHqfIVgllhJ4+Yfo9JEHanAyblGpOqsVrUIar0QTsBffNr7tbf+8336qOPPcCF7S2h2YJus/38YQqAeIm2AlshKBIsSehiQxcbG2YOsQQHQWugBGMZFZHu4jp5bhiXgnddcI6iKptg2V9sdgwZznTJ89ByAV5wEbTGapw/bDMjcKUJnI552XipYTVEWB082bBLGQuolZAHQaCe+vnDOL+zQW+geJToUtRklKFHkVdEk5N1I6m1pAzpd6/lwa/sMt5EXIQMTwf0thM93n7vm0FSPvqRP+aRBx8XnEFCvLhCaYVvRHYaDESJiMaW2nMtkWKaklgMZSuqdYagiq8jtdZIbwmjNUqj6c71WBgM6FxXsznZhZPf0rrYwXYHhLrGpo4wnYgYxUePcID6m1m7CG5eegsEncXj0P7dlHNlnjeXFcQaUptSVQVJB978s6/RxcVV9opTVFJjk4xJGTEm0F3sIrak103Y3dxBp32Gwy6//1sfYN2isYYTFt7xUz/Cs59+LR7LjqT82Z/fjwV8FTE4FEuJIeDbkpNWd/uYmGHUEVXmGmwVPEqIgDhVkACIsQ3DpDV9F4EpRTUmTTrgetRF5HShDPrHOXLXK+g+93mcfeCL5F//EsRAmBaSJKlCIXWETi+hnAZEtCkNtUkLHaFpRzRkR8RrPMD8sM9xqUHEYKOhqipSk1IWFbc991bG03NM65rEWrLOgEJKUI8YKCcXqErH0K2xsnAln/njz/PtLzem/PdffD1vevldLDthdGEDM1jhn737twnA0rCv50YTEYSIw8/8VCxntg8qSHQQWk7VQhCl1oiNNKBqY05iDLH2kER2N55i8cQqo71NrAGP4JIettcjBlAXKLRmWo654tYX0Hv6sziUJXz+U5/U6dlTUO4pzkheeZAEpWGuZhbvRDN01j+S2NjJQUI5AibBhCaqaGxJiVhx/Jqh7k3PYpIR2WCVSbXDZKTYLMPYmt3pLiv9AWYCftTlscfP8we/+UUWgF9624u451k3klzYYrK5x9GjT+MDH/40E2AEUo0mJK5L9L4xz3lrJrT+TPGxJg0GOyOqJaIu4kMkxICqNKCaTlsKK2iQR7/6eb1+aZ2BDGBwhN0ayiqHWECoUBuwNmJdynZQzpSw4Ra58tVvRae7mHKHb33iw8rm6cZPay5Ej7GN6zUG27D3l0b4g47MB0SV1DZa3ek5vIHX/9RrGa5maBqogFoyiiB4bYheIcWGIfl5w0I8wnve+b+5agE+9rv/mlc8/0Z2n/oq/WxKf+AoTcJ/+9Q3GYPE4ZKqy6h8zbwVIzWYpqXQdqVAa1wEo2YWCMAEoouoaJueGQi630oyClunpdj4NusdQ7G7i0RLkmV0Fnpki0NM4qijojaj1IRk+Rij3ioPPLXNg1sl48Ex1u96FUt3vBQGa0CmiMG0ZJA7kCFy0Wq1NLMdQvRNcqWeSGRSVVz5zKFecdMqO/UZdqsNcAkLywtN4isBKiXxi1R7DtnJuPdtH+Slz4Rfe9cvUJ5/FK9nOXHIkk+3cStX8q3zI7aBcdpFq1pIDGhNCK1ctp4/6LnrpxSHqInS+loFEyB6lLppq8y0RACtQZu04/zDf42xHdavvIPdtMdWUVJPShj2sZ1FYj6iCjUalfF4THaoD6srdLtdnto8z5HhFRwZLKFlye4DX4TJBI01BnBzknjW253h275C9FiExCQUcYomQAfe+LNvoOyMmMYJg6VFIor3nvFoxEJ3yIJbIasTPvuRT/HhD57kVXfAL9z705jiSaR8iiOHu+xub2MTi0/gD//8U0xmFZZxkFioLnnQrTUF2upTDrRLtBVcaqBusoE20IoYjIkEH6H2dHsd8jNPyMmtkfLts6zdehfH148zCoZKK3zpCUWBSx2200VcyvTCCAYL5KMK011mpyyoQ8HxG29jfP4pwmSD4OumqehMAxwSZy6rifKxyVsdlkwyzeNYvAF66NXP71MO9yi1opOkTKY52JLUOZYHS6R+QLzQ508+9FHu+/AZXnN3yr/4R69iKTtLUmyzsOoJ9ZQsTXFWGSWRj37ucaYz2wk5TBs2i7aZGFzbqpcEjMFrCUlX26DfCCy0PtdjCdi2AajqMW2SaBVsrDBGiOWm8Phn2HziC8rha1m//pmsHb2GKumSO0NpuxQY6tJjh4cIaoGEiJJLwCQddqopd7/8lXz6A19r3LqCK2Mx91PG7JfQjad1KFBoLjIrErrw+re8jqo3Rm2kyJWF3hJFtU05CiwvrbJzasp//DfvZ1jBq+8Z8otvfz3HFvbYfvJRFhcHSOUpx4aaQBTIY4k4CMFCXe1bi2/4CpWG66ADSKedzaghStuuiYgYtCFnsdpWU8TW8ps8tO0+UeVNDm6MIrGGmEs4/Q02znxbN1wPFlYx197A0jU3IN1DDIbrbO+NQFIQQ5YYSBUJkWBSJr5shzJEQHGKRwSMETRow8QDBktEGWR93S13xUsEB2/9+deRh5zK56gP9P2AzdN7LC8tcuzIVfyfP7qPP3n/X8lAwZfov/3FN9OpH2Z362GOXtGh3Bsx3asYDg6RJQNKIrFKGXmaEig2beF+IlRlE2AyEo2xlliB1wKioWsteR1QiQSZuTDBBMVqU2AbkYatQokxzAvD0PbSokmaflPDCiM6EvVjuHCeOD6pFx68H666hcO33EVHFzHdRaJ6krxkYKeYWBNMwk4xge4ArS+0PrX1UxqbAzSxwLRxSrlQ7kp3MVNf5PKyn7xbDx09QpGOyascq5bl3hoAfuL5l7/0HyifRKTtHN/1nCEnjnbZPLlB1psQpaJSw9L6KnvjEZ1EyIOQLnRJMpQ6isyCPaoGJJJSBMQY1wxmmKbR1nUdzQPUJlCbAKRNVRQtJkpTf0uTo1pnCL7JdGU2FRFTwGEyh9YlGiNKxLU+Opal+HIM38p1E8vq0+8k2owyNixaz1h8iKhLmeaKJF1mLXczi6azlEMQrHFEo3jjSVZSnZa53P7K5+rTbr2ZJOlz+vFz2GmP9c4JdMfy8f/xF7z3HR+U8kkE7WLCEAssry3xxFMPU+uU3kKGdISYBpJFhx16xnqBnAm95YTXv+EZIJB1GiAq31RBNR1KBhp7R1Sl3wQeDUzKiSCWykJlaTqkwWKCxYYENGmIa2uJxs4VpQxQeQumryyta6x8k8N2UkibVDECfdDDTlX8jsQH7ycttqiLXUrrqHqH2EqPcN6sMTEDahwqBoOZZ6bzZdoRmDJWeAI4qIpCFp62os9/yQvpLCxw5vQWt1z3XNbcMe776Ff49+/8HT77p48KEbJ+V/GOEJrm2u64YnH1BIurx9gra0giyTBybvQYbjHSW7H0FwK+2uANr30+GRCqgFhpkhFJCNJRWb6aG+98Jaxdo4hBMyjpQX+Z3FhqQ9v3t21EsyiOKA6MaQsIMDYligXJsCeu56Y7fwhz5GpleEjRtPHXWRdxBg8y8e3QUIjYpKEXa7GQdPAk0BlQYJFsAMV+P82JMei8k2nxsWaWbNFDl25Y423vfDtFlbO1s8Ph4WE+98mv8LHf/zOhaDvNsVGKcjeXphvQo0NfP/XZDfnLvzqlr3r500ntHmc3v8LRK5bR8ZRpGRh0FjGxZjR6iCtXFrn1OvSrjyAqSg0EFLqLLN78HOLRp8O5HZicBErorSrHrmfqknYSTSC2nKpGRBSVhPkIoJiG4osGBst6xfU3M7z6Jp526AgnH3uYyUMPKRfOQZVTR6TGQ9JTButw9Gn4zmFIViBYSIHJNgwHaB3JOl3IywOgijRUJE3t30xhKWYh1YUji7zlLT/N1sYmvV6Pyfkxv/6+98Mu4tIEX9cYTUhNQp5P6S12dDotpSzHeDXSF3j7v/qfvOWNa7zr51/O8pU9Nscnsd0ettNjdzxlYGFlMSX0av7xT97Ku977N+SxmW/ADvTKF/8IZu1pnJcux+74Yc4sVBqLXZAlbnr+S3ikVFA3c5ZoGxUsNRlVE6hSixQlVV2D6cLSUXTxOCfHQs2Q1Zvv4tpbXki5tcHJb3yV4pEHGkQOrbNy422sXnMLZ6cpedUEtN5CwrQqSLxg6l2W+/AkNRFpcugZutZaQssApQsdfeE9d3Pni15AFSru//KX+Px9n6M4N5b5vGKcBZRm0Exn3MFsaZM/JG3EHfbRe++9hh/7sTtYWRVGexucONRlcuph1leO8cRpIVl6Nr/6Wx/ndz/0dQluUW977c9Qr97ARp1xwSuYSD+ZYkIOPmCSPhM3oI4pkEEQMgcyOc+6G/PEx/47bD8sJuZkFvLgIDmsN77+XrZ7J9jyBkJB1zk0ejIrWI0EX5EkCSGCSbts7+XYrI/r9JnmTUPSWkH3nuK2pZIv/q/fgwsb0lRrHtfr9ZhOp42WKpDAq1/9am56+k189v9+ls985jOEvJJ5UWAN6uOBqnZGxcV9UwOQSFBDBDoJXJhE+Y3/8jj/6bcfZ3kZvfNOeNMb7uKFt93JTi0cu+FaTm+m3Pe5rxOAm1/0o0yky8bWNqNkSLK8StLvMs5H4HtknYivakIZWD26xtapDXoLQ5iOWekK48ceht3zdLOEOM2JHkyWokeP4wYDpnWEpEen08NYoaw83hpChEANNmm03BvcQo+yyKnzCUv9HrGu8XXJsaUue499EUZnBOo20TdIYh11aEYdr77+Gn3Wc27j1Nkz3P/l+0XLsF+6Hixh2wKhkyWUZT1j4Wbpw37JqwYhwWIx1Aj1vClmgCRBfUBUmmrJN94Su3BMF655NoefcQfj7iJlb5HN6RSKCnqDdmwv4HpdrDjK7W36gz6Ts2dZtpHnXXsFH//P74F6hzTuiCGyvLyoZ3YK+XvvfLd++fSILbtE6K2QFwHjOg3jn2ZNmxqQtIOGgHMGv7cDEulaQz3dRXzFsJtyyE555BN/QDj94H5DKkZkhsVVV1+pLk145JFHBQHbc4TCtwNcrZa2VLeGtkAQQ5yxGzNgD9KGCmiXfjbUWAYCpQglQj3vN1W2YecE8B7EDYl1orgBay98Ccn6MbY1wawcgmzAdFIjaZfUdSk3N5As0jGe1FccTi3XLPf4+G+8D8ix1Z4k5HSc05GPEkxG59qb9Z4ffyNnS+HsqGbiHTZbwGMwaZdKhaoKDf9Qt2P1TljuJphyjK2nrC/32Tl/hic/8RHYeqwZgpNWM0SQ1FjqGFDAJobuoKuTfCpaN23yS8bZscZAVGLQtmuYzBovF4M6BzYBUgSLwWgzxawopdQU+NlUjrR7KWCyxkcmfR3ccjtr191M7B1i5B1ql5iW4CvL8lKHoniKG65a5vxjD2D3Njl531/AaFPET0nwLZ9tKbHNQFp/UakjXHkVL3jZqzizG4nZkGkdqSWhCIZahe5wAeccBk893UOKEUsuYoodnvjGl+HxhyDmUE8F9VwEqgUSl1D6er/XMgPGgrXN8JjOpszn49qCkZSgzfBupESpDxAbFwOb2C4+BGzb2TFEgijBVWCa2fpqWpOK4FzKtIrgOkCiLB1m/ZbbWTtxI4VPETfAJj0mk11E9zj1+NeIpx6GvXOQXxBCyTBtFM2mjkkZIe2BcYqPTUe8mylFhGM3MVy/isW1wyyvX4G6DqOioo5KXhR0U8sgM9R7mzz50Nfwjz8I5V6TcsZSqD3G2qaroE1bRVJjCTG0k96OEMLcP8bZvPYBdznHfT4N3VewRMp2arq+iOR2GfiivTFCkgqh1obZ82DSPqGKbaZgMLRfWkCoUSqkmRcVA87AwnLzWMsakgHsFY0wYQK2EqoxFkiSNh9vc9RmOsWBdUpZCBpwNsOHRGlnrkg7kHSaINUbIEYRVeLGk00bRyvQqaTUDK3VPATxxuLFEMP+cHNbCpumNwUYK4TQyG2sYIxpgJ59W4cmyEkUGt6n02pqw2Mqfr9OO6Cx1kI4MMSXJC0hpY5utqChLEXwLbhOPbVEFEUo8c2DTmdj463LMBlUWZuAlBhT00kied3691kHppNB0Q4DRyVFMFq3Y+oJsXUUggWXqMY2gMRaGkY8AJ7URFIC2nadnEX3AtJS+E1aGsJ+oDpord9rfZ+Rkb/tV/9/VtuM3Ffw2XeYGnpiX6aDY+37bJq0LRelwU1nBfilbqglsxxNURRosg3MgW9LfLfDztLFg9mQziz2ktsuG9RLLlx0/+zLYPPVnuo7pV9/S3jHfuNsf9kZ90sDu7Rgzvj1MPvsg6AqF4Ew41Xn759lOAdl+k6K8Z2utTMF8fu87YBUB9d3mMuXi+Xe/2U2pHPpqNasDGv5vfb9cwWQS17Q1qtANC153gbJ9mZtqJ85qBfLffAB7CtrEzPa3tWcnYvtoPB3fubzL19IezZxrSuqmybkAYT+H5CxtTIX3FXwAAAAAElFTkSuQmCC" style="width:40px;height:40px;object-fit:contain">
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v26.13 — 진선테크</div>
+        <div class="login-sub">v26.14 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -1035,7 +1170,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <div style="font-size:11px;color:var(--text3)">v26.13 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:11px;color:var(--text3)">v26.14 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
       <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
     </div>
   </div>
@@ -1050,7 +1185,7 @@ div#po-inner-tabs .po-itab.active {
     <img src="data:image/png;base64,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" style="height:28px;width:auto;object-fit:contain">
     <div>
       <div style="font-size:13px;font-weight:600;white-space:nowrap">AXCELIS 통합 관리</div>
-      <div style="font-size:9px;color:var(--text3);font-family:var(--mono)">v26.13</div>
+      <div style="font-size:9px;color:var(--text3);font-family:var(--mono)">v26.14</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -1090,6 +1225,8 @@ div#po-inner-tabs .po-itab.active {
   <button class="app-btn po" id="appbtn-po" onclick="switchApp('po')">📋 PO 관리</button>
   <div class="app-divider"></div>
   <button class="app-btn srch" id="appbtn-srch" onclick="switchApp('srch')">🔍 자재조회</button>
+  <div class="app-divider"></div>
+  <button class="app-btn quote" id="appbtn-quote" onclick="switchApp('quote')" style="color:var(--amb)">📝 견적</button>
 </div>
 
 <div class="sect-wrap on" id="sect-purchase">
@@ -3535,23 +3672,26 @@ function switchApp(app) {
   var so  = document.getElementById('sect-po');
   var ss  = document.getElementById('sect-srch');
   var st  = document.getElementById('sect-todo');
+  var sq  = document.getElementById('sect-quote');
   sp.style.display  = (app==='purchase') ? 'block':'none';
   so.style.display  = (app==='po')       ? 'block':'none';
-  if(ss) ss.style.display = (app==='srch') ? 'block':'none';
+  if(ss) ss.style.display = (app==='srch')   ? 'block':'none';
   if(st) { st.style.display = (app==='todo') ? 'block':'none'; if(app==='todo') { st.style.cssText='display:block!important'; } }
+  if(sq) { sq.style.display = (app==='quote')? 'block':'none'; if(app==='quote') sq.style.cssText='display:block!important'; }
   sp.classList.toggle('on', app==='purchase');
   so.classList.toggle('on', app==='po');
   if(ss) ss.classList.toggle('on', app==='srch');
   if(st) st.classList.toggle('on', app==='todo');
+  if(sq) sq.classList.toggle('on', app==='quote');
   document.getElementById('appbtn-purchase').classList.toggle('on', app==='purchase');
   document.getElementById('appbtn-po').classList.toggle('on', app==='po');
-  var bs = document.getElementById('appbtn-srch');
-  if(bs) bs.classList.toggle('on', app==='srch');
-  var bt = document.getElementById('appbtn-todo');
-  if(bt) bt.classList.toggle('on', app==='todo');
-  if(app==='srch') { srchTab('item'); }
-  if(app==='todo') renderTodo();
-  // 업무탭에서 구매관리 서브탭 숨기기
+  var bs = document.getElementById('appbtn-srch'); if(bs) bs.classList.toggle('on', app==='srch');
+  var bt = document.getElementById('appbtn-todo'); if(bt) bt.classList.toggle('on', app==='todo');
+  var bq = document.getElementById('appbtn-quote'); if(bq) bq.classList.toggle('on', app==='quote');
+  if(app==='srch')  { srchTab('item'); }
+  if(app==='todo')  renderTodo();
+  if(app==='quote') { qInitCheck(); }
+  // 구매관리 서브탭 숨기기
   var ptTabs = document.getElementById('pt-inner-tabs');
   if(ptTabs) ptTabs.style.display = (app==='purchase') ? '' : 'none';
 }
@@ -11093,6 +11233,875 @@ function initAfterLogin() {
 }
 
 
+// ═══════════════════════════════════════════════════════════
+//  견적 모듈 (QUOTE MODULE) v3
+//  ※ DB 전역배열 사용: r.pn, r.d, r.rv, r.mg, r.mp, r.by, r.lt, r.k5, r.k6
+//  ※ 수량체계: part.qty(BOM1개당) × assy.assyQty(발주수량) = 실사용수량
+// ═══════════════════════════════════════════════════════════
+
+var QS = {
+  bomAssies: [],    // [{pn,desc,rev,isAssy,assyQty,laborKrw,parts:[{pn,desc,qty,unit,rev}]}]
+  quoteAssies: [],  // after DB lookup
+};
+var _qmrid = 0;
+
+function qInitCheck(){
+  if(DB && DB.length) qUpdRateDisp();
+}
+
+/* ── 서브탭 ── */
+function qSw(id){
+  document.querySelectorAll('.q-stab').forEach(function(b){ b.classList.remove('on'); });
+  document.querySelectorAll('.q-tp').forEach(function(p){ p.classList.remove('on'); });
+  var btn=document.getElementById('qstab-'+id); if(btn) btn.classList.add('on');
+  var tp=document.getElementById('q-tp-'+id); if(tp) tp.classList.add('on');
+}
+
+/* ── Toast ── */
+function qToast(m,t,ms){
+  t=t||'ok'; ms=ms||2800;
+  var e=document.getElementById('q-toast');
+  e.className=t; e.textContent=m; e.style.display='block';
+  clearTimeout(e._t); e._t=setTimeout(function(){ e.style.display='none'; },ms);
+}
+
+/* ── 환율 ── */
+function qUpdRateDisp(){
+  var b=+(document.getElementById('q-buy-rate')||{value:1450}).value||1450;
+  var s=+(document.getElementById('q-sell-rate')||{value:1250}).value||1250;
+  var el=document.getElementById('q-rate-disp');
+  if(el) el.textContent='매입 '+b.toLocaleString()+' | 판매 '+s.toLocaleString()+' ₩/$';
+}
+
+/* ── DB 조회 (전역 DB 사용) ── */
+function qFindItem(pn){
+  if(!DB||!DB.length) return null;
+  var p=String(pn).trim();
+  return DB.find(function(r){ return String(r.pn).trim()===p; })||null;
+}
+
+/* ── 설정 ── */
+function qGetCfg(){
+  var g=function(id,def){ var e=document.getElementById(id); return e?+(e.value)||def:def; };
+  return{
+    buyRate:  g('q-buy-rate',1450),
+    sellRate: g('q-sell-rate',1250),
+    laborMarg:g('q-labor-marg',25)/100,
+    tiers:[
+      {min:1000000,m:g('q-m1',20)/100},
+      {min:100000, m:g('q-m2',25)/100},
+      {min:10000,  m:g('q-m3',35)/100},
+      {min:0,      m:g('q-m4',45)/100},
+    ]
+  };
+}
+function qGetMarg(buyKrw,cfg){
+  if(!buyKrw||buyKrw<=0) return cfg.tiers[cfg.tiers.length-1].m;
+  for(var i=0;i<cfg.tiers.length;i++){ if(buyKrw>=cfg.tiers[i].min) return cfg.tiers[i].m; }
+  return cfg.tiers[cfg.tiers.length-1].m;
+}
+
+/* ── ASSY 판별 ── */
+function qIsAssy(pn){ return /^(10|11|12|16)/.test(String(pn)); }
+
+/* ── toNumber ── */
+function qToN(v){ if(v==null||v==='') return null; var n=parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?null:n; }
+
+/* ── BOM Excel 파싱 ── */
+function qLoadBOMXl(inp){
+  if(!inp||!inp.files[0]) return;
+  qToast('BOM 파일 읽는 중...','info');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array'});
+      var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:null});
+      qParseBOMRows(rows); qToast('✓ BOM 파싱 완료','ok');
+    }catch(err){ qToast('BOM 읽기 실패: '+err.message,'err',5000); }
+    inp.value='';
+  };
+  reader.readAsArrayBuffer(inp.files[0]);
+}
+
+function qParseBOMRows(rows){
+  QS.bomAssies=[];
+  var cur=null;
+  var dfl=+(document.getElementById('q-labor-def')||{value:50000}).value||50000;
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var lv=r[0], tp=r[1], pn=r[2]!=null?String(r[2]).trim():'';
+    var desc=String(r[3]||''), qty=r[4], unit=String(r[5]||''), rev=String(r[6]||'');
+    if(tp!=='Part') continue;
+    if((qty===0||qty===null)&&unit==='as needed') continue;
+    if(lv===0){
+      cur={pn:pn,desc:desc,rev:rev,isAssy:qIsAssy(pn),assyQty:1,laborKrw:dfl,parts:[]};
+      QS.bomAssies.push(cur);
+    } else if(lv===1){
+      if(!cur){ cur={pn:'(미분류)',desc:'미분류',rev:'',isAssy:false,assyQty:1,laborKrw:0,parts:[]}; QS.bomAssies.push(cur); }
+      cur.parts.push({pn:pn,desc:desc,qty:qty!=null?qty:0,unit:unit,rev:rev});
+    }
+  }
+  qRefreshBOMTable();
+  qUpdBOMCnt();
+}
+
+/* ── BOM 테이블 렌더 ── */
+function qRefreshBOMTable(){
+  var tb=document.getElementById('q-bom-rows');
+  if(!tb) return;
+  tb.innerHTML='';
+  QS.bomAssies.forEach(function(a,ai){
+    var atr=document.createElement('tr');
+    atr.style.background='var(--bg3)';
+    atr.innerHTML='<td class="c"><span class="q-lvc q-lv0">0</span></td>'
+      +'<td class="q-apn" style="font-family:var(--mono);font-size:11.5px;color:var(--amb)">'+a.pn+'</td>'
+      +'<td style="font-weight:500">'+a.desc+'</td>'
+      +'<td class="r" colspan="2"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'
+        +'<span style="font-size:11px;color:var(--text2)">ASSY수량</span>'
+        +'<input class="q-aqty-in" type="number" value="'+a.assyQty+'" min="1"'
+          +' onchange="QS.bomAssies['+ai+'].assyQty=parseFloat(this.value)||1;qUpdBOMCnt()">'
+        +'</div></td>'
+      +'<td class="c"><span class="qbdg qbdg-g">'+a.rev+'</span></td>'
+      +'<td><button class="q-rdel" onclick="QS.bomAssies.splice('+ai+',1);qRefreshBOMTable();qUpdBOMCnt()">✕</button></td>';
+    tb.appendChild(atr);
+    a.parts.forEach(function(p,pi){
+      var ptr=document.createElement('tr');
+      ptr.innerHTML='<td class="c"><span class="q-lvc q-lv1">1</span></td>'
+        +'<td style="font-family:var(--mono);font-size:11px;color:var(--accent)">'+p.pn+'</td>'
+        +'<td style="font-size:11.5px;color:var(--text2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.desc+'</td>'
+        +'<td class="r"><input class="q-bni" type="number" value="'+p.qty+'" min="0"'
+          +' onchange="QS.bomAssies['+ai+'].parts['+pi+'].qty=parseFloat(this.value)||0"></td>'
+        +'<td class="c" style="font-size:11px;color:var(--text2)">'+p.unit+'</td>'
+        +'<td class="c"><span class="qbdg qbdg-g">'+p.rev+'</span></td>'
+        +'<td><button class="q-rdel" onclick="QS.bomAssies['+ai+'].parts.splice('+pi+',1);qRefreshBOMTable()">✕</button></td>';
+      tb.appendChild(ptr);
+    });
+  });
+}
+
+function qUpdBOMCnt(){
+  var total=QS.bomAssies.reduce(function(s,a){return s+a.parts.length;},0);
+  var el=document.getElementById('q-bom-cnt');
+  if(el) el.textContent=QS.bomAssies.length?QS.bomAssies.length+'개 ASSY / '+total+'개 부품':'';
+}
+
+function qAddRow(){
+  var tb=document.getElementById('q-bom-rows'); if(!tb) return;
+  _qmrid++;
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td class="c">'
+    +'<select class="q-bsi" style="width:44px"><option value="0">0</option><option value="1" selected>1</option></select></td>'
+    +'<td><input class="q-bpni" type="text" placeholder="품번"></td>'
+    +'<td></td>'
+    +'<td class="r"><input class="q-bni" type="number" value="1" min="0"></td>'
+    +'<td class="c"><input class="q-bsi" type="text" value="EA"></td>'
+    +'<td class="c"><input class="q-bsi" type="text" value="" placeholder="REV"></td>'
+    +'<td><button class="q-rdel" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+  tb.appendChild(tr);
+}
+
+function qClearBOM(){
+  QS.bomAssies=[];
+  var tb=document.getElementById('q-bom-rows'); if(tb) tb.innerHTML='';
+  var rs=document.getElementById('q-result'); if(rs) rs.style.display='none';
+  var el=document.getElementById('q-bom-cnt'); if(el) el.textContent='';
+}
+
+function qTogglePaste(){
+  var e=document.getElementById('q-paste-wrap');
+  if(e) e.style.display=e.style.display==='none'?'block':'none';
+}
+
+function qParsePaste(){
+  var ta=document.getElementById('q-paste-ta'); if(!ta||!ta.value.trim()) return;
+  var dfl=+(document.getElementById('q-labor-def')||{value:50000}).value||50000;
+  var cur=null;
+  ta.value.trim().split('\n').filter(function(l){return l.trim();}).forEach(function(line){
+    var cols=line.split('\t').map(function(c){return c.trim();});
+    var lv=parseInt(cols[0]),pn=cols[1]||'',qty=parseFloat(cols[2])||0,unit=cols[3]||'EA',rev=cols[4]||'';
+    if(!pn) return;
+    if(lv===0){ cur={pn:pn,desc:pn,rev:rev,isAssy:qIsAssy(pn),assyQty:1,laborKrw:dfl,parts:[]}; QS.bomAssies.push(cur); }
+    else{ if(!cur){ cur={pn:'(미분류)',desc:'',rev:'',isAssy:false,assyQty:1,laborKrw:0,parts:[]}; QS.bomAssies.push(cur); } cur.parts.push({pn:pn,desc:'',qty:qty,unit:unit,rev:rev}); }
+  });
+  ta.value='';
+  var pw=document.getElementById('q-paste-wrap'); if(pw) pw.style.display='none';
+  qRefreshBOMTable(); qUpdBOMCnt(); qToast('✓ 파싱 완료','ok');
+}
+
+/* ── 견적 생성 ── */
+function qGenQuote(){
+  if(!QS.bomAssies.length){ qToast('BOM을 먼저 입력하세요','err'); return; }
+  if(!DB||!DB.length){ qToast('DB가 로드되지 않았습니다. 구매관리 → 품목DB를 먼저 로드하세요','err',5000); return; }
+  var cfg=qGetCfg();
+
+  QS.quoteAssies=QS.bomAssies.map(function(assy){
+    var assyQty=assy.assyQty||1;
+    var qp=assy.parts.map(function(p){
+      var pn=String(p.pn).trim();
+      var item=qFindItem(pn);
+      var status='ok', buyKrw=null, quoteUSDper=null, margin=null;
+      if(!item){ status='unreg'; }
+      else{
+        buyKrw=qToN(item.k6)||qToN(item.k5)||null;
+        if(buyKrw===null){ status='noprice'; }
+        else{ margin=qGetMarg(buyKrw,cfg); quoteUSDper=buyKrw/(1-margin)/cfg.sellRate; }
+      }
+      var effQty=p.qty*assyQty;
+      return Object.assign({},p,{
+        item:item, status:status, buyKrw:buyKrw, margin:margin, effQty:effQty,
+        buyKrwTotal:buyKrw!=null?buyKrw*effQty:null,
+        quoteUSDTotal:quoteUSDper!=null?quoteUSDper*effQty:null,
+        quoteUSDper:quoteUSDper,
+        rev:p.rev||(item?item.rv:'')||'',
+        vendor:item?item.by||'':'', lt:item?item.lt||'':'',
+        mfg:item?item.mg||'':'', mfgpn:item?item.mp||'':''
+      });
+    });
+    var okParts=qp.filter(function(p){return p.buyKrw!=null;});
+    var totalBuyKrw=okParts.reduce(function(s,p){return s+(p.buyKrwTotal||0);},0);
+    var totalPartUSD=qp.reduce(function(s,p){return s+(p.quoteUSDTotal||0);},0);
+    var labor=assy.isAssy?(assy.laborKrw||0):0;
+    var laborUSD=assy.isAssy?labor/(1-cfg.laborMarg)/cfg.sellRate:0;
+    var totalUSD=totalPartUSD+laborUSD;
+    var totalKRW=totalUSD*cfg.sellRate;
+    var gm=totalKRW>0?(totalKRW-totalBuyKrw-labor)/totalKRW*100:0;
+    return Object.assign({},assy,{assyQty:assyQty,parts:qp,totalBuyKrw:totalBuyKrw,
+      totalPartUSD:totalPartUSD,laborUSD:laborUSD,totalUSD:totalUSD,totalKRW:totalKRW,overallMargin:gm});
+  });
+
+  qRenderResults(cfg);
+  qUpdateIssues();
+  qBuildDoc();
+  var rs=document.getElementById('q-result'); if(rs) rs.style.display='block';
+  qToast('✓ 견적 생성 완료 ('+QS.quoteAssies.length+'개 ASSY)','ok');
+}
+
+/* ── 결과 렌더 ── */
+function qRenderResults(cfg){
+  var all=QS.quoteAssies;
+  var allParts=[];
+  all.forEach(function(a){ a.parts.forEach(function(p){ allParts.push(p); }); });
+  var tBuy=all.reduce(function(s,a){return s+a.totalBuyKrw;},0);
+  var tLabor=all.reduce(function(s,a){return s+(a.isAssy?a.laborKrw||0:0);},0);
+  var tUSD=all.reduce(function(s,a){return s+a.totalUSD;},0);
+  var tKRW=tUSD*cfg.sellRate;
+  var tMarg=tKRW-tBuy-tLabor;
+  var gPct=tKRW>0?tMarg/tKRW*100:0;
+  var ucnt=allParts.filter(function(p){return p.status==='unreg';}).length;
+  var npcnt=allParts.filter(function(p){return p.status==='noprice';}).length;
+  document.getElementById('q-summary').innerHTML=
+    '<div class="q-sc"><div class="q-scl">총 ASSY</div><div class="q-scv">'+all.length+'</div><div class="q-scs">'+allParts.length+'개 부품</div></div>'+
+    '<div class="q-sc"><div class="q-scl">총 매입가 (₩)</div><div class="q-scv" style="font-size:14px">'+Math.round(tBuy).toLocaleString()+'</div><div class="q-scs">작업비 제외</div></div>'+
+    '<div class="q-sc"><div class="q-scl">작업비 합계 (₩)</div><div class="q-scv" style="font-size:14px">'+Math.round(tLabor).toLocaleString()+'</div></div>'+
+    '<div class="q-sc"><div class="q-scl">총 견적가 ($)</div><div class="q-scv" style="color:var(--amb)">'+tUSD.toFixed(2)+'</div><div class="q-scs">'+Math.round(tKRW).toLocaleString()+' ₩</div></div>'+
+    '<div class="q-sc"><div class="q-scl">총 마진 (₩)</div><div class="q-scv" style="font-size:14px;color:'+(tMarg>=0?'var(--green)':'var(--red)')+'">'+Math.round(tMarg).toLocaleString()+'</div><div class="q-scs">'+gPct.toFixed(1)+'%</div></div>'+
+    (ucnt?'<div class="q-sc" style="border-color:var(--red)"><div class="q-scl" style="color:var(--red)">미등록</div><div class="q-scv" style="color:var(--red)">'+ucnt+'</div><div class="q-scs" style="color:var(--red)">DB 등록 필요</div></div>':'')+
+    (npcnt?'<div class="q-sc" style="border-color:var(--amb)"><div class="q-scl" style="color:var(--amb)">단가없음</div><div class="q-scv" style="color:var(--amb)">'+npcnt+'</div><div class="q-scs" style="color:var(--amb)">k5/k6 등록 필요</div></div>':'');
+  qRerender();
+}
+
+function qRerender(){
+  var hz=document.getElementById('q-hide-zero'); var hd=document.getElementById('q-hide-docs');
+  var hideZero=hz&&hz.checked; var hideDocs=hd&&hd.checked;
+  var cont=document.getElementById('q-assy-sections'); if(!cont) return;
+  cont.innerHTML='';
+  QS.quoteAssies.forEach(function(a,ai){
+    var d=document.createElement('div'); d.className='q-assy';
+    d.innerHTML=qBuildAssyHTML(a,ai,hideZero,hideDocs);
+    cont.appendChild(d);
+  });
+}
+
+function qBuildAssyHTML(assy,ai,hideZero,hideDocs){
+  var cfg=qGetCfg();
+  var ucnt=assy.parts.filter(function(p){return p.status==='unreg';}).length;
+  var ncnt=assy.parts.filter(function(p){return p.status==='noprice';}).length;
+  var issueBdg=(ucnt?'<span class="qbdg qbdg-r">미등록 '+ucnt+'</span> ':'')+(ncnt?'<span class="qbdg qbdg-a">단가없음 '+ncnt+'</span>':'');
+  var labor=assy.isAssy?(assy.laborKrw||0):0;
+  var laborSection=assy.isAssy
+    ?('<div style="display:flex;align-items:center;gap:6px">'
+        +'<span style="font-size:11px;color:var(--text2)">작업비(₩)</span>'
+        +'<input class="q-labor-in" type="number" value="'+labor+'" step="1000" min="0" onchange="qUpdLabor('+ai+',this.value)">'
+        +'<span style="font-size:11px;color:var(--text2)">=$<span id="q-lusd-'+ai+'">'+assy.laborUSD.toFixed(2)+'</span></span>'
+        +'</div>')
+    :'<span class="qbdg qbdg-g">작업비없음</span>';
+
+  var parts=assy.parts.filter(function(p){
+    if(hideDocs&&p.qty===0) return false;
+    if(hideZero&&p.effQty===0) return false;
+    return true;
+  });
+
+  var rows=parts.map(function(p,pi){
+    var rc=p.status==='unreg'?'q-ru':p.status==='noprice'?'q-rn':'';
+    var it=p.item||{};
+    var desc=p.item?it.d||p.desc:p.desc||'<span style="color:var(--red)">미등록</span>';
+    var mfgStr=[it.mg,it.mp].filter(Boolean).join(' | ');
+    var buyStr=p.buyKrw!=null?p.buyKrw.toLocaleString():(p.status==='unreg'?'—':'<span style="color:var(--amb)">미등록</span>');
+    var totStr=p.buyKrwTotal!=null?p.buyKrwTotal.toLocaleString():'—';
+    var effStr=p.effQty!==p.qty?('<span style="color:var(--amb);font-weight:700">'+p.effQty+'</span> <span style="color:var(--text3);font-size:10px">(×'+assy.assyQty+')</span>'):''+p.qty;
+    var mg=p.margin!=null?('<span class="'+(p.margin>=.35?'mhi':p.margin>=.25?'mmd':'mlo')+'">'+(p.margin*100).toFixed(0)+'%</span>'):'—';
+    var qdef=p.quoteUSDTotal!=null?p.quoteUSDTotal.toFixed(2):'';
+    return '<tr class="'+rc+'">'
+      +'<td class="q-pn">'+p.pn+'</td>'
+      +'<td><div class="q-dm">'+desc+'</div>'+(mfgStr?'<div class="q-ds">'+mfgStr+'</div>':'')+'</td>'
+      +'<td class="c"><span class="qbdg qbdg-g">'+(p.rev||'-')+'</span></td>'
+      +'<td class="r" style="font-size:12px">'+effStr+'</td>'
+      +'<td class="c" style="font-size:11px;color:var(--text2)">'+p.unit+'</td>'
+      +'<td class="q-pkrw">'+buyStr+'</td>'
+      +'<td class="q-pkrw">'+totStr+'</td>'
+      +'<td class="q-mval">'+mg+'</td>'
+      +'<td><input class="q-epr" type="number" step="0.01" value="'+qdef+'" onchange="qOnPrEd('+ai+','+pi+',this.value)"></td>'
+      +'<td style="font-size:11px;color:var(--text2)">'+p.vendor+'</td>'
+      +'<td class="c" style="font-size:11px;color:var(--text2)">'+p.lt+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var gm=assy.overallMargin;
+  var gmcls=gm>=30?'var(--green)':gm>=20?'var(--amb)':'var(--red)';
+
+  return '<div class="q-ahdr">'
+    +'<span class="q-apn">'+assy.pn+'</span>'
+    +'<span class="q-adesc">'+assy.desc+'</span>'
+    +'<span class="q-arev">REV '+assy.rev+'</span>'
+    +(assy.isAssy?'<span class="q-abd q-abd-a">ASSY</span>':'<span class="q-abd q-abd-n">PART</span>')
+    +issueBdg
+    +'<div class="q-aqty-wrap"><label style="font-size:11px;color:var(--text2)">ASSY 수량</label>'
+    +'<input class="q-aqty-in" type="number" value="'+assy.assyQty+'" min="1" onchange="qUpdAssyQty('+ai+',this.value)"></div>'
+    +laborSection
+    +'<input style="background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:4px 8px;color:var(--text2);font-size:11px;width:160px;font-family:var(--font)" '
+    +' value="'+(assy.remark||'').replace(/"/g,'&quot;')+'"'
+    +' onchange="QS.quoteAssies['+ai+'].remark=this.value" placeholder="Remark...">'
+    +'</div>'
+    +'<div class="q-tw" style="border:none;border-radius:0"><table><thead><tr>'
+    +'<th style="width:120px">품번</th><th>품명/제조사</th>'
+    +'<th class="c" style="width:42px">REV</th>'
+    +'<th class="r" style="width:80px">수량(실)</th>'
+    +'<th class="c" style="width:50px">단위</th>'
+    +'<th class="r" style="width:100px">매입가(₩)</th>'
+    +'<th class="r" style="width:105px">매입소계(₩)</th>'
+    +'<th class="c" style="width:52px">마진</th>'
+    +'<th class="r" style="width:86px">견적가($)</th>'
+    +'<th style="width:76px">구매처</th>'
+    +'<th class="c" style="width:46px">납기</th>'
+    +'</tr></thead>'
+    +'<tbody>'+(rows||'<tr><td colspan="11" style="text-align:center;padding:14px;color:var(--text3)">표시할 부품 없음</td></tr>')+'</tbody>'
+    +'</table></div>'
+    +'<div class="q-aftr">'
+    +'<div class="q-astat"><span class="q-astl">매입합계</span><span class="q-astv">'+Math.round(assy.totalBuyKrw).toLocaleString()+' ₩</span></div>'
+    +(assy.isAssy?'<div class="q-astat"><span class="q-astl">작업비</span><span class="q-astv" id="q-lftr-'+ai+'" style="color:var(--amb)">'+Math.round(labor).toLocaleString()+' ₩</span></div>':'')
+    +'<div class="q-astat"><span class="q-astl">ASSY 견적가</span><span class="q-astv" style="color:var(--amb)">$ <span id="q-atot-'+ai+'">'+assy.totalUSD.toFixed(2)+'</span></span></div>'
+    +'<div class="q-astat"><span class="q-astl">마진율</span><span class="q-astv" id="q-amarg-'+ai+'" style="color:'+gmcls+'">'+gm.toFixed(1)+'%</span></div>'
+    +'</div>';
+}
+
+/* ── ASSY qty / Labor 업데이트 ── */
+function qUpdAssyQty(ai,val){
+  var cfg=qGetCfg(); var a=QS.quoteAssies[ai]; var aq=parseFloat(val)||1;
+  a.assyQty=aq; if(QS.bomAssies[ai]) QS.bomAssies[ai].assyQty=aq;
+  a.parts.forEach(function(p){ p.effQty=p.qty*aq; p.buyKrwTotal=p.buyKrw!=null?p.buyKrw*p.effQty:null; p.quoteUSDTotal=p.quoteUSDper!=null?p.quoteUSDper*p.effQty:null; });
+  qRecalcAssy(ai,cfg); qRerender();
+}
+function qUpdLabor(ai,val){
+  var cfg=qGetCfg(); var a=QS.quoteAssies[ai];
+  a.laborKrw=parseFloat(val)||0; if(QS.bomAssies[ai]) QS.bomAssies[ai].laborKrw=a.laborKrw;
+  qRecalcAssy(ai,cfg);
+  var e; e=document.getElementById('q-lusd-'+ai); if(e) e.textContent=a.laborUSD.toFixed(2);
+  e=document.getElementById('q-lftr-'+ai); if(e) e.textContent=Math.round(a.laborKrw).toLocaleString()+' ₩';
+  e=document.getElementById('q-atot-'+ai); if(e) e.textContent=a.totalUSD.toFixed(2);
+  e=document.getElementById('q-amarg-'+ai); if(e){ e.textContent=a.overallMargin.toFixed(1)+'%'; e.style.color=a.overallMargin>=30?'var(--green)':a.overallMargin>=20?'var(--amb)':'var(--red)'; }
+}
+function qRecalcAssy(ai,cfg){
+  var a=QS.quoteAssies[ai];
+  a.totalBuyKrw=a.parts.filter(function(p){return p.buyKrw!=null;}).reduce(function(s,p){return s+(p.buyKrwTotal||0);},0);
+  a.totalPartUSD=a.parts.reduce(function(s,p){return s+(p.quoteUSDTotal||0);},0);
+  var labor=a.isAssy?(a.laborKrw||0):0;
+  a.laborUSD=a.isAssy?labor/(1-cfg.laborMarg)/cfg.sellRate:0;
+  a.totalUSD=a.totalPartUSD+a.laborUSD;
+  a.totalKRW=a.totalUSD*cfg.sellRate;
+  a.overallMargin=a.totalKRW>0?(a.totalKRW-a.totalBuyKrw-labor)/a.totalKRW*100:0;
+}
+function qOnPrEd(ai,pi,val){ if(QS.quoteAssies[ai]&&QS.quoteAssies[ai].parts[pi]) QS.quoteAssies[ai].parts[pi]._custom=parseFloat(val)||null; }
+
+/* ── 이슈 탭 ── */
+function qUpdateIssues(){
+  var allParts=[];
+  QS.quoteAssies.forEach(function(a){ a.parts.forEach(function(p){ allParts.push(Object.assign({},p,{assyPn:a.pn})); }); });
+  var ur=allParts.filter(function(p){return p.status==='unreg';});
+  var np=allParts.filter(function(p){return p.status==='noprice';});
+  var eu=document.getElementById('q-cnt-ur'); if(eu) eu.textContent=ur.length;
+  var en=document.getElementById('q-cnt-np'); if(en) en.textContent=np.length;
+  var btn=document.getElementById('qstab-issues');
+  if(btn) btn.textContent='⚠ 이슈'+(ur.length+np.length?' ('+(ur.length+np.length)+')':'');
+  var up=document.getElementById('q-panel-ur');
+  if(up) up.innerHTML=ur.length?('<div class="q-tw"><table><thead><tr><th>품번</th><th>BOM 품명</th><th class="r">BOM수량</th><th class="r">실수량</th><th>소속 ASSY</th></tr></thead><tbody>'
+    +ur.map(function(p){return '<tr class="q-ru"><td class="q-pn">'+p.pn+'</td><td>'+p.desc+'</td><td class="r">'+p.qty+'</td><td class="r" style="color:var(--amb)">'+p.effQty+'</td><td style="font-family:var(--mono);font-size:11px;color:var(--text3)">'+p.assyPn+'</td></tr>';}).join('')
+    +'</tbody></table></div>'):'<div style="color:var(--green);padding:10px 0;font-size:12px">✓ 미등록 품목 없음</div>';
+  var np2=document.getElementById('q-panel-np');
+  if(np2) np2.innerHTML=np.length?('<div class="q-tw"><table><thead><tr><th>품번</th><th>DB 품명</th><th>제조사</th><th class="r">BOM수량</th><th class="r">실수량</th><th>소속 ASSY</th></tr></thead><tbody>'
+    +np.map(function(p){var it=p.item||{}; return '<tr class="q-rn"><td class="q-pn" style="color:var(--amb)">'+p.pn+'</td><td>'+it.d+'</td><td style="font-size:11px">'+it.mg+'</td><td class="r">'+p.qty+'</td><td class="r" style="color:var(--amb)">'+p.effQty+'</td><td style="font-family:var(--mono);font-size:11px;color:var(--text3)">'+p.assyPn+'</td></tr>';}).join('')
+    +'</tbody></table></div>'):'<div style="color:var(--green);padding:10px 0;font-size:12px">✓ 단가 없는 품목 없음</div>';
+}
+
+/* ── 견적서 빌드 (상위품번만, REMARK, 세부내역 확장) ── */
+function qBuildDoc(){
+  var cont=document.getElementById('q-doc-container');
+  if(!QS.quoteAssies.length){ if(cont) cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">견적 생성 후 확인 가능합니다</div>'; return; }
+  var cfg=qGetCfg();
+  var g=function(id,def){ var e=document.getElementById(id); return e?e.value:def||''; };
+  var qno=g('q-no','—'), qdate=g('q-date',new Date().toISOString().slice(0,10));
+  var qprj=g('q-project',''), qto=g('q-to','AXCELIS Corp.'), qctact=g('q-contact',''), qdeliv=g('q-delivery','To be discussed');
+  var sco=g('q-s-co','Jinsun Tech'), sperson=g('q-s-person',''), semail=g('q-s-email',''), stel=g('q-s-tel','');
+  var allParts=[];
+  QS.quoteAssies.forEach(function(a){ a.parts.forEach(function(p){ allParts.push(p); }); });
+  var hasIssues=allParts.some(function(p){return p.status!=='ok';});
+  var warnHtml=hasIssues?'<div class="qdoc-warn">⚠ 미등록/단가없는 품목이 있습니다. 견적가가 불완전할 수 있습니다.</div>':'';
+
+  var rowNum=0, tableRows='';
+  QS.quoteAssies.forEach(function(assy,ai){
+    rowNum++;
+    var totalUSD=assy._customTotalUSD!=null?assy._customTotalUSD:assy.totalUSD;
+    var unitUSD=assy.assyQty>0?totalUSD/assy.assyQty:totalUSD;
+    var expandId='qdx-'+ai;
+    var rmk=assy.remark||'';
+
+    // ── 상위품번 메인 행 ──
+    tableRows+='<tr class="qa-row">'
+      +'<td class="c">'+rowNum+'</td>'
+      +'<td style="font-family:monospace;font-size:10.5px;min-width:100px">'+assy.pn+'</td>'
+      +'<td>'+assy.desc+'</td>'
+      +'<td class="c">'+assy.rev+'</td>'
+      +'<td class="r">'+assy.assyQty+'</td>'
+      +'<td class="r">'+unitUSD.toFixed(2)+'</td>'
+      +'<td class="r" style="font-weight:700">'+totalUSD.toFixed(2)+'</td>'
+      +'<td><input id="qrm-'+ai+'" value="'+rmk.replace(/"/g,'&quot;')+'"'
+        +' onchange="QS.quoteAssies['+ai+'].remark=this.value"'
+        +' style="border:1px solid #ccc;border-radius:3px;padding:2px 5px;font-size:10px;width:100%;min-width:80px;font-family:inherit"'
+        +' placeholder="Remark..."></td>'
+      +'<td class="c">'
+        +'<button onclick="qToggleDetail(\''+expandId+'\')"'
+          +' style="background:none;border:1px solid #aaa;border-radius:3px;padding:1px 7px;cursor:pointer;font-size:10px;color:#555" '
+          +' title="세부내역 보기" id="qdbtn-'+ai+'">▼</button>'
+      +'</td>'
+      +'</tr>';
+
+    // ── 세부내역 (접힘) ──
+    var detHtml='';
+    assy.parts.filter(function(p){return p.effQty>0;}).forEach(function(p){
+      var it=p.item||{};
+      var pUSD=p._custom!=null?p._custom:(p.quoteUSDTotal!=null?p.quoteUSDTotal:null);
+      detHtml+='<tr style="background:#fafafa">'
+        +'<td class="c" style="color:#bbb;font-size:9px;padding:3px 6px">└</td>'
+        +'<td style="font-family:monospace;font-size:9.5px;color:#666;padding:3px 6px">'+p.pn+'</td>'
+        +'<td style="color:#444;font-size:10.5px;padding:3px 6px">'+(it.d||p.desc||'')+'</td>'
+        +'<td class="c" style="font-size:9.5px;padding:3px 6px">'+(p.rev||'-')+'</td>'
+        +'<td class="r" style="font-size:10px;padding:3px 6px">'+p.effQty+'</td>'
+        +'<td class="r" style="font-size:9.5px;color:#888;padding:3px 6px">'+(p.quoteUSDper!=null?p.quoteUSDper.toFixed(3):'—')+'</td>'
+        +'<td class="r" style="font-size:10px;color:#666;padding:3px 6px">'+(pUSD!=null?pUSD.toFixed(2):'—')+'</td>'
+        +'<td colspan="2" style="font-size:9.5px;color:#888;padding:3px 6px">'+(it.mg||'')+(it.mg&&it.mp?' | ':'')+(it.mp||'')+'</td>'
+        +'</tr>';
+    });
+    if(assy.isAssy&&assy.laborKrw>0){
+      detHtml+='<tr style="background:#fafafa">'
+        +'<td class="c" style="color:#bbb;font-size:9px;padding:3px 6px">└</td>'
+        +'<td colspan="5" style="font-size:9.5px;color:#888;padding:3px 6px">작업비 (Assembly Labor)</td>'
+        +'<td class="r" style="font-size:10px;color:#666;padding:3px 6px">'+assy.laborUSD.toFixed(2)+'</td>'
+        +'<td colspan="2"></td>'
+        +'</tr>';
+    }
+    if(detHtml){
+      tableRows+='<tr id="'+expandId+'" style="display:none"><td colspan="9" style="padding:0;border-bottom:2px solid #e0e0e0">'
+        +'<table style="width:100%;border-collapse:collapse"><thead>'
+        +'<tr style="background:#f0f0f0"><th style="width:24px;text-align:center;padding:3px;font-size:9px">—</th>'
+        +'<th style="text-align:left;padding:3px 6px;font-size:9px;font-weight:600">PART NO.</th>'
+        +'<th style="padding:3px 6px;font-size:9px;font-weight:600">DESCRIPTION</th>'
+        +'<th style="text-align:center;width:33px;padding:3px;font-size:9px">REV</th>'
+        +'<th style="text-align:right;width:36px;padding:3px 6px;font-size:9px">QTY</th>'
+        +'<th style="text-align:right;width:70px;padding:3px 6px;font-size:9px">UNIT($)</th>'
+        +'<th style="text-align:right;width:70px;padding:3px 6px;font-size:9px">TOTAL($)</th>'
+        +'<th colspan="2" style="padding:3px 6px;font-size:9px">MFR / MFR P/N</th>'
+        +'</tr></thead><tbody>'+detHtml+'</tbody></table>'
+        +'</td></tr>';
+    }
+  });
+
+  var grandUSD=QS.quoteAssies.reduce(function(s,a){return s+(a._customTotalUSD!=null?a._customTotalUSD:a.totalUSD);},0);
+
+  if(cont) cont.innerHTML='<div class="qdoc">'+warnHtml
+    +'<div class="qdoc-title">QUOTATION</div>'
+    +'<div class="qdoc-no">No. '+qno+' | '+qdate+(qprj?' | '+qprj:'')+'</div>'
+    +'<div class="qdoc-parties">'
+      +'<div class="qdoc-party issued"><div class="qdoc-party-title">ISSUED TO (CUSTOMER)</div><div class="qdoc-party-name">'+qto+'</div><div class="qdoc-party-sub">Contact: '+(qctact||'—')+'</div></div>'
+      +'<div class="qdoc-party"><div class="qdoc-party-title">SUPPLIER</div><div class="qdoc-party-name">'+sco+'</div><div class="qdoc-party-sub">'
+        +'CEO : ChunSeok Hong<br>Address : 98 Chadollo-ro, Dongnam-gu, Cheonan-si, CN<br>'
+        +'Contact : '+sperson+' | '+stel+'<br>E-Mail : '+semail+'<br>Business Reg. : 312-86-59918'
+      +'</div></div>'
+    +'</div>'
+    +'<div class="qdoc-meta">'
+      +'<div class="qdoc-meta-item"><div class="qdoc-meta-label">Quote No.</div><div class="qdoc-meta-val">'+qno+'</div></div>'
+      +'<div class="qdoc-meta-item"><div class="qdoc-meta-label">Date</div><div class="qdoc-meta-val">'+qdate+'</div></div>'
+      +'<div class="qdoc-meta-item"><div class="qdoc-meta-label">Validity</div><div class="qdoc-meta-val">15 days</div></div>'
+      +'<div class="qdoc-meta-item"><div class="qdoc-meta-label">Delivery</div><div class="qdoc-meta-val">'+qdeliv+'</div></div>'
+    +'</div>'
+    +'<table class="qdoc-tbl"><thead><tr>'
+      +'<th class="c" style="width:26px">NO</th>'
+      +'<th style="width:110px">Item No.</th>'
+      +'<th>Description</th>'
+      +'<th class="c" style="width:33px">REV</th>'
+      +'<th class="r" style="width:36px">Qty</th>'
+      +'<th class="r" style="width:76px">Unit Price($)</th>'
+      +'<th class="r" style="width:80px">Total($)</th>'
+      +'<th style="width:120px">Remarks</th>'
+      +'<th class="c" style="width:36px">Detail</th>'
+    +'</tr></thead>'
+    +'<tbody>'+tableRows+'</tbody>'
+    +'<tfoot><tr class="qtot">'
+      +'<td colspan="6" class="r" style="font-size:12px;letter-spacing:.5px">GRAND TOTAL (USD)</td>'
+      +'<td class="r" style="font-size:14px">$ '+grandUSD.toFixed(2)+'</td>'
+      +'<td colspan="2"></td>'
+    +'</tr></tfoot></table>'
+    +'<div class="qdoc-terms">All prices are in USD. Payment due within 30 days of invoice. Prices valid for 15 days from date of quotation. Delivery subject to confirmation upon order receipt.</div>'
+    +'<div class="qdoc-sig">'
+      +'<div class="qdoc-sig-box"><div class="qdoc-sig-label">Authorized by — Supplier</div><div class="qdoc-sig-line">'+sperson+' / '+sco+'</div></div>'
+      +'<div class="qdoc-sig-box"><div class="qdoc-sig-label">Received by — Customer</div><div class="qdoc-sig-line">Name &amp; Signature</div></div>'
+    +'</div>'
+    +'</div>';
+}
+
+function qToggleDetail(id){
+  var row=document.getElementById(id);
+  if(!row) return;
+  var ai=id.replace('qdx-','');
+  var btn=document.getElementById('qdbtn-'+ai);
+  if(row.style.display==='none'){ row.style.display=''; if(btn) btn.textContent='▲'; }
+  else{ row.style.display='none'; if(btn) btn.textContent='▼'; }
+}
+
+function qPrintDoc(){
+  var html=document.getElementById('q-doc-container').innerHTML;
+  var w=window.open('','_blank');
+  var sty=Array.from(document.querySelectorAll('#sect-quote style,style')).map(function(s){return s.textContent;}).join('\n');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Quotation</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:\'Noto Sans KR\',sans-serif;background:#fff}'
+    +'.qdoc{padding:24px 28px}'
+    +'.qdoc-title{font-size:22px;font-weight:900;letter-spacing:4px;text-align:center;margin-bottom:4px}'
+    +'.qdoc-no{text-align:center;font-size:12px;color:#555;margin-bottom:18px}'
+    +'.qdoc-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;border:1px solid #ddd;border-radius:4px;overflow:hidden}'
+    +'.qdoc-party{padding:11px 14px}.qdoc-party.issued{background:#f8f8f8;border-right:1px solid #ddd}'
+    +'.qdoc-party-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px}'
+    +'.qdoc-party-name{font-size:13px;font-weight:700;margin-bottom:3px}.qdoc-party-sub{font-size:10px;color:#555;line-height:1.7}'
+    +'.qdoc-meta{display:flex;border:1px solid #ddd;border-radius:4px;margin-bottom:12px;overflow:hidden}'
+    +'.qdoc-meta-item{flex:1;padding:7px 11px;border-right:1px solid #ddd}.qdoc-meta-item:last-child{border-right:none}'
+    +'.qdoc-meta-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;margin-bottom:1px}.qdoc-meta-val{font-size:12px;font-weight:600}'
+    +'.qdoc-tbl{width:100%;border-collapse:collapse;margin-bottom:12px}'
+    +'.qdoc-tbl th{background:#1a1a1a;color:#fff;padding:6px 9px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase}'
+    +'.qdoc-tbl th.r,.qdoc-tbl td.r{text-align:right}.qdoc-tbl th.c,.qdoc-tbl td.c{text-align:center}'
+    +'.qdoc-tbl td{padding:5px 9px;border-bottom:1px solid #eee;font-size:11px}'
+    +'.qa-row td{background:#f5f0e0;font-weight:700;font-size:11px}'
+    +'.qtot td{background:#1a1a1a;color:#fff;font-weight:700;padding:7px 9px}'
+    +'.qdoc-tbl input{border:1px solid #ccc;border-radius:3px;padding:2px 5px;font-size:10px;width:100%;font-family:inherit}'
+    +'[id^="qdx-"]{display:none!important}'   /* 인쇄시 세부내역 숨김 */
+    +'button{display:none!important}'          /* 인쇄시 버튼 숨김 */
+    +'.qdoc-terms{border:1px solid #ddd;border-radius:4px;padding:9px 12px;font-size:10px;color:#555;line-height:1.7;margin-bottom:12px}'
+    +'.qdoc-sig{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}'
+    +'.qdoc-sig-box{border:1px solid #ddd;border-radius:4px;padding:11px 13px}'
+    +'.qdoc-sig-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;margin-bottom:18px}'
+    +'.qdoc-sig-line{border-top:1px solid #999;margin-top:14px;padding-top:4px;font-size:10px;color:#555}'
+    +'.qdoc-warn{background:#fff8e0;border:1px solid #f0a825;border-radius:4px;padding:7px 11px;font-size:10px;color:#7a5a00;margin-bottom:10px}'
+    +'@media print{@page{size:A4;margin:12mm}}</style>'
+    +'</head><body>'+html+'<script>window.onload=function(){window.print();}<\/script></body></html>');
+  w.document.close();
+}
+
+function qExportDocHTML(){
+  var html=document.getElementById('q-doc-container').innerHTML;
+  var qno=document.getElementById('q-no').value||'DRAFT';
+  var blob=new Blob(['<!DOCTYPE html><html><head><meta charset="UTF-8"><title>견적서 '+qno+'</title></head><body style="background:#eee;padding:20px">'+html+'</body></html>'],{type:'text/html'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='견적서_'+qno+'_'+new Date().toISOString().slice(0,10)+'.html';
+  a.click(); qToast('✓ HTML 저장됨','ok');
+}
+
+/* ── 견적 제출 (이력 저장) ── */
+function qSubmitQuote(){
+  if(!QS.quoteAssies.length){ qToast('먼저 견적을 생성하세요','err'); return; }
+  if(!confirm('이 견적을 제출하고 이력에 저장하시겠습니까?')) return;
+  var cfg=qGetCfg();
+  var qno=document.getElementById('q-no').value||'Q-'+Date.now();
+  var qdate=document.getElementById('q-date').value||new Date().toISOString().slice(0,10);
+  var prj=document.getElementById('q-project').value||'';
+  var grandUSD=QS.quoteAssies.reduce(function(s,a){return s+a.totalUSD;},0);
+  var grandKRW=grandUSD*cfg.sellRate;
+  var totalBuy=QS.quoteAssies.reduce(function(s,a){return s+a.totalBuyKrw;},0);
+  var totalLabor=QS.quoteAssies.reduce(function(s,a){return s+(a.isAssy?a.laborKrw||0:0);},0);
+
+  var records=QS.quoteAssies.map(function(a){
+    return {견적번호:qno,견적일자:qdate,품번:a.pn,품명:a.desc,ASSY수량:a.assyQty,
+      매입합계:Math.round(a.totalBuyKrw),작업비:a.isAssy?(a.laborKrw||0):0,
+      견적가달러:parseFloat(a.totalUSD.toFixed(2)),견적가한화:Math.round(a.totalUSD*cfg.sellRate),
+      마진율:parseFloat(a.overallMargin.toFixed(1)),프로젝트:prj,비고:a.remark||'',
+      제출일시:new Date().toISOString(),상태:'제출'};
+  });
+  // 합계 행
+  records.push({견적번호:qno,견적일자:qdate,품번:'(합계)',품명:'견적서 '+qno+' 합계',
+    ASSY수량:QS.quoteAssies.reduce(function(s,a){return s+a.assyQty;},0),
+    매입합계:Math.round(totalBuy),작업비:Math.round(totalLabor),
+    견적가달러:parseFloat(grandUSD.toFixed(2)),견적가한화:Math.round(grandKRW),
+    마진율:grandKRW>0?parseFloat(((grandKRW-totalBuy-totalLabor)/grandKRW*100).toFixed(1)):0,
+    프로젝트:prj,제출일시:new Date().toISOString(),상태:'합계'});
+
+  try{
+    var existing=JSON.parse(localStorage.getItem('jst_quote_hist')||'[]');
+    localStorage.setItem('jst_quote_hist',JSON.stringify(records.concat(existing)));
+  }catch(e){}
+  qToast('✓ 견적 "'+qno+'" 이력 저장 완료','ok');
+
+  // Apps Script 서버 저장 (rows를 객체배열로 전송 — GS handleAppendRows 형식 맞춤)
+  if(CURRENT_TOKEN){
+    apiPost({action:'appendRows',sheet:'quote_hist',rows:records})
+      .then(function(res){ if(res&&(res.ok||res.result==='ok')) qToast('✓ 서버 이력 저장 완료','ok'); })
+      .catch(function(){});
+  }
+}
+
+/* ── 이력 렌더 ── */
+function qRenderHist(){
+  var hist; try{hist=JSON.parse(localStorage.getItem('jst_quote_hist')||'[]');}catch(e){hist=[];}
+  var cont=document.getElementById('q-hist-cont');
+  if(!cont) return;
+
+  // 서버에서 최신 이력 병합 (CURRENT_TOKEN 있을 때)
+  if(CURRENT_TOKEN){
+    cont.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3)">서버에서 이력 불러오는 중...</div>';
+    apiGet({action:'getQuoteHist'}).then(function(res){
+      if(res&&res.data&&res.data.length){
+        // 서버 데이터 + 로컬 병합 (견적번호+제출일시 기준 중복 제거)
+        var serverKeys=new Set(res.data.map(function(r){return r.견적번호+'|'+r.제출일시;}));
+        var localOnly=hist.filter(function(r){return !serverKeys.has(r.견적번호+'|'+r.제출일시);});
+        hist=res.data.concat(localOnly);
+        try{ localStorage.setItem('jst_quote_hist',JSON.stringify(hist)); }catch(e){}
+      }
+      qRenderHistData(hist,cont);
+    }).catch(function(){ qRenderHistData(hist,cont); });
+  } else {
+    qRenderHistData(hist,cont);
+  }
+}
+
+function qRenderHistData(hist,cont){
+  if(!hist.length){ cont.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3)">견적 제출 이력이 없습니다</div>'; return; }
+  var totals=hist.filter(function(r){return r.상태==='합계';}).sort(function(a,b){return new Date(b.제출일시)-new Date(a.제출일시);});
+  var details=hist.filter(function(r){return r.상태==='제출';});
+  var html='<div class="q-tw"><table><thead><tr>'
+    +'<th>견적번호</th><th>견적일자</th><th>품번 (ASSY)</th><th>품명</th>'
+    +'<th class="r">수량</th><th class="r">매입합계(₩)</th><th class="r">작업비(₩)</th>'
+    +'<th class="r">견적가($)</th><th class="r">견적가(₩)</th><th class="r">마진율</th>'
+    +'<th>프로젝트</th><th>상태</th><th>제출일시</th>'
+    +'</tr></thead><tbody>';
+  totals.forEach(function(r){
+    var mr=parseFloat(r.마진율)||0;
+    html+='<tr style="background:var(--bg3)">'
+      +'<td style="font-family:var(--mono);font-weight:700;color:var(--amb)">'+r.견적번호+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11.5px">'+r.견적일자+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--text2)">ALL</td>'
+      +'<td style="font-weight:600">합계</td>'
+      +'<td class="r">'+r.ASSY수량+'</td>'
+      +'<td class="r" style="font-family:var(--mono);color:var(--text2)">'+(+r.매입합계||0).toLocaleString()+'</td>'
+      +'<td class="r" style="font-family:var(--mono);color:var(--text2)">'+(+r.작업비||0).toLocaleString()+'</td>'
+      +'<td class="r" style="font-family:var(--mono);font-weight:700;color:var(--amb)">'+(+r.견적가달러||0).toLocaleString()+'</td>'
+      +'<td class="r" style="font-family:var(--mono);color:var(--text2)">'+(+r.견적가한화||0).toLocaleString()+'</td>'
+      +'<td class="r" style="font-family:var(--mono);color:'+(mr>=30?'var(--green)':mr>=20?'var(--amb)':'var(--red)')+'">'+mr+'%</td>'
+      +'<td style="font-size:11px;color:var(--text2)">'+r.프로젝트+'</td>'
+      +'<td><span class="q-hstat q-hs-s">제출</span></td>'
+      +'<td style="font-family:var(--mono);font-size:10.5px;color:var(--text3)">'+(r.제출일시||'').slice(0,16).replace('T',' ')+'</td>'
+      +'</tr>';
+    details.filter(function(d){return d.견적번호===r.견적번호;}).forEach(function(d){
+      var dm=parseFloat(d.마진율)||0;
+      html+='<tr><td></td>'
+        +'<td style="font-family:var(--mono);font-size:11px;color:var(--text3)">'+d.견적일자+'</td>'
+        +'<td class="q-pn">'+d.품번+'</td>'
+        +'<td style="font-size:11.5px;color:var(--text2)">'+d.품명+'</td>'
+        +'<td class="r">'+d.ASSY수량+'</td>'
+        +'<td class="r q-pkrw">'+(+d.매입합계||0).toLocaleString()+'</td>'
+        +'<td class="r q-pkrw">'+(+d.작업비||0).toLocaleString()+'</td>'
+        +'<td class="r q-pusd">'+(+d.견적가달러||0).toLocaleString()+'</td>'
+        +'<td class="r q-pkrw">'+(+d.견적가한화||0).toLocaleString()+'</td>'
+        +'<td class="r" style="font-family:var(--mono);font-size:11px;color:'+(dm>=30?'var(--green)':dm>=20?'var(--amb)':'var(--red)')+'">'+dm+'%</td>'
+        +'<td></td><td></td><td></td></tr>';
+    });
+  });
+  html+='</tbody></table></div>';
+  cont.innerHTML=html;
+}
+
+function qExportHistCSV(){
+  var hist; try{hist=JSON.parse(localStorage.getItem('jst_quote_hist')||'[]');}catch(e){hist=[];}
+  if(!hist.length){ qToast('이력이 없습니다','err'); return; }
+  var keys=['견적번호','견적일자','품번','품명','ASSY수량','매입합계','작업비','견적가달러','견적가한화','마진율','프로젝트','비고','제출일시','상태'];
+  var csv=[keys].concat(hist.map(function(r){return keys.map(function(k){return r[k]!=null?r[k]:'';});}))
+    .map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='견적이력_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); qToast('✓ 이력 CSV 저장됨','ok');
+}
+
+/* ── CSV 상세 내보내기 ── */
+function qExportCSV(){
+  if(!QS.quoteAssies.length){ qToast('견적을 먼저 생성하세요','err'); return; }
+  var cfg=qGetCfg();
+  var rows=[['ASSY PN','ASSY DESC','ASSY수량','LV','품번','품명','제조사','MFG PN','REV','BOM수량','실수량','UNIT','매입가(₩)','매입소계(₩)','마진율(%)','견적가per($)','견적소계($)','구매처','납기','상태','작업비(₩)']];
+  QS.quoteAssies.forEach(function(a){
+    rows.push([a.pn,a.desc,a.assyQty,'0',a.pn,a.desc,'','',a.rev,'','','','','','','','','','',a.isAssy?'ASSY':'PART',a.isAssy?a.laborKrw:'']);
+    a.parts.forEach(function(p){
+      var it=p.item||{};
+      rows.push([a.pn,a.desc,a.assyQty,'1',p.pn,it.d||p.desc,it.mg||'',it.mp||'',p.rev,p.qty,p.effQty,p.unit,p.buyKrw!=null?p.buyKrw:'',p.buyKrwTotal!=null?p.buyKrwTotal:'',p.margin!=null?(p.margin*100).toFixed(1):'',p.quoteUSDper!=null?p.quoteUSDper.toFixed(4):'',p._custom!=null?p._custom:p.quoteUSDTotal!=null?p.quoteUSDTotal.toFixed(2):'',p.vendor,p.lt,p.status,'']);
+    });
+    rows.push([a.pn,'합계',a.assyQty,'','','','','','','','','','',Math.round(a.totalBuyKrw),'',a.totalUSD.toFixed(2),'','','','',a.isAssy?a.laborKrw:'']);
+    rows.push([]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c!=null?c:'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='견적_'+(document.getElementById('q-no').value||'DRAFT')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); qToast('✓ CSV 저장됨','ok');
+}
+
+/* ── 초기화 ── */
+(function(){
+  var today=new Date().toISOString().slice(0,10);
+  var qd=document.getElementById('q-date');
+  if(qd){ qd.value=today; qAutoNo(today); }
+  qUpdRateDisp();
+})();
+
+/* ── BOM관리에 저장 ── */
+function qSaveToBOM(){
+  if(!QS.bomAssies.length){ qToast('BOM이 비어있습니다','err'); return; }
+  var assyPNs=QS.bomAssies.filter(function(a){return a.parts.length>0;}).map(function(a){return a.pn;});
+  if(!assyPNs.length){ qToast('저장할 ASSY가 없습니다','err'); return; }
+
+  // 확인 메시지
+  var msg='다음 ASSY BOM을 BOM관리에 저장합니다:\n\n'+assyPNs.join('\n')+'\n\n기존 데이터는 덮어씌워집니다. 계속하시겠습니까?';
+  if(!confirm(msg)) return;
+
+  var added=0, updated=0;
+  QS.bomAssies.forEach(function(assy){
+    if(!assy.parts.length) return;
+    var parent=String(assy.pn).trim();
+    var children=assy.parts.map(function(p,idx){
+      var entry={
+        no: idx+1,
+        lv: 1,
+        pn: String(p.pn).trim(),
+        desc: p.desc||(p.item?p.item.d:''),
+        qty: p.qty,
+        aqty: p.qty,   // 실사용수량은 ASSY수량 곱셈이므로 BOM엔 기본값 저장
+        unit: p.unit||'EA'
+      };
+      // REV가 있으면 추가
+      if(p.rev) entry.rev=p.rev;
+      return entry;
+    });
+    if(BOM[parent]) updated++; else added++;
+    BOM[parent]=children;
+  });
+
+  // localStorage + 서버 동기화
+  try{ sv(K.BOM, BOM); }catch(e){}
+  if(CURRENT_TOKEN){
+    apiPost({ action:'setSheet', sheet:'bom_data', data: bomToRows(BOM) })
+      .then(function(){ qToast('✓ BOM관리 저장 완료 (신규 '+added+'건 / 갱신 '+updated+'건)','ok'); })
+      .catch(function(e){ qToast('서버 저장 실패, 로컬 저장됨','info'); });
+  } else {
+    qToast('✓ 로컬 BOM 저장 완료 (신규 '+added+'건 / 갱신 '+updated+'건)','ok');
+  }
+
+  // BOM관리 탭 UI 갱신 (함수가 있으면)
+  if(typeof renderBOM==='function') renderBOM();
+  if(typeof updateBOMStat==='function') updateBOMStat();
+}
+
+/* ── 문서번호 자동부여 ── */
+function qAutoNo(dateStr){
+  if(!dateStr) return;
+  var d=dateStr; // 'YYYY-MM-DD'
+  var prefix=d.slice(2,4)+d.slice(5,7)+d.slice(8,10); // 'YYMMDD'
+  var hist=[]; try{hist=JSON.parse(localStorage.getItem('jst_quote_hist')||'[]');}catch(e){}
+  // 같은 날짜 prefix의 '합계' 이력 수 카운트
+  var count=hist.filter(function(r){ return r.상태==='합계'&&r.견적번호&&r.견적번호.startsWith(prefix+'-'); }).length;
+  var seq=String(count+1).padStart(3,'0');
+  var noEl=document.getElementById('q-no');
+  if(noEl) noEl.value=prefix+'-'+seq;
+}
+
+/* ── 수동입력 날짜 → 문서번호 ── */
+function qMAutoNo(dateStr){
+  if(!dateStr) return;
+  var d=dateStr;
+  var prefix=d.slice(2,4)+d.slice(5,7)+d.slice(8,10);
+  var hist=[]; try{hist=JSON.parse(localStorage.getItem('jst_quote_hist')||'[]');}catch(e){}
+  var count=hist.filter(function(r){ return r.상태==='합계'&&r.견적번호&&r.견적번호.startsWith(prefix+'-'); }).length;
+  var seq=String(count+1).padStart(3,'0');
+  var noEl=document.getElementById('qm-no');
+  if(noEl&&!noEl.value) noEl.value=prefix+'-'+seq;
+}
+
+/* ── 수동이력 토글 ── */
+function qToggleManualEntry(){
+  var el=document.getElementById('q-manual-entry');
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block'){
+    var today=new Date().toISOString().slice(0,10);
+    var dateEl=document.getElementById('qm-date');
+    if(dateEl&&!dateEl.value){ dateEl.value=today; qMAutoNo(today); }
+  }
+}
+
+/* ── 수동이력 저장 ── */
+function qSaveManualEntry(){
+  var g=function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
+  var qdate=g('qm-date'); if(!qdate){ qToast('견적일자를 입력하세요','err'); return; }
+  var pn=g('qm-pn'); if(!pn){ qToast('품번을 입력하세요','err'); return; }
+  var usd=parseFloat(g('qm-usd')); if(!usd){ qToast('견적가($)를 입력하세요','err'); return; }
+  var qno=g('qm-no')||qdate.slice(2,4)+qdate.slice(5,7)+qdate.slice(8,10)+'-M'+Date.now().toString().slice(-3);
+  var qty=parseInt(g('qm-qty'))||1;
+  var buyKrw=parseFloat(g('qm-buy'))||0;
+  var labor=parseFloat(g('qm-labor'))||0;
+  var krw=parseFloat(g('qm-krw'))||Math.round(usd*1250);
+  var marg=krw>0?parseFloat(((krw-buyKrw-labor)/krw*100).toFixed(1)):0;
+
+  var records=[
+    {견적번호:qno,견적일자:qdate,품번:pn,품명:g('qm-desc'),ASSY수량:qty,
+     매입합계:buyKrw,작업비:labor,견적가달러:usd,견적가한화:krw,
+     마진율:marg,프로젝트:g('qm-prj'),비고:g('qm-note'),
+     제출일시:new Date().toISOString(),상태:'제출'},
+    {견적번호:qno,견적일자:qdate,품번:'(합계)',품명:'수동입력',ASSY수량:qty,
+     매입합계:buyKrw,작업비:labor,견적가달러:usd,견적가한화:krw,
+     마진율:marg,프로젝트:g('qm-prj'),비고:g('qm-note'),
+     제출일시:new Date().toISOString(),상태:'합계'}
+  ];
+
+  var hist=[]; try{hist=JSON.parse(localStorage.getItem('jst_quote_hist')||'[]');}catch(e){}
+  // 같은 견적번호면 합계만 업데이트하고 제출 추가
+  hist=hist.filter(function(r){ return !(r.견적번호===qno&&r.상태==='합계'); });
+  try{ localStorage.setItem('jst_quote_hist',JSON.stringify(records.concat(hist))); }catch(e){}
+
+  // 서버 저장 (rows를 객체배열로 전송)
+  if(CURRENT_TOKEN){
+    apiPost({action:'appendRows',sheet:'quote_hist',rows:records}).catch(function(){});
+  }
+
+  qToast('✓ 이력 저장: '+qno+' / '+pn,'ok');
+
+  // 폼 초기화 (품번만 클리어, 나머지 유지하여 동일 견적번호로 여러 ASSY 추가 가능)
+  ['qm-pn','qm-desc','qm-qty','qm-buy','qm-labor','qm-usd','qm-krw','qm-note'].forEach(function(id){
+    var e=document.getElementById(id); if(e) e.value=id==='qm-qty'?'1':'';
+  });
+  qRenderHist();
+}
+
+// ═══ 견적 모듈 끝 ═══
 
 </script>
 </div><!-- /app-wrap -->
@@ -11522,3 +12531,212 @@ function initAfterLogin() {
   </div>
 </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════
+     견적 섹션
+══════════════════════════════════════════════════ -->
+<div class="sect-wrap" id="sect-quote">
+  <!-- 서브탭 -->
+  <div class="q-stabs">
+    <button class="q-stab on" id="qstab-write"  onclick="qSw('write')">✦ 견적 작성</button>
+    <button class="q-stab" id="qstab-doc"    onclick="qSw('doc');qBuildDoc()">📄 견적서</button>
+    <button class="q-stab" id="qstab-issues" onclick="qSw('issues')" id="q-issues-btn">⚠ 이슈</button>
+    <button class="q-stab" id="qstab-hist"   onclick="qSw('hist');qRenderHist()">📋 이력</button>
+    <button class="q-stab" id="qstab-cfg"    onclick="qSw('cfg')">⚙ 설정</button>
+  </div>
+  <div class="q-page">
+
+    <!-- ── 견적 작성 ── -->
+    <div class="q-tp on" id="q-tp-write">
+      <!-- 기본정보 -->
+      <div class="q-card">
+        <div class="q-ct"><div class="q-ctl"><div class="q-ctb"></div>견적 기본정보</div></div>
+        <div class="q-ga">
+          <div class="qfg"><label>Quote No.</label><input type="text" id="q-no" placeholder="자동 부여 (날짜 입력 시)"></div>
+          <div class="qfg"><label>Date</label><input type="date" id="q-date" onchange="qAutoNo(this.value)"></div>
+          <div class="qfg"><label>Project / RFQ</label><input type="text" id="q-project"></div>
+          <div class="qfg"><label>Issued to</label><input type="text" id="q-to" value="AXCELIS Corp."></div>
+          <div class="qfg"><label>Contact</label><input type="text" id="q-contact" value="LEE, JAEGYU"></div>
+          <div class="qfg"><label>납기 (Delivery)</label><input type="text" id="q-delivery" placeholder="To be discussed"></div>
+        </div>
+      </div>
+      <!-- BOM 입력 -->
+      <div class="q-card">
+        <div class="q-ct">
+          <div class="q-ctl"><div class="q-ctb"></div>BOM 입력</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="qbtn qbp" onclick="document.getElementById('q-xl-in').click()">📂 Excel BOM 업로드</button>
+            <button class="qbtn qbs qbsm" onclick="qTogglePaste()">📋 붙여넣기</button>
+            <button class="qbtn qbs qbsm" onclick="qAddRow()">+ 행 추가</button>
+            <button class="qbtn qbs qbsm" onclick="qClearBOM()">🗑 초기화</button>
+            <input type="file" id="q-xl-in" accept=".xlsx,.xlsm,.xls" style="display:none" onchange="qLoadBOMXl(this)">
+          </div>
+        </div>
+        <div id="q-paste-wrap" style="display:none;margin-bottom:10px">
+          <textarea class="q-paste-ta" id="q-paste-ta" rows="5"
+            placeholder="Excel에서 복사 붙여넣기 (탭 구분)&#10;형식: LEVEL[탭]품번[탭]수량[탭]단위[탭]REV&#10;Level 0=ASSY, Level 1=부품 / 수량=0 or as needed 자동 제외"></textarea>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+            <button class="qbtn qbp qbsm" onclick="qParsePaste()">▶ 파싱 & 추가</button>
+            <span style="font-size:11px;color:var(--text3)">* 상위레벨 수량: ASSY수량 입력란에서 설정</span>
+          </div>
+        </div>
+        <div class="q-tw" style="margin-bottom:10px">
+          <table id="q-bom-tbl">
+            <thead><tr>
+              <th class="c" style="width:40px">LV</th>
+              <th style="width:140px">품번</th><th>설명 (DB 조회시 자동)</th>
+              <th class="r" style="width:62px">수량</th>
+              <th class="c" style="width:58px">단위</th>
+              <th class="c" style="width:52px">REV</th>
+              <th style="width:32px"></th>
+            </tr></thead>
+            <tbody id="q-bom-rows"></tbody>
+          </table>
+        </div>
+        <div class="qbrow">
+          <button class="qbtn qbp" onclick="qGenQuote()">🔍 DB 조회 &amp; 견적 생성</button>
+          <button class="qbtn qbs qbsm" onclick="qExportCSV()">↓ CSV</button>
+          <button class="qbtn qbg qbsm" onclick="qSubmitQuote()">📤 견적 제출 (이력 저장)</button>
+          <button class="qbtn qbsm" style="background:rgba(167,139,250,.12);border:1px solid var(--purple);color:var(--purple)" onclick="qSaveToBOM()">📦 BOM관리에 저장</button>
+          <span id="q-bom-cnt" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+      </div>
+      <!-- 결과 -->
+      <div id="q-result" style="display:none">
+        <div class="q-card">
+          <div class="q-ct">
+            <div class="q-ctl"><div class="q-ctb" style="background:var(--green)"></div>견적 요약</div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <label style="font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="q-hide-zero" onchange="qRerender()"> 수량=0 숨기기</label>
+              <label style="font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="q-hide-docs" onchange="qRerender()" checked> 문서참조 숨기기</label>
+              <button class="qbtn qbp qbsm" onclick="qSw('doc');qBuildDoc()">📄 견적서 보기</button>
+            </div>
+          </div>
+          <div class="q-sgrid" id="q-summary"></div>
+        </div>
+        <div id="q-assy-sections"></div>
+      </div>
+    </div>
+
+    <!-- ── 견적서 ── -->
+    <div class="q-tp" id="q-tp-doc">
+      <div class="q-card">
+        <div class="q-ct">
+          <div class="q-ctl"><div class="q-ctb"></div>견적서 미리보기</div>
+          <div style="display:flex;gap:8px">
+            <button class="qbtn qbp" onclick="qPrintDoc()">🖨 인쇄 / PDF</button>
+            <button class="qbtn qbs qbsm" onclick="qExportDocHTML()">↓ HTML 저장</button>
+            <button class="qbtn qbg qbsm" onclick="qSubmitQuote()">📤 견적 제출</button>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#e8e8e8;padding:16px">
+          <div id="q-doc-container"><div style="text-align:center;padding:40px;color:var(--text3)">견적 생성 후 여기에 표시됩니다</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 이슈 ── -->
+    <div class="q-tp" id="q-tp-issues">
+      <div class="q-g2">
+        <div class="q-card">
+          <div class="q-ct"><div class="q-ctl"><div class="q-ctb" style="background:var(--red)"></div>미등록 품목</div><span id="q-cnt-ur" class="qbdg qbdg-r">0</span></div>
+          <div id="q-panel-ur"><div style="color:var(--text3);font-size:12px;padding:12px 0">견적 생성 후 확인 가능</div></div>
+        </div>
+        <div class="q-card">
+          <div class="q-ct"><div class="q-ctl"><div class="q-ctb" style="background:var(--amb)"></div>단가 없는 품목</div><span id="q-cnt-np" class="qbdg qbdg-a">0</span></div>
+          <div id="q-panel-np"><div style="color:var(--text3);font-size:12px;padding:12px 0">견적 생성 후 확인 가능</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 이력 ── -->
+    <div class="q-tp" id="q-tp-hist">
+      <div class="q-card">
+        <div class="q-ct">
+          <div class="q-ctl"><div class="q-ctb" style="background:var(--purple)"></div>견적 제출 이력</div>
+          <div style="display:flex;gap:8px">
+            <button class="qbtn qbsm" style="background:rgba(167,139,250,.12);border:1px solid var(--purple);color:var(--purple)" onclick="qToggleManualEntry()">✏ 이전 이력 추가</button>
+            <button class="qbtn qbs qbsm" onclick="qExportHistCSV()">↓ CSV</button>
+            <button class="qbtn qbsm" style="background:rgba(255,85,85,.12);border:1px solid var(--red);color:var(--red)" onclick="if(confirm('이력을 모두 삭제하시겠습니까?')){localStorage.removeItem('jst_quote_hist');qRenderHist();}">🗑 초기화</button>
+          </div>
+        </div>
+
+        <!-- 수동 이력 입력 폼 -->
+        <div id="q-manual-entry" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:14px">
+          <div style="font-size:11.5px;font-weight:600;color:var(--purple);margin-bottom:12px">✏ 이전 이력 수동 입력</div>
+          <div class="q-ga" style="margin-bottom:10px">
+            <div class="qfg"><label>견적번호 (없으면 날짜로 자동)</label><input type="text" id="qm-no" placeholder="260101-001"></div>
+            <div class="qfg"><label>견적일자 *</label><input type="date" id="qm-date" onchange="qMAutoNo(this.value)"></div>
+            <div class="qfg"><label>품번 (ASSY PN) *</label><input type="text" id="qm-pn" placeholder="110133610" style="font-family:var(--mono)"></div>
+            <div class="qfg"><label>품명 (Description)</label><input type="text" id="qm-desc" placeholder="ASSY RCPT INJECTOR RACK 1"></div>
+            <div class="qfg"><label>ASSY 수량</label><input type="number" id="qm-qty" value="1" min="1"></div>
+            <div class="qfg"><label>매입합계 (₩)</label><input type="number" id="qm-buy" placeholder="0" style="font-family:var(--mono)"></div>
+            <div class="qfg"><label>작업비 (₩)</label><input type="number" id="qm-labor" placeholder="0" style="font-family:var(--mono)"></div>
+            <div class="qfg"><label>견적가 ($) *</label><input type="number" id="qm-usd" placeholder="0.00" step="0.01" style="font-family:var(--mono)"></div>
+            <div class="qfg"><label>견적가 (₩)</label><input type="number" id="qm-krw" placeholder="0" style="font-family:var(--mono)"></div>
+            <div class="qfg"><label>프로젝트 / RFQ</label><input type="text" id="qm-prj" placeholder="RFQ_XXXXXXX"></div>
+            <div class="qfg"><label>비고</label><input type="text" id="qm-note" placeholder=""></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="qbtn qbp" onclick="qSaveManualEntry()">💾 저장</button>
+            <button class="qbtn qbs qbsm" onclick="qToggleManualEntry()">취소</button>
+            <span style="font-size:11px;color:var(--text3)">* 동일 견적번호로 여러 ASSY를 입력하면 이력에 묶어서 표시됩니다</span>
+          </div>
+        </div>
+
+        <div id="q-hist-cont"><div style="text-align:center;padding:30px;color:var(--text3)">견적 제출 이력이 없습니다</div></div>
+      </div>
+    </div>
+
+    <!-- ── 설정 ── -->
+    <div class="q-tp" id="q-tp-cfg">
+      <div class="q-g2">
+        <div class="q-card">
+          <div class="q-ct"><div class="q-ctl"><div class="q-ctb"></div>환율</div></div>
+          <div class="q-g2">
+            <div class="qfg"><label>매입환율 (₩/$)</label><input type="number" id="q-buy-rate" value="1450" oninput="qUpdRateDisp()"></div>
+            <div class="qfg"><label>판매환율 (₩/$)</label><input type="number" id="q-sell-rate" value="1250" oninput="qUpdRateDisp()"></div>
+          </div>
+          <div style="margin-top:10px;font-size:11.5px;color:var(--text3);line-height:1.7">
+            * DB의 k6(26년 매입가₩) 기준. k6 없으면 k5 사용<br>
+            * 환율표시: 헤더 <span id="q-rate-disp" style="font-family:var(--mono);color:var(--amb)">—</span>
+          </div>
+        </div>
+        <div class="q-card">
+          <div class="q-ct"><div class="q-ctl"><div class="q-ctb"></div>마진율 (금액 구간별)</div></div>
+          <table class="q-mtt">
+            <thead><tr><th>구간 (매입가 ₩)</th><th class="r">마진율</th></tr></thead>
+            <tbody>
+              <tr><td>1,000,000원 이상</td><td class="r"><input type="number" id="q-m1" value="20" min="0" max="100"> %</td></tr>
+              <tr><td>100,000원 이상</td><td class="r"><input type="number" id="q-m2" value="25" min="0" max="100"> %</td></tr>
+              <tr><td>10,000원 이상</td><td class="r"><input type="number" id="q-m3" value="35" min="0" max="100"> %</td></tr>
+              <tr><td>10,000원 미만</td><td class="r"><input type="number" id="q-m4" value="45" min="0" max="100"> %</td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px;font-family:var(--mono)">견적가($) = 매입가₩×qty ÷ (1-마진율) ÷ 판매환율</div>
+        </div>
+        <div class="q-card">
+          <div class="q-ct"><div class="q-ctl"><div class="q-ctb" style="background:var(--amb)"></div>작업비</div></div>
+          <div class="q-g2">
+            <div class="qfg"><label>작업비 마진율 (%)</label><input type="number" id="q-labor-marg" value="25" min="0" max="100"></div>
+            <div class="qfg"><label>기본 작업비 (₩/ASSY)</label><input type="number" id="q-labor-def" value="50000" step="1000"></div>
+          </div>
+          <div style="margin-top:10px;font-size:11.5px;color:var(--text3);line-height:1.8">
+            ASSY 조건: <span style="font-family:var(--mono);color:var(--amb)">10xxxx / 11xxxx / 12xxxx / 16xxxx</span>
+          </div>
+        </div>
+        <div class="q-card">
+          <div class="q-ct"><div class="q-ctl"><div class="q-ctb"></div>견적서 회사정보</div></div>
+          <div class="q-ga">
+            <div class="qfg"><label>회사명</label><input type="text" id="q-s-co" value="Jinsun Tech Co., Ltd."></div>
+            <div class="qfg"><label>담당자</label><input type="text" id="q-s-person" value="김교한 차장"></div>
+            <div class="qfg"><label>이메일</label><input type="text" id="q-s-email" value="sales@jinsuntech.co.kr"></div>
+            <div class="qfg"><label>전화</label><input type="text" id="q-s-tel" value="041-579-5845"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.q-page -->
+</div><!-- /#sect-quote -->
+<div id="q-toast"></div>
