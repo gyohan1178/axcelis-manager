@@ -10420,8 +10420,7 @@ function renderWhereUsed(childPN){
         +'<span style="color:var(--text2)">사용 ASSY: <b style="color:var(--tel)">'+groups.length+'개</b></span>'
         +'<span style="color:var(--text2)">총 합계수량: <b style="color:var(--tel)">'+grandTotal+'</b></span>'
       +'</div>'
-    +'</div>'
-    // ── 테이블 ──
+    // ── 테이블 (품명 좁힘, 수량 소수점 2자리) ──
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">'
     +'<colgroup><col style="width:140px"><col style="width:220px"><col style="width:100px"><col style="width:80px"><col style="width:72px"></colgroup>'
     +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
@@ -10438,15 +10437,15 @@ function renderWhereUsed(childPN){
     var detailId='wu-det-'+gi;
     var totQtyDisp=Number.isInteger(g.totalQty)?g.totalQty:parseFloat(g.totalQty).toFixed(2);
     // ── 요약 행 ──
-    html+='<tr style="border-bottom:1px solid var(--border);cursor:default">'
+    html+='<tr style="border-bottom:1px solid var(--border)">'
       +'<td style="padding:9px 14px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tel);white-space:nowrap">'+g.parentPN+'</td>'
       +'<td style="padding:9px 12px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+g.desc+'">'+g.desc+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)">'+g.totalQty+'</td>'
-      +'<td style="padding:9px 10px;text-align:center">'
+      +'<td style="padding:9px 14px;text-align:right;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)">'+totQtyDisp+'</td>'
+      +'<td style="padding:9px 12px;text-align:center">'
         +'<button onclick="srchTab(\'bom\');document.getElementById(\'bom-lookup-pn\').value=\''+g.parentPN+'\';lookupBOM()" '
           +'style="background:none;border:1px solid var(--tel);border-radius:5px;padding:3px 10px;color:var(--tel);font-size:11px;cursor:pointer;font-weight:600">조회</button>'
       +'</td>'
-      +'<td style="padding:9px 10px;text-align:center">'
+      +'<td style="padding:9px 12px;text-align:center">'
         +(multiRow
           ? '<button onclick="wuToggle(\''+detailId+'\')" id="wubtn-'+gi+'" '
               +'style="background:none;border:1px solid var(--border2);border-radius:5px;padding:3px 10px;color:var(--text2);font-size:11px;cursor:pointer;min-width:44px">▼ '+g.rows.length+'</button>'
@@ -10457,25 +10456,27 @@ function renderWhereUsed(childPN){
     if(multiRow){
       html+='<tr id="'+detailId+'" style="display:none"><td colspan="5" style="padding:0;background:rgba(45,212,191,.04);border-bottom:2px solid var(--border2)">'
         +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed">'
-        +'<colgroup><col style="width:140px"><col style="width:50px"><col><col style="width:90px"><col style="width:120px"></colgroup>'
+        +'<colgroup><col style="width:100px"><col style="width:44px"><col><col style="width:90px"><col style="width:70px"></colgroup>'
         +'<thead><tr style="background:rgba(45,212,191,.08)">'
           +'<th style="padding:5px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--tel);text-transform:uppercase;letter-spacing:.3px">항목번호</th>'
           +'<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:600;color:var(--tel)">LV</th>'
-          +'<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--tel)">부품 설명</th>'
-          +'<th style="padding:5px 12px;text-align:right;font-size:10px;font-weight:600;color:var(--tel)">수량</th>'
-          +'<th style="padding:5px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--tel)">대체</th>'
+          +'<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--tel)">사용 품번</th>'
+          +'<th style="padding:5px 14px;text-align:right;font-size:10px;font-weight:600;color:var(--tel)">수량</th>'
+          +'<th style="padding:5px 10px;text-align:center;font-size:10px;font-weight:600;color:var(--tel)">대체</th>'
         +'</tr></thead><tbody>'
         +g.rows.map(function(r){
+          var qDisp=Number.isInteger(r.qty)?r.qty:parseFloat(r.qty).toFixed(2);
           return '<tr style="border-top:1px solid rgba(45,212,191,.1)">'
             +'<td style="padding:5px 14px;font-family:var(--mono);font-size:11px;color:var(--text3)">'+(r.no||'—')+'</td>'
             +'<td style="padding:5px 8px;text-align:center"><span style="background:rgba(45,212,191,.15);color:var(--tel);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:700;font-family:var(--mono)">'+r.lv+'</span></td>'
-            +'<td style="padding:5px 8px;color:var(--text2);font-size:11px">'+r.parentPN+' 내 '+pn+'</td>'
-            +'<td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">'+r.qty+'</td>'
-            +'<td style="padding:5px 12px">'+(r.isAlt?'<span style="font-size:10px;background:rgba(255,181,71,.18);color:var(--amber);border-radius:3px;padding:1px 6px;font-weight:700">대체</span>':'')+'</td>'
+            +'<td style="padding:5px 8px;color:var(--text2);font-size:11px;font-family:var(--mono)">'+pn+'</td>'
+            +'<td style="padding:5px 14px;text-align:right;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text)">'+qDisp+'</td>'
+            +'<td style="padding:5px 10px;text-align:center">'+(r.isAlt?'<span style="font-size:10px;background:rgba(255,181,71,.18);color:var(--amber);border-radius:3px;padding:1px 6px;font-weight:700">대체</span>':'')+'</td>'
             +'</tr>';
         }).join('')
         +'</tbody></table></td></tr>';
     }
+  });
   });
 
   html+='</tbody></table></div>';
@@ -10496,6 +10497,7 @@ function wuToggle(id){
     btn.style.borderColor=open?'var(--tel)':'var(--border2)';
   }
 }
+
 
 
 
