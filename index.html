@@ -12077,7 +12077,8 @@ function qSaveManualEntry(){
   var qty=parseInt(g('qm-qty'))||1;
   var buyKrw=parseFloat(g('qm-buy'))||0;
   var labor=parseFloat(g('qm-labor'))||0;
-  var krw=parseFloat(g('qm-krw'))||Math.round(usd*1250);
+  var cfg2=qGetCfg();
+  var krw=parseFloat(g('qm-krw'))||Math.round(usd*cfg2.sellRate);
   var marg=krw>0?parseFloat(((krw-buyKrw-labor)/krw*100).toFixed(1)):0;
 
   var records=[
@@ -12108,6 +12109,110 @@ function qSaveManualEntry(){
     var e=document.getElementById(id); if(e) e.value=id==='qm-qty'?'1':'';
   });
   qRenderHist();
+}
+
+/* ── PO PDF 업로드 (PDF.js 동적 로드) ── */
+var _pdfJsLoaded = false;
+var _pdfJsLoading = false;
+var _pdfJsCbs = [];
+
+function qEnsurePdfJs(cb){
+  if(_pdfJsLoaded){ cb(); return; }
+  _pdfJsCbs.push(cb);
+  if(_pdfJsLoading) return;
+  _pdfJsLoading = true;
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload = function(){
+    // pdf.js 워커 설정
+    if(window.pdfjsLib){
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    _pdfJsLoaded = true;
+    _pdfJsCbs.forEach(function(fn){ fn(); });
+    _pdfJsCbs = [];
+  };
+  s.onerror = function(){
+    qToast('PDF.js 로드 실패. 인터넷 연결을 확인하세요','err',5000);
+    _pdfJsLoading = false; _pdfJsCbs = [];
+  };
+  document.head.appendChild(s);
+}
+
+function qLoadPOPdf(inp){
+  if(!inp||!inp.files[0]) return;
+  var file = inp.files[0];
+  var stEl = document.getElementById('qpo-pdf-status');
+  if(stEl) stEl.textContent = '⏳ PDF.js 로드 중...';
+  qToast('PDF 로드 중...','info',8000);
+
+  qEnsurePdfJs(function(){
+    if(!window.pdfjsLib){ qToast('PDF.js 로드 실패','err'); return; }
+    if(stEl) stEl.textContent = '⏳ PDF 파싱 중...';
+
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var arr = new Uint8Array(e.target.result);
+      pdfjsLib.getDocument({data: arr}).promise.then(function(pdf){
+        var pages = pdf.numPages;
+        var textPromises = [];
+        for(var pg=1; pg<=pages; pg++){
+          textPromises.push(pdf.getPage(pg).then(function(page){
+            return page.getTextContent();
+          }));
+        }
+        Promise.all(textPromises).then(function(results){
+          // 각 페이지 텍스트 합치기
+          var fullText = '';
+          results.forEach(function(content){
+            // y좌표 기준으로 줄 그룹핑
+            var lines = {};
+            content.items.forEach(function(item){
+              var y = Math.round(item.transform[5]); // y 좌표
+              if(!lines[y]) lines[y] = [];
+              lines[y].push({x: item.transform[4], str: item.str});
+            });
+            // y 내림차순 (위→아래), x 오름차순 정렬
+            Object.keys(lines).sort(function(a,b){return b-a;}).forEach(function(y){
+              var lineItems = lines[y].sort(function(a,b){return a.x-b.x;});
+              var lineStr = lineItems.map(function(it){ return it.str; }).join('  ').trim();
+              if(lineStr) fullText += lineStr + '\n';
+            });
+          });
+
+          // PO No / Date 자동 추출
+          var mPO = fullText.match(/PURCHASE ORDER NO[\s.]*\n?\s*([\d]+)/i);
+          if(mPO){
+            var noEl = document.getElementById('qpo-no');
+            if(noEl && !noEl.value) noEl.value = mPO[1].trim();
+          }
+          var mDate = fullText.match(/ORDER DATE\s*\n?\s*(\d{2}\/\d{2}\/\d{2,4})/i);
+          if(mDate){
+            var dateEl = document.getElementById('qpo-date');
+            if(dateEl && !dateEl.value){
+              // MM/DD/YY → YYYY-MM-DD
+              var dp = mDate[1].split('/');
+              var yr = dp[2].length===2?'20'+dp[2]:dp[2];
+              dateEl.value = yr+'-'+dp[0].padStart(2,'0')+'-'+dp[1].padStart(2,'0');
+            }
+          }
+
+          var ta = document.getElementById('qpo-paste');
+          if(ta) ta.value = fullText;
+          if(stEl) stEl.textContent = '✓ '+pages+'페이지 추출 완료';
+          qToast('✓ PDF 텍스트 추출 완료 — 파싱 시작...','ok');
+          // 자동 파싱
+          qParsePO();
+        });
+      }).catch(function(err){
+        if(stEl) stEl.textContent = '❌ 오류';
+        qToast('PDF 파싱 오류: '+err.message,'err',5000);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+    inp.value = '';
+  });
 }
 
 /* ── PO 파싱 & 대조 ── */
@@ -12413,6 +12518,9 @@ function qConvertHistRows(rows){
   if(iUSD<0)  return{error:'필수 열 없음: 견적가 (usd / quoteprice / 견적가($) 등)'};
 
   var cfg=qGetCfg();
+  // 업로드 시점 환율 (입력값 우선, 없으면 설정탭 판매환율)
+  var exRateEl=document.getElementById('qhist-exrate');
+  var exRate=exRateEl?(parseFloat(exRateEl.value)||cfg.sellRate):cfg.sellRate;
   var records=[];
   var dupes=0;
   var existing=[];
@@ -12460,7 +12568,7 @@ function qConvertHistRows(rows){
     var moq   = iMOQ>=0?toNum(r[iMOQ])||1:1;
     var labor = iLabor>=0?toNum(r[iLabor]):0;
     var buy   = iBuy>=0?toNum(r[iBuy]):0;
-    var krw   = iKRW>=0?toNum(r[iKRW]):Math.round(usd*cfg.sellRate);
+    var krw   = iKRW>=0?toNum(r[iKRW]):Math.round(usd*exRate);
     var prj   = iPrj>=0?String(r[iPrj]||'').trim():'';
     var note  = iNote>=0?String(r[iNote]||'').trim():'';
     var desc  = iDesc>=0?String(r[iDesc]||'').trim():'';
@@ -13095,8 +13203,15 @@ function qMergeHistRecords(newRecs){
           <div class="q-ctl"><div class="q-ctb" style="background:var(--purple)"></div>견적 제출 이력</div>
           <div style="display:flex;gap:8px">
             <button class="qbtn qbsm" style="background:rgba(167,139,250,.12);border:1px solid var(--purple);color:var(--purple)" onclick="qToggleManualEntry()">✏ 이전 이력 추가</button>
+            <button class="qbtn qbsm" style="background:rgba(52,211,153,.12);border:1px solid var(--green);color:var(--green)" onclick="document.getElementById('q-csv-guide').style.display=document.getElementById('q-csv-guide').style.display==='none'?'block':'none'">? 형식</button>
             <button class="qbtn qbsm" style="background:rgba(52,211,153,.12);border:1px solid var(--green);color:var(--green)" onclick="document.getElementById('qhist-csv-in').click()">📂 CSV 업로드</button>
             <input type="file" id="qhist-csv-in" accept=".csv,.xlsx,.xls" style="display:none" onchange="qLoadHistCSV(this)">
+            <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px">
+              환율
+              <input type="number" id="qhist-exrate" value="1250" step="10" min="500" max="3000"
+                style="background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:3px 7px;color:var(--amb);font-family:var(--mono);font-size:12px;font-weight:600;width:70px;text-align:right">
+              ₩/$
+            </span>
             <button class="qbtn qbs qbsm" onclick="qExportHistCSV()">↓ CSV</button>
             <button class="qbtn qbsm" style="background:rgba(255,85,85,.12);border:1px solid var(--red);color:var(--red)" onclick="if(confirm('이력을 모두 삭제하시겠습니까?')){localStorage.removeItem('jst_quote_hist');qRenderHist();}">🗑 초기화</button>
           </div>
@@ -13154,21 +13269,23 @@ function qMergeHistRecords(newRecs){
       <div class="q-card">
         <div class="q-ct">
           <div class="q-ctl"><div class="q-ctb" style="background:var(--teal)"></div>PO 발주서 입력</div>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--text3)">PO No.</span>
             <input type="text" id="qpo-no" placeholder="815745" style="background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:4px 10px;color:var(--text);font-family:var(--mono);font-size:12px;width:110px">
             <span style="font-size:11px;color:var(--text3)">발주일</span>
             <input type="date" id="qpo-date" style="background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:4px 10px;color:var(--text);font-size:12px">
+            <button class="qbtn" style="background:var(--teal);color:#051515;font-weight:700;margin-left:8px" onclick="document.getElementById('qpo-pdf-in').click()">📄 PDF 업로드</button>
+            <input type="file" id="qpo-pdf-in" accept=".pdf" style="display:none" onchange="qLoadPOPdf(this)">
+            <span id="qpo-pdf-status" style="font-size:11px;color:var(--text3)"></span>
           </div>
         </div>
 
         <!-- 붙여넣기 안내 -->
         <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:11.5px;color:var(--text2);line-height:1.9">
-          <b style="color:var(--teal)">PDF → 텍스트 붙여넣기 방법</b><br>
-          1. PDF를 브라우저 또는 Adobe Acrobat에서 열기<br>
-          2. <b>Ctrl+A</b> → <b>Ctrl+C</b> 로 전체 복사<br>
-          3. 아래 입력란에 붙여넣기 → 자동 파싱<br>
-          <span style="color:var(--text3)">※ AXCELIS PO 양식 자동 인식: ITEM / PART NUMBER / UNIT PRICE / DATE / QTY</span>
+          <b style="color:var(--teal)">입력 방법</b><br>
+          <b>① PDF 업로드</b> — 위 버튼으로 PDF 직접 선택 → 자동 파싱<br>
+          <b>② 텍스트 붙여넣기</b> — PDF에서 Ctrl+A → Ctrl+C 복사 후 아래 입력란에 붙여넣기<br>
+          <span style="color:var(--text3)">※ AXCELIS PO 표준 양식 자동 인식</span>
         </div>
 
         <textarea id="qpo-paste" rows="8" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px;color:var(--text);font-family:var(--mono);font-size:11.5px;resize:vertical;line-height:1.7"
