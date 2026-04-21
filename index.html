@@ -3758,7 +3758,7 @@ function switchApp(app) {
   if(app==='srch')   { srchTab('item'); }
   if(app==='todo')   renderTodo();
   if(app==='quote')  { qInitCheck(); }
-  if(app==='pdbox')  { pbRender(); }
+  if(app==='pdbox')  { pbLoad(); pbRender(); pbSyncFromServer(function(){ pbRender(); }); }
   var ptTabs=document.getElementById('pt-inner-tabs');
   if(ptTabs) ptTabs.style.display=(app==='purchase')?'':'none';
 }
@@ -12884,6 +12884,37 @@ function pbSaveAll(){
     apiPost({action:'setSheet',sheet:'pdbox_data',data:_pbData}).catch(function(){});
   }
 }
+function pbSyncFromServer(callback){
+  if(!CURRENT_TOKEN){ if(callback) callback(); return; }
+  apiGet({action:'getSheet',sheet:'pdbox_data'}).then(function(res){
+    if(res&&res.ok&&Array.isArray(res.data)&&res.data.length>0){
+      // 서버 데이터 우선, updatedAt 기준으로 병합
+      var serverMap={};
+      res.data.forEach(function(r){ if(r.id) serverMap[r.id]=r; });
+      var local=[];
+      try{ local=JSON.parse(localStorage.getItem(PB_KEY)||'[]'); }catch(e){}
+      var localMap={};
+      local.forEach(function(r){ if(r.id) localMap[r.id]=r; });
+      // 모든 id 합집합
+      var allIds=new Set(Object.keys(serverMap).concat(Object.keys(localMap)));
+      var merged=[];
+      allIds.forEach(function(id){
+        var s=serverMap[id], l=localMap[id];
+        if(s&&l){ merged.push((s.updatedAt||'')>=(l.updatedAt||'')?s:l); }
+        else merged.push(s||l);
+      });
+      merged.sort(function(a,b){return (a.reqDate||'').localeCompare(b.reqDate||'');});
+      _pbData=merged;
+      try{ localStorage.setItem(PB_KEY,JSON.stringify(_pbData)); }catch(e){}
+    } else {
+      pbLoad(); // 서버 데이터 없으면 로컬 사용
+    }
+    if(callback) callback();
+  }).catch(function(){
+    pbLoad(); // 실패 시 로컬 사용
+    if(callback) callback();
+  });
+}
 function pbUID(){ return 'pb'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 // 납품요청일 기준 전장 완료요청일 자동계산 (영업일 -4일)
@@ -14160,6 +14191,7 @@ function pbExportCSV(){
     <button onclick="document.getElementById('pb-import-in').click()" style="padding:7px 14px;background:rgba(45,212,191,.12);border:1px solid var(--teal);border-radius:7px;font-size:12px;color:var(--teal);cursor:pointer;white-space:nowrap">📂 CSV 가져오기</button>
     <input type="file" id="pb-import-in" accept=".csv,.xlsx,.xls" style="display:none" onchange="pbImportCSV(this)">
     <button onclick="pbExportCSV()" style="padding:7px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;font-size:12px;color:var(--text);cursor:pointer">↓ CSV</button>
+    <button onclick="pbSyncFromServer(function(){pbRender();qToast('✓ 서버 동기화 완료','ok');})" style="padding:7px 12px;background:none;border:1px solid var(--teal);border-radius:7px;font-size:12px;color:var(--teal);cursor:pointer" title="서버에서 최신 데이터 불러오기">🔄</button>
     <!-- 일괄작업 (체크 시 표시) -->
     <div id="pb-bulk-bar" style="display:none;align-items:center;gap:8px;background:rgba(45,212,191,.1);border:1px solid var(--teal);border-radius:8px;padding:5px 12px">
       <span id="pb-sel-cnt" style="font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap">0건 선택</span>
@@ -14181,7 +14213,7 @@ function pbExportCSV(){
           <th rowspan="2" style="width:34px;text-align:center">
             <input type="checkbox" id="pb-chk-all" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer" onchange="pbSelAll(this.checked)" title="전체 선택">
           </th>
-          <th rowspan="2" style="min-width:80Px">PD 명</th>
+          <th rowspan="2" style="min-width:80px">PD 명</th>
           <th rowspan="2" style="width:80px;white-space:nowrap">품번</th>
           <th rowspan="2" style="width:60px;white-space:nowrap">호기</th>
           <th rowspan="2" style="width:60px;font-size:10px;white-space:nowrap">REV</th>
