@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AXCELIS 통합 관리 v26.23</title>
+<title>AXCELIS 통합 관리 v26.25</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -174,6 +174,61 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16p
 #q-toast.ok{border-color:var(--green);color:var(--green)}
 #q-toast.err{border-color:var(--red);color:var(--red)}
 #q-toast.info{border-color:var(--amb);color:var(--amb)}
+
+/* ── PD BOX 섹션 ── */
+#sect-pdbox{background:var(--bg);min-height:100vh}
+.pb-page{max-width:1600px;margin:0 auto;padding:16px 20px 60px}
+.pb-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.pb-flt{display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:1}
+.pb-flt select,.pb-flt input[type=text]{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:var(--font)}
+.pb-flt select:focus,.pb-flt input:focus{outline:none;border-color:var(--teal)}
+/* stat cards */
+.pb-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.pb-stat{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:11px 14px}
+.pb-stat-l{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.pb-stat-v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);line-height:1}
+.pb-stat-s{font-size:10.5px;color:var(--text3);margin-top:3px}
+/* table */
+.pb-tw{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--bg2)}
+#pb-table{width:100%;border-collapse:collapse;font-size:12px;min-width:1200px}
+#pb-table thead tr{background:var(--bg3);border-bottom:1px solid var(--border2)}
+#pb-table th{padding:8px 10px;text-align:left;font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;cursor:pointer;user-select:none}
+#pb-table th:hover{color:var(--text)}
+#pb-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+#pb-table tbody tr:hover{background:rgba(255,255,255,.025)}
+#pb-table tbody tr:last-child td{border-bottom:none}
+.pb-status{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.pb-s-before{background:var(--bg3);color:var(--text3);border:1px solid var(--border2)}
+.pb-s-mfg{background:rgba(79,124,255,.15);color:var(--accent);border:1px solid rgba(79,124,255,.3)}
+.pb-s-qual{background:rgba(167,139,250,.15);color:var(--purple,#a78bfa);border:1px solid rgba(167,139,250,.3)}
+.pb-s-ship{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+.pb-s-done{background:rgba(45,212,191,.12);color:var(--tel);border:1px solid rgba(45,212,191,.3)}
+.pb-nopo{background:rgba(255,181,71,.15);color:var(--amb);border:1px solid rgba(255,181,71,.3);border-radius:4px;font-size:10px;font-weight:700;padding:1px 6px}
+/* modal */
+#m-pdbox{z-index:3000}
+.pb-modal-body{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pb-fgs{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.pb-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:var(--font);transition:border-color .15s}
+.pb-inp:focus{outline:none;border-color:var(--teal)}
+.pb-inp[type=date]{color-scheme:dark}
+.pb-sec{grid-column:1/-1;background:var(--bg3);border-radius:8px;padding:12px 14px;margin-top:4px}
+.pb-sec-t{font-size:11.5px;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+/* missing parts */
+.pb-mp-row{display:grid;grid-template-columns:1fr 80px 130px 1fr 32px;gap:6px;align-items:center;margin-bottom:6px}
+.pb-mp-inp{background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;font-family:var(--mono);width:100%}
+.pb-mp-inp:focus{outline:none;border-color:var(--teal)}
+.pb-del-btn{background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);cursor:pointer;font-size:13px;padding:3px 7px;width:32px;text-align:center}
+.pb-del-btn:hover{color:var(--red);border-color:var(--red)}
+/* PO 미접수 badge row */
+.pb-pre-row{background:rgba(255,181,71,.06) !important}
+/* hogi badge */
+.pb-hogi{font-family:var(--mono);font-size:11px;background:rgba(45,212,191,.12);color:var(--tel);border-radius:4px;padding:1px 7px;font-weight:700}
+.pb-hogi.fa{background:rgba(255,181,71,.18);color:var(--amb)}
+/* date cell */
+.pb-dt{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+.pb-dt.empty{color:var(--text3)}
+.pb-dt.overdue{color:var(--red);font-weight:600}
+.pb-dt.soon{color:var(--amb)}
 .app-divider{width:1px;height:28px;background:var(--border2);margin:0 4px}
 
 
@@ -1155,7 +1210,7 @@ div#po-inner-tabs .po-itab.active {
       <img src="data:image/png;base64,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" style="width:40px;height:40px;object-fit:contain">
       <div>
         <div class="login-title">AXCELIS 통합관리</div>
-        <div class="login-sub">v26.23 — 진선테크</div>
+        <div class="login-sub">v26.25 — 진선테크</div>
       </div>
     </div>
     <div class="login-field">
@@ -1170,7 +1225,7 @@ div#po-inner-tabs .po-itab.active {
     <div class="login-err" id="login-err"></div>
     <div class="login-loading" id="login-loading" style="display:none">🔄 서버 연결 중...</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <div style="font-size:11px;color:var(--text3)">v26.23 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
+      <div style="font-size:11px;color:var(--text3)">v26.25 &nbsp;·&nbsp; AXCELIS 통합관리 시스템</div>
       <div style="font-size:10px;color:var(--text3);margin-top:4px;opacity:.6">제작 김교한</div>
     </div>
   </div>
@@ -1185,7 +1240,7 @@ div#po-inner-tabs .po-itab.active {
     <img src="data:image/png;base64,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" style="height:28px;width:auto;object-fit:contain">
     <div>
       <div style="font-size:13px;font-weight:600;white-space:nowrap">AXCELIS 통합 관리</div>
-      <div style="font-size:9px;color:var(--text3);font-family:var(--mono)">v26.23</div>
+      <div style="font-size:9px;color:var(--text3);font-family:var(--mono)">v26.25</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -1227,6 +1282,8 @@ div#po-inner-tabs .po-itab.active {
   <button class="app-btn srch" id="appbtn-srch" onclick="switchApp('srch')">🔍 자재조회</button>
   <div class="app-divider"></div>
   <button class="app-btn quote" id="appbtn-quote" onclick="switchApp('quote')" style="color:var(--amb)">📝 견적</button>
+  <div class="app-divider"></div>
+  <button class="app-btn pdbox" id="appbtn-pdbox" onclick="switchApp('pdbox')" style="color:var(--teal)">🗂 PD BOX</button>
 </div>
 
 <div class="sect-wrap on" id="sect-purchase">
@@ -3673,27 +3730,31 @@ function switchApp(app) {
   var ss  = document.getElementById('sect-srch');
   var st  = document.getElementById('sect-todo');
   var sq  = document.getElementById('sect-quote');
+  var spb = document.getElementById('sect-pdbox');
   sp.style.display  = (app==='purchase') ? 'block':'none';
   so.style.display  = (app==='po')       ? 'block':'none';
-  if(ss) ss.style.display = (app==='srch')   ? 'block':'none';
-  if(st) { st.style.display = (app==='todo') ? 'block':'none'; if(app==='todo') { st.style.cssText='display:block!important'; } }
-  if(sq) { sq.style.display = (app==='quote')? 'block':'none'; if(app==='quote') sq.style.cssText='display:block!important'; }
+  if(ss)  ss.style.display  = (app==='srch')   ? 'block':'none';
+  if(st)  { st.style.display = (app==='todo')  ? 'block':'none'; if(app==='todo') st.style.cssText='display:block!important'; }
+  if(sq)  { sq.style.display = (app==='quote') ? 'block':'none'; if(app==='quote') sq.style.cssText='display:block!important'; }
+  if(spb) { spb.style.display=(app==='pdbox')  ? 'block':'none'; if(app==='pdbox') spb.style.cssText='display:block!important'; }
   sp.classList.toggle('on', app==='purchase');
   so.classList.toggle('on', app==='po');
-  if(ss) ss.classList.toggle('on', app==='srch');
-  if(st) st.classList.toggle('on', app==='todo');
-  if(sq) sq.classList.toggle('on', app==='quote');
+  if(ss)  ss.classList.toggle('on',  app==='srch');
+  if(st)  st.classList.toggle('on',  app==='todo');
+  if(sq)  sq.classList.toggle('on',  app==='quote');
+  if(spb) spb.classList.toggle('on', app==='pdbox');
   document.getElementById('appbtn-purchase').classList.toggle('on', app==='purchase');
   document.getElementById('appbtn-po').classList.toggle('on', app==='po');
-  var bs = document.getElementById('appbtn-srch'); if(bs) bs.classList.toggle('on', app==='srch');
-  var bt = document.getElementById('appbtn-todo'); if(bt) bt.classList.toggle('on', app==='todo');
-  var bq = document.getElementById('appbtn-quote'); if(bq) bq.classList.toggle('on', app==='quote');
-  if(app==='srch')  { srchTab('item'); }
-  if(app==='todo')  renderTodo();
-  if(app==='quote') { qInitCheck(); }
-  // 구매관리 서브탭 숨기기
-  var ptTabs = document.getElementById('pt-inner-tabs');
-  if(ptTabs) ptTabs.style.display = (app==='purchase') ? '' : 'none';
+  var bs=document.getElementById('appbtn-srch');   if(bs)  bs.classList.toggle('on', app==='srch');
+  var bt=document.getElementById('appbtn-todo');   if(bt)  bt.classList.toggle('on', app==='todo');
+  var bq=document.getElementById('appbtn-quote');  if(bq)  bq.classList.toggle('on', app==='quote');
+  var bb=document.getElementById('appbtn-pdbox');  if(bb)  bb.classList.toggle('on', app==='pdbox');
+  if(app==='srch')   { srchTab('item'); }
+  if(app==='todo')   renderTodo();
+  if(app==='quote')  { qInitCheck(); }
+  if(app==='pdbox')  { pbRender(); }
+  var ptTabs=document.getElementById('pt-inner-tabs');
+  if(ptTabs) ptTabs.style.display=(app==='purchase')?'':'none';
 }
 
 // ══ 구매관리 JS ══
@@ -7170,7 +7231,12 @@ function saveOutEdit(){
 }
 
 
-function closeM(id){document.getElementById(id)?.classList.remove('on');}
+function closeM(id){
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('on');
+  el.style.display='none';
+}
 
 function recvUpLoad(file){
   if(!file) return;
@@ -12791,7 +12857,352 @@ function qMergeHistRecords(newRecs){
   }
 }
 
-// ═══ 견적 모듈 끝 ═══
+/* ════════════════════════════════════════════════════════
+   PD BOX 관리 모듈
+   저장: localStorage 'jst_pdbox' + GS 'pdbox_data' 시트
+════════════════════════════════════════════════════════ */
+
+var PB_KEY = 'jst_pdbox';
+var _pbData = [];  // 전체 레코드
+
+/* ── 로드 ── */
+
+/* ════════════════════════════════════════════════════════
+   PD BOX 관리 모듈 v2
+════════════════════════════════════════════════════════ */
+var PB_KEY = 'jst_pdbox';
+var _pbData = [];
+
+function pbLoad(){
+  try{ _pbData=JSON.parse(localStorage.getItem(PB_KEY)||'[]'); }catch(e){ _pbData=[]; }
+}
+function pbSaveAll(){
+  try{ localStorage.setItem(PB_KEY,JSON.stringify(_pbData)); }catch(e){}
+  if(CURRENT_TOKEN){
+    apiPost({action:'setSheet',sheet:'pdbox_data',data:_pbData}).catch(function(){});
+  }
+}
+function pbUID(){ return 'pb'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// 납품요청일 기준 전장 완료요청일 자동계산 (영업일 -4일)
+function pbAutoElecDate(){
+  var reqVal=document.getElementById('pb-req-date').value;
+  var el=document.getElementById('pb-elec-done');
+  if(!reqVal||!el){return;}
+  var d=new Date(reqVal); var sub=0;
+  while(sub<4){
+    d.setDate(d.getDate()-1);
+    var dow=d.getDay();
+    if(dow!==0&&dow!==6) sub++;
+  }
+  el.value=d.toISOString().slice(0,10);
+}
+
+function pbStatusClass(s){
+  return 'pb-s-'+({'시작전':'before','진행중-제조':'mfg','진행중-품질':'qual','출하':'ship','완료':'done'}[s]||'before');
+}
+function pbStatusLabel(s){
+  return {'시작전':'시작 전','진행중-제조':'진행 중 - 제조','진행중-품질':'진행 중 - 품질','출하':'출하','완료':'완료'}[s]||s;
+}
+function pbDtCell(v){
+  if(!v) return '<span class="pb-dt empty">—</span>';
+  var today=new Date(); today.setHours(0,0,0,0);
+  var d=new Date(v); var diff=Math.round((d-today)/86400000);
+  var cls='pb-dt'+(diff<0?' overdue':diff<=3?' soon':'');
+  return '<span class="'+cls+'">'+v+'</span>';
+}
+
+function pbRenderStats(items){
+  var nodb=items.filter(function(r){return !r.poReceived;}).length;
+  var mfg=items.filter(function(r){return r.status==='진행중-제조';}).length;
+  var qual=items.filter(function(r){return r.status==='진행중-품질';}).length;
+  var hasMissing=items.filter(function(r){return (r.missingParts||[]).length>0;}).length;
+  var el=document.getElementById('pb-stats'); if(!el) return;
+  el.innerHTML=
+    '<div class="pb-stat"><div class="pb-stat-l">전체</div><div class="pb-stat-v">'+items.length+'</div></div>'
+   +'<div class="pb-stat" style="border-color:var(--accent)"><div class="pb-stat-l" style="color:var(--accent)">제조</div><div class="pb-stat-v" style="color:var(--accent)">'+mfg+'</div></div>'
+   +'<div class="pb-stat" style="border-color:var(--purple,#a78bfa)"><div class="pb-stat-l" style="color:var(--purple,#a78bfa)">품질</div><div class="pb-stat-v" style="color:var(--purple,#a78bfa)">'+qual+'</div></div>'
+   +'<div class="pb-stat" style="border-color:var(--amb)"><div class="pb-stat-l" style="color:var(--amb)">PO미접수</div><div class="pb-stat-v" style="color:var(--amb)">'+nodb+'</div></div>'
+   +'<div class="pb-stat" style="border-color:var(--red)"><div class="pb-stat-l" style="color:var(--red)">미불출 있음</div><div class="pb-stat-v" style="color:var(--red)">'+hasMissing+'</div></div>';
+}
+
+function pbRender(){
+  pbLoad();
+  var fStatus=(document.getElementById('pb-flt-status')||{value:''}).value;
+  var fPO=(document.getElementById('pb-flt-po')||{value:''}).value;
+  var fQ=((document.getElementById('pb-flt-q')||{value:''}).value||'').toLowerCase();
+  var items=_pbData.filter(function(r){
+    if(fStatus&&r.status!==fStatus) return false;
+    if(fPO==='Y'&&!r.poReceived) return false;
+    if(fPO==='N'&&r.poReceived) return false;
+    if(fQ&&!((r.name||'').toLowerCase().includes(fQ)||(r.pn||'').toLowerCase().includes(fQ)||(r.hogi||'').toLowerCase().includes(fQ)||(r.note||'').toLowerCase().includes(fQ))) return false;
+    return true;
+  });
+  items.sort(function(a,b){return (a.reqDate||'').localeCompare(b.reqDate||'');});
+  pbRenderStats(items);
+  var tb=document.getElementById('pb-tbody'); if(!tb) return;
+  if(!items.length){ tb.innerHTML='<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--text3)">등록된 PD가 없습니다</td></tr>'; return; }
+  tb.innerHTML=items.map(function(r){
+    var hogiCls=r.hogi==='#FA'?'pb-hogi fa':'pb-hogi';
+    var rowCls=r.poReceived?'':'pb-pre-row';
+    var mp=r.missingParts||[];
+    var mpCnt=mp.length;
+    var mpBadge=mpCnt?'<span style="background:rgba(255,85,85,.18);color:var(--red);border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer" onclick="pbToggleMissing(event,\'pb-mp-'+r.id+'\')">'+mpCnt+' ▼</span>':'<span style="color:var(--text3);font-size:11px">—</span>';
+    // 미불출 상세 행
+    var mpDetail=mp.length?'<tr id="pb-mp-'+r.id+'" style="display:none;background:rgba(255,85,85,.05)"><td colspan="17" style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:rgba(255,85,85,.1)"><th style="padding:5px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--red);width:120px">품번</th><th style="padding:5px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--red)">품명</th><th style="padding:5px 12px;font-size:10px;font-weight:600;color:var(--red)">제조사</th><th style="padding:5px 12px;font-size:10px;font-weight:600;color:var(--red)">제조사품번</th><th style="padding:5px 12px;text-align:right;font-size:10px;font-weight:600;color:var(--red);width:70px">미입고수량</th><th style="padding:5px 12px;font-size:10px;font-weight:600;color:var(--red);width:100px">입고예정일</th></tr></thead><tbody>'
+      +mp.map(function(p){
+        var dbi=typeof DB!=='undefined'?DB.find(function(d){return String(d.pn).trim()===String(p.pn).trim();}):null;
+        return '<tr style="border-top:1px solid rgba(255,85,85,.12)"><td style="padding:5px 12px;font-family:var(--mono);font-size:11px;color:var(--accent)">'+p.pn+'</td><td style="padding:5px 12px;font-size:11.5px">'+((dbi&&dbi.d)||'')+'</td><td style="padding:5px 12px;font-size:11px;color:var(--text2)">'+((dbi&&dbi.mg)||'')+'</td><td style="padding:5px 12px;font-family:var(--mono);font-size:11px;color:var(--text2)">'+((dbi&&dbi.mp)||'')+'</td><td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--red)">'+p.qty+'</td><td style="padding:5px 12px;font-family:var(--mono);font-size:11px;color:var(--amb)">'+p.expectedDate+'</td></tr>';
+      }).join('')
+      +'</tbody></table></td></tr>':'';
+    return '<tr class="'+rowCls+'" onclick="pbOpenEdit(\''+r.id+'\')" style="cursor:pointer">'
+      +'<td style="text-align:center" onclick="event.stopPropagation()"><button onclick="pbOpenEdit(\''+r.id+'\')" style="background:none;border:1px solid var(--border2);border-radius:4px;padding:2px 7px;color:var(--text2);font-size:11px;cursor:pointer">편집</button></td>'
+      +'<td style="font-weight:600">'+r.name+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11.5px;color:var(--accent)">'+r.pn+'</td>'
+      +'<td><span class="'+hogiCls+'">'+r.hogi+'</span></td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--text2)">'+r.ccn+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--text2)">'+r.rev+'</td>'
+      +'<td><span class="pb-status '+pbStatusClass(r.status)+'">'+pbStatusLabel(r.status)+'</span>'+(r.poReceived?'':'<span class="pb-nopo" style="margin-left:4px">PO미접수</span>')+'</td>'
+      +'<td>'+pbDtCell(r.reqDate)+'</td>'
+      // 가공물
+      +'<td style="background:rgba(255,181,71,.04)">'+pbDtCell(r.machineDate)+'</td>'
+      +'<td style="background:rgba(255,181,71,.04)">'+pbDtCell(r.arrivalDate)+'</td>'
+      // 하네스
+      +'<td style="background:rgba(45,212,191,.04)">'+pbDtCell(r.harnessIssue)+'</td>'
+      +'<td style="background:rgba(45,212,191,.04)">'+pbDtCell(r.harnessDone)+'</td>'
+      // 전장
+      +'<td style="background:rgba(167,139,250,.04)">'+pbDtCell(r.partIssue)+'</td>'
+      +'<td style="background:rgba(167,139,250,.04)">'+pbDtCell(r.elecDone)+'</td>'
+      +'<td style="text-align:center" onclick="event.stopPropagation()">'+mpBadge+'</td>'
+      +'<td style="font-size:11.5px;color:var(--text2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+r.note+'">'+r.note+'</td>'
+      +'</tr>'
+      +mpDetail;
+  }).join('');
+}
+
+function pbToggleMissing(e, id){
+  e.stopPropagation();
+  var row=document.getElementById(id);
+  if(!row) return;
+  var span=e.target;
+  var open=row.style.display==='none';
+  row.style.display=open?'':'none';
+  span.textContent=span.textContent.replace(open?'▼':'▲',open?'▲':'▼');
+}
+
+function pbModalFields(r){
+  r=r||{};
+  document.getElementById('pb-name').value=r.name||'';
+  document.getElementById('pb-pn').value=r.pn||'';
+  var hSel=document.getElementById('pb-hogi');
+  var knownH=['#FA','#1','#2','#3','#4','#5','#6','#7','#8','#9','#10','#11','#12','#13','#14','#15'];
+  if(knownH.indexOf(r.hogi)>=0){ hSel.value=r.hogi||'#FA'; document.getElementById('pb-hogi-custom').style.display='none'; document.getElementById('pb-hogi-custom').value=''; }
+  else if(r.hogi){ hSel.value='기타'; document.getElementById('pb-hogi-custom').style.display='block'; document.getElementById('pb-hogi-custom').value=r.hogi; }
+  else{ hSel.value='#FA'; document.getElementById('pb-hogi-custom').style.display='none'; }
+  document.getElementById('pb-ccn').value=r.ccn||'';
+  document.getElementById('pb-rev').value=r.rev||'';
+  document.getElementById('pb-status').value=r.status||'시작전';
+  document.getElementById('pb-note').value=r.note||'';
+  document.getElementById('pb-no-po').checked=!r.poReceived;
+  document.getElementById('pb-req-date').value=r.reqDate||'';
+  document.getElementById('pb-machine-date').value=r.machineDate||'';
+  document.getElementById('pb-arrival-date').value=r.arrivalDate||'';
+  document.getElementById('pb-harness-issue').value=r.harnessIssue||'';
+  document.getElementById('pb-harness-done').value=r.harnessDone||'';
+  document.getElementById('pb-part-issue').value=r.partIssue||'';
+  document.getElementById('pb-elec-done').value=r.elecDone||'';
+  if(r.reqDate) pbAutoElecDate();
+  var cont=document.getElementById('pb-missing-rows');
+  cont.innerHTML='';
+  (r.missingParts||[]).forEach(function(p){ pbAddMissingPartRow(p); });
+  document.getElementById('pb-missing-empty').style.display=(r.missingParts&&r.missingParts.length)?'none':'';
+}
+
+function pbOpenNew(){
+  document.getElementById('pb-modal-title').textContent='등록';
+  document.getElementById('pb-edit-id').value='';
+  pbModalFields({});
+  document.getElementById('m-pdbox').classList.add('on');
+}
+function pbOpenEdit(id){
+  pbLoad();
+  var r=_pbData.find(function(x){return x.id===id;}); if(!r) return;
+  document.getElementById('pb-modal-title').textContent='편집';
+  document.getElementById('pb-edit-id').value=id;
+  pbModalFields(r);
+  document.getElementById('m-pdbox').classList.add('on');
+}
+
+function pbSave(){
+  var name=document.getElementById('pb-name').value.trim();
+  if(!name){ alert('PD 명을 입력하세요'); return; }
+  var hogiSel=document.getElementById('pb-hogi').value;
+  var hogi=hogiSel==='기타'?(document.getElementById('pb-hogi-custom').value.trim()||hogiSel):hogiSel;
+  // 미불출 수집
+  var mpRows=document.getElementById('pb-missing-rows').querySelectorAll('.pb-mp-row');
+  var missingParts=[];
+  mpRows.forEach(function(row){
+    var pn=(row.querySelector('[data-f="pn"]')||{value:''}).value.trim();
+    var qty=(row.querySelector('[data-f="qty"]')||{value:''}).value;
+    var date=(row.querySelector('[data-f="date"]')||{value:''}).value;
+    var note=(row.querySelector('[data-f="note"]')||{value:''}).value;
+    if(pn||qty) missingParts.push({pn:pn,qty:qty,expectedDate:date,note:note});
+  });
+  var id=document.getElementById('pb-edit-id').value;
+  var now=new Date().toISOString();
+  var rec={
+    id:id||pbUID(), name:name,
+    pn:document.getElementById('pb-pn').value.trim(),
+    hogi:hogi, ccn:document.getElementById('pb-ccn').value.trim(),
+    rev:document.getElementById('pb-rev').value.trim(),
+    status:document.getElementById('pb-status').value,
+    note:document.getElementById('pb-note').value.trim(),
+    poReceived:!document.getElementById('pb-no-po').checked,
+    reqDate:document.getElementById('pb-req-date').value,
+    machineDate:document.getElementById('pb-machine-date').value,
+    arrivalDate:document.getElementById('pb-arrival-date').value,
+    harnessIssue:document.getElementById('pb-harness-issue').value,
+    harnessDone:document.getElementById('pb-harness-done').value,
+    partIssue:document.getElementById('pb-part-issue').value,
+    elecDone:document.getElementById('pb-elec-done').value,
+    missingParts:missingParts, updatedAt:now,
+  };
+  pbLoad();
+  if(id){ var idx=_pbData.findIndex(function(x){return x.id===id;});
+    if(idx>=0){rec.createdAt=_pbData[idx].createdAt||now;_pbData[idx]=rec;}
+    else{rec.createdAt=now;_pbData.push(rec);}
+  } else {rec.createdAt=now;_pbData.push(rec);}
+  pbSaveAll();
+  closeM('m-pdbox');
+  pbRender();
+  qToast('✓ 저장: '+name+' '+hogi,'ok');
+}
+
+function pbAddMissingPart(){ pbAddMissingPartRow({}); }
+function pbAddMissingPartRow(p){
+  document.getElementById('pb-missing-empty').style.display='none';
+  var cont=document.getElementById('pb-missing-rows');
+  var div=document.createElement('div'); div.className='pb-mp-row';
+  var pnVal=p.pn||''; var dbi=pnVal&&typeof DB!=='undefined'?DB.find(function(d){return String(d.pn).trim()===pnVal.trim();}):null;
+  div.innerHTML=
+    '<input class="pb-mp-inp" data-f="pn" type="text" placeholder="품번" value="'+pnVal+'" style="font-family:var(--mono)" oninput="pbMpLookup(this)">'
+    +'<input class="pb-mp-inp" data-f="qty" type="number" placeholder="수량" value="'+(p.qty||'')+'" min="0">'
+    +'<input class="pb-mp-inp" data-f="date" type="date" value="'+(p.expectedDate||'')+'">'
+    +'<div style="grid-column:1/-2;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:3px">'
+      +'<input class="pb-mp-inp" data-f="desc" type="text" placeholder="품명 (자동)" value="'+(dbi?dbi.d:'')+((!dbi&&p.note)?p.note:'')+'" readonly style="background:var(--bg2);font-size:11.5px">'
+      +'<input class="pb-mp-inp" data-f="mfg" type="text" placeholder="제조사 (자동)" value="'+(dbi?dbi.mg:'')+'" readonly style="background:var(--bg2);font-size:11.5px">'
+      +'<input class="pb-mp-inp" data-f="mp" type="text" placeholder="제조사품번 (자동)" value="'+(dbi?dbi.mp:'')+'" readonly style="background:var(--bg2);font-size:11.5px;font-family:var(--mono)">'
+    +'</div>'
+    +'<button class="pb-del-btn" onclick="var r=this.closest(\'.pb-mp-row\');r.remove();if(!document.getElementById(\'pb-missing-rows\').children.length)document.getElementById(\'pb-missing-empty\').style.display=\'\'" title="삭제">✕</button>';
+  cont.appendChild(div);
+}
+function pbMpLookup(inp){
+  var row=inp.closest('.pb-mp-row');
+  if(!row||typeof DB==='undefined') return;
+  var pn=inp.value.trim();
+  var dbi=DB.find(function(d){return String(d.pn).trim()===pn;});
+  (row.querySelector('[data-f="desc"]')||{}).value=dbi?dbi.d||'':'';
+  (row.querySelector('[data-f="mfg"]')||{}).value=dbi?dbi.mg||'':'';
+  (row.querySelector('[data-f="mp"]')||{}).value=dbi?dbi.mp||'':'';
+}
+
+// ── CSV 업로드 (기존 데이터 일괄 입력) ──
+function pbImportCSV(inp){
+  if(!inp||!inp.files[0]) return;
+  var ext=inp.files[0].name.split('.').pop().toLowerCase();
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var rows;
+      if(ext==='csv'){
+        var txt=e.target.result.replace(/^\uFEFF/,'');
+        rows=txt.split(/\r?\n/).filter(function(l){return l.trim();}).map(function(l){
+          var cols=[]; var cur=''; var inQ=false;
+          for(var i=0;i<l.length;i++){
+            var c=l[i];
+            if(c==='"'){inQ=!inQ;}
+            else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
+            else cur+=c;
+          }
+          cols.push(cur.trim()); return cols;
+        });
+      } else {
+        var wb=XLSX.read(e.target.result,{type:'array'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+      }
+      if(rows.length<2){ qToast('데이터가 없습니다','err'); return; }
+      var hdr=rows[0].map(function(h){return String(h).trim();});
+      var fi=function(aliases){ for(var i=0;i<aliases.length;i++){var idx=hdr.findIndex(function(h){return h.toLowerCase()===aliases[i].toLowerCase();});if(idx>=0)return idx;} return -1;};
+      var iName=fi(['pd명','pd name','name','프로젝트','project']);
+      var iPn=fi(['품번','pn','part number','partnumber','partno']);
+      var iHogi=fi(['호기','hogi','unit']);
+      var iCcn=fi(['ccn']);
+      var iRev=fi(['rev','revision']);
+      var iStatus=fi(['상태','status']);
+      var iNoPo=fi(['po미접수','nopo','no_po','선진행']);
+      var iNote=fi(['비고','note','remark']);
+      var iReq=fi(['납품요청일','reqdate','req_date','납품일']);
+      var iMachine=fi(['가공물발주','machinedate','machine_date','가공물발주일']);
+      var iArrival=fi(['입고예정','arrivaldate','arrival_date','가공물입고']);
+      var iHiIssue=fi(['하네스불출','harnessdate','harness_issue','하네스불출일']);
+      var iHiDone=fi(['하네스완료','harnessdone','harness_done','하네스제작완료']);
+      var iPartIssue=fi(['파트불출','partissue','part_issue','파트불출일']);
+      var iElec=fi(['전장완료','elecdone','elec_done','전장완료요청일']);
+      var now=new Date().toISOString();
+      var added=0, skipped=0;
+      pbLoad();
+      rows.slice(1).forEach(function(r){
+        var name=iName>=0?String(r[iName]||'').trim():'';
+        if(!name){skipped++;return;}
+        var rec={
+          id:pbUID(),
+          name:name,
+          pn:iPn>=0?String(r[iPn]||'').trim():'',
+          hogi:iHogi>=0?String(r[iHogi]||'').trim():'#1',
+          ccn:iCcn>=0?String(r[iCcn]||'').trim():'',
+          rev:iRev>=0?String(r[iRev]||'').trim():'',
+          status:iStatus>=0?String(r[iStatus]||'').trim():'시작전',
+          poReceived:iNoPo>=0?String(r[iNoPo]||'').trim()!=='Y'&&String(r[iNoPo]||'').trim()!=='TRUE'&&String(r[iNoPo]||'').trim()!=='1':true,
+          note:iNote>=0?String(r[iNote]||'').trim():'',
+          reqDate:iReq>=0?String(r[iReq]||'').trim():'',
+          machineDate:iMachine>=0?String(r[iMachine]||'').trim():'',
+          arrivalDate:iArrival>=0?String(r[iArrival]||'').trim():'',
+          harnessIssue:iHiIssue>=0?String(r[iHiIssue]||'').trim():'',
+          harnessDone:iHiDone>=0?String(r[iHiDone]||'').trim():'',
+          partIssue:iPartIssue>=0?String(r[iPartIssue]||'').trim():'',
+          elecDone:iElec>=0?String(r[iElec]||'').trim():'',
+          missingParts:[],
+          createdAt:now, updatedAt:now,
+        };
+        _pbData.push(rec); added++;
+      });
+      pbSaveAll(); pbRender();
+      qToast('✓ '+added+'건 가져오기 완료'+(skipped?' ('+skipped+'건 건너뜀)':''),'ok');
+    }catch(err){ qToast('가져오기 실패: '+err.message,'err',5000); }
+    inp.value='';
+  };
+  if(ext==='csv') reader.readAsText(inp.files[0],'UTF-8');
+  else reader.readAsArrayBuffer(inp.files[0]);
+}
+
+function pbExportCSV(){
+  pbLoad();
+  var keys=['name','pn','hogi','ccn','rev','status','poReceived','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','updatedAt'];
+  var header=keys.concat(['미불출품번','미불출수량','입고예정일','비고']);
+  var rows=[header];
+  _pbData.forEach(function(r){
+    var base=keys.map(function(k){return r[k]!=null?r[k]:'';});
+    var mp=r.missingParts||[];
+    if(!mp.length) rows.push(base.concat(['','','','']));
+    else mp.forEach(function(p){ rows.push(base.concat([p.pn||'',p.qty||'',p.expectedDate||'',p.note||''])); });
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='PDBOX_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); qToast('✓ CSV 저장됨','ok');
+}
+
+// ═══ PD BOX 모듈 끝 ═══
 
 </script>
 </div><!-- /app-wrap -->
@@ -13559,4 +13970,179 @@ function qMergeHistRecords(newRecs){
 
   </div><!-- /.q-page -->
 </div><!-- /#sect-quote -->
+
+<!-- ══════════════════════════════════════════════════════
+     PD BOX 관리 섹션
+══════════════════════════════════════════════════════ -->
+<div class="sect-wrap" id="sect-pdbox">
+<div class="pb-page">
+
+  <!-- 툴바 -->
+  <div class="pb-toolbar">
+    <div class="pb-flt">
+      <select id="pb-flt-status" onchange="pbRender()">
+        <option value="">전체 상태</option>
+        <option value="시작전">시작 전</option>
+        <option value="진행중-제조">진행중 - 제조</option>
+        <option value="진행중-품질">진행중 - 품질</option>
+        <option value="출하">출하</option>
+        <option value="완료">완료</option>
+      </select>
+      <select id="pb-flt-po" onchange="pbRender()">
+        <option value="">PO 전체</option>
+        <option value="N">PO 미접수 (선진행)</option>
+        <option value="Y">PO 접수</option>
+      </select>
+      <input type="text" id="pb-flt-q" placeholder="PD명 / 품번 / 호기 검색..." oninput="pbRender()" style="width:220px">
+    </div>
+    <button onclick="pbOpenNew()" style="padding:7px 16px;background:var(--teal);color:#051515;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">+ PD 등록</button>
+    <button onclick="document.getElementById('pb-import-in').click()" style="padding:7px 14px;background:rgba(45,212,191,.12);border:1px solid var(--teal);border-radius:7px;font-size:12px;color:var(--teal);cursor:pointer;white-space:nowrap">📂 CSV 가져오기</button>
+    <input type="file" id="pb-import-in" accept=".csv,.xlsx,.xls" style="display:none" onchange="pbImportCSV(this)">
+    <button onclick="pbExportCSV()" style="padding:7px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;font-size:12px;color:var(--text);cursor:pointer">↓ CSV</button>
+  </div>
+
+  <!-- 통계 -->
+  <div class="pb-stats" id="pb-stats"></div>
+
+  <!-- 테이블 -->
+  <div class="pb-tw">
+    <table id="pb-table">
+      <thead>
+        <!-- 그룹 헤더 -->
+        <tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">
+          <th rowspan="2" style="width:40px"></th>
+          <th rowspan="2" style="min-width:170px">PD 명</th>
+          <th rowspan="2" style="width:105px">품번</th>
+          <th rowspan="2" style="width:54px">호기</th>
+          <th rowspan="2" style="width:40px">CCN</th>
+          <th rowspan="2" style="width:40px">REV</th>
+          <th rowspan="2" style="width:90px">상태</th>
+          <th rowspan="2" style="width:82px;background:rgba(79,124,255,.08);color:var(--accent)">납품요청일</th>
+          <th colspan="2" style="width:164px;background:rgba(255,181,71,.12);color:var(--amb);text-align:center;border-left:2px solid rgba(255,181,71,.3)">⚙ 가공물</th>
+          <th colspan="2" style="width:164px;background:rgba(45,212,191,.12);color:var(--teal);text-align:center;border-left:2px solid rgba(45,212,191,.3)">🧵 하네스</th>
+          <th colspan="2" style="width:164px;background:rgba(167,139,250,.12);color:var(--purple,#a78bfa);text-align:center;border-left:2px solid rgba(167,139,250,.3)">⚡ 전장</th>
+          <th rowspan="2" style="width:56px">미불출</th>
+          <th rowspan="2" style="min-width:100px">비고</th>
+        </tr>
+        <tr style="background:var(--bg3);border-bottom:2px solid var(--border2)">
+          <th style="width:82px;background:rgba(255,181,71,.08);color:var(--text2);font-size:10px;border-left:2px solid rgba(255,181,71,.3)">발주일</th>
+          <th style="width:82px;background:rgba(255,181,71,.08);color:var(--text2);font-size:10px">입고예정</th>
+          <th style="width:82px;background:rgba(45,212,191,.08);color:var(--text2);font-size:10px;border-left:2px solid rgba(45,212,191,.3)">자재불출</th>
+          <th style="width:82px;background:rgba(45,212,191,.08);color:var(--text2);font-size:10px">완료요청</th>
+          <th style="width:82px;background:rgba(167,139,250,.08);color:var(--text2);font-size:10px;border-left:2px solid rgba(167,139,250,.3)">자재불출</th>
+          <th style="width:82px;background:rgba(167,139,250,.08);color:var(--purple,#a78bfa);font-size:10px">완료요청</th>
+        </tr>
+      </thead>
+      <tbody id="pb-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div><!-- /#sect-pdbox -->
+
+<!-- ══ PD BOX 등록/수정 모달 ══ -->
+<div class="mbg" id="m-pdbox">
+<div class="modal" style="max-width:900px;width:95vw;max-height:90vh;overflow-y:auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--teal)">🗂 PD BOX <span id="pb-modal-title">등록</span></h3>
+    <button class="mx" onclick="closeM('m-pdbox')">✕</button>
+  </div>
+  <!-- PO 미접수 -->
+  <div style="background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.3);border-radius:8px;padding:9px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--amb)">
+      <input type="checkbox" id="pb-no-po" style="accent-color:var(--amb);width:15px;height:15px">
+      PO 미접수 선진행
+    </label>
+    <span style="font-size:11px;color:var(--text3)">체크 시 주황 표시</span>
+  </div>
+  <div class="pb-modal-body">
+    <!-- 기본정보 3열 -->
+    <div class="qfg" style="grid-column:1/-1;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:10px">
+      <div><div class="pb-fgs">PD 명 *</div><input class="pb-inp" type="text" id="pb-name" placeholder="ASSY TERM PD 480VAC"></div>
+      <div><div class="pb-fgs">품번 (ASSY)</div><input class="pb-inp" type="text" id="pb-pn" placeholder="110171800" style="font-family:var(--mono)"></div>
+      <div><div class="pb-fgs">호기 *</div>
+        <select class="pb-inp" id="pb-hogi" onchange="document.getElementById('pb-hogi-custom').style.display=this.value==='기타'?'block':'none'">
+          <option value="#FA">#FA (초도품)</option>
+          <option value="#1">#1</option><option value="#2">#2</option><option value="#3">#3</option>
+          <option value="#4">#4</option><option value="#5">#5</option><option value="#6">#6</option>
+          <option value="#7">#7</option><option value="#8">#8</option><option value="#9">#9</option>
+          <option value="#10">#10</option><option value="#11">#11</option><option value="#12">#12</option>
+          <option value="#13">#13</option><option value="#14">#14</option><option value="#15">#15</option>
+          <option value="기타">기타</option>
+        </select>
+        <input class="pb-inp" type="text" id="pb-hogi-custom" placeholder="직접입력" style="display:none;margin-top:4px">
+      </div>
+      <div><div class="pb-fgs">CCN</div><input class="pb-inp" type="text" id="pb-ccn" placeholder="B"></div>
+      <div><div class="pb-fgs">REV</div><input class="pb-inp" type="text" id="pb-rev" placeholder="E"></div>
+      <div><div class="pb-fgs">상태</div>
+        <select class="pb-inp" id="pb-status">
+          <option value="시작전">시작 전</option>
+          <option value="진행중-제조">진행중-제조</option>
+          <option value="진행중-품질">진행중-품질</option>
+          <option value="출하">출하</option>
+          <option value="완료">완료</option>
+        </select>
+      </div>
+    </div>
+    <div class="qfg" style="grid-column:1/-1"><div class="pb-fgs">비고</div><input class="pb-inp" type="text" id="pb-note" placeholder=""></div>
+
+    <!-- 일정 그룹 -->
+    <div class="pb-sec" style="grid-column:1/-1">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+        <!-- 헤더행 -->
+        <div style="background:rgba(79,124,255,.12);border-right:1px solid var(--border2);padding:7px 12px;font-size:10.5px;font-weight:700;color:var(--accent)">📅 납품요청일</div>
+        <div style="background:rgba(255,181,71,.12);border-right:1px solid var(--border2);padding:7px 12px;font-size:10.5px;font-weight:700;color:var(--amb);grid-column:span 1">⚙ 가공물</div>
+        <div style="background:rgba(45,212,191,.12);border-right:1px solid var(--border2);padding:7px 12px;font-size:10.5px;font-weight:700;color:var(--teal);grid-column:span 1">🧵 하네스</div>
+        <div style="background:rgba(167,139,250,.12);padding:7px 12px;font-size:10.5px;font-weight:700;color:var(--purple,#a78bfa);grid-column:span 2">⚡ 전장</div>
+        <!-- 서브헤더행 -->
+        <div style="background:var(--bg3);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--text3)"></div>
+        <div style="background:rgba(255,181,71,.06);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--text2)">발주일</div>
+        <div style="background:rgba(255,181,71,.06);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--text2)">입고예정일</div>
+        <div style="background:rgba(45,212,191,.06);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--text2)">자재불출일</div>
+        <div style="background:rgba(45,212,191,.06);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--text2)">완료요청일</div>
+        <div style="background:rgba(167,139,250,.06);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--text2)">자재불출일</div>
+        <div style="background:rgba(167,139,250,.06);border-top:1px solid var(--border2);padding:5px 12px;font-size:10px;color:var(--purple,#a78bfa)">완료요청일 <span style="font-size:9px">(납품-4일 자동)</span></div>
+        <!-- 입력행 -->
+        <div style="background:var(--bg3);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-req-date" onchange="pbAutoElecDate()" style="width:100%;padding:5px 8px;font-size:12px">
+        </div>
+        <div style="background:rgba(255,181,71,.04);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-machine-date" style="width:100%;padding:5px 8px;font-size:12px">
+        </div>
+        <div style="background:rgba(255,181,71,.04);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-arrival-date" style="width:100%;padding:5px 8px;font-size:12px">
+        </div>
+        <div style="background:rgba(45,212,191,.04);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-harness-issue" style="width:100%;padding:5px 8px;font-size:12px">
+        </div>
+        <div style="background:rgba(45,212,191,.04);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-harness-done" style="width:100%;padding:5px 8px;font-size:12px">
+        </div>
+        <div style="background:rgba(167,139,250,.04);border-right:1px solid var(--border2);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-part-issue" style="width:100%;padding:5px 8px;font-size:12px">
+        </div>
+        <div style="background:rgba(167,139,250,.04);border-top:1px solid var(--border2);padding:8px 10px">
+          <input class="pb-inp" type="date" id="pb-elec-done" readonly style="width:100%;padding:5px 8px;font-size:12px;background:rgba(167,139,250,.08);cursor:default" title="납품요청일 기준 -4영업일 자동계산">
+        </div>
+      </div>
+    </div>
+
+    <!-- 파트 미불출 현황 -->
+    <div class="pb-sec" style="grid-column:1/-1">
+      <div class="pb-sec-t">
+        ⚠ 파트 미불출 현황
+        <button onclick="pbAddMissingPart()" style="background:none;border:1px solid var(--teal);border-radius:5px;padding:2px 10px;color:var(--teal);font-size:11px;cursor:pointer;font-weight:600">+ 추가</button>
+      </div>
+      <div id="pb-missing-rows"></div>
+      <div id="pb-missing-empty" style="font-size:12px;color:var(--text3);padding:8px 0">미불출 파트 없음</div>
+    </div>
+  </div>
+  <input type="hidden" id="pb-edit-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+    <button onclick="closeM('m-pdbox')" style="padding:8px 18px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;cursor:pointer">취소</button>
+    <button onclick="pbSave()" style="padding:8px 22px;background:var(--teal);color:#051515;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">💾 저장</button>
+  </div>
+</div>
+</div>
+
 <div id="q-toast"></div>
