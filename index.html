@@ -14112,7 +14112,6 @@ function pbSelectRow(id){
   pbTbSelUpdate();
 }
 function pbTbSelUpdate(){
-function pbTbSelUpdate(){
   var isViewerMode=_pbViewerMode||(!CURRENT_USER||CURRENT_USER.role==='viewer'||CURRENT_USER.role==='guest');
   var show=!!_pbSelRow;
   var e=document.getElementById('pb-tb-edit'); if(e) e.style.display=show&&!isViewerMode?'':'none';
