@@ -929,3 +929,22 @@ function initSrch2(){
   if(dt2 && !dt2.value) dt2.value=new Date().toISOString().split('T')[0];
   renderReqPanel2();
 }
+
+function updateStat(){
+  const noLT=DB.filter(r=>!r.lt||r.lt===0);
+  const alt=DB.filter(r=>r.ia);
+  const saved=DB.filter(r=>r.k5>0&&r.k6>0&&r.k6<r.k5);
+  const hasSafe=DB.filter(r=>r.sf>0);
+  const _set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  _set('d0',DB.length.toLocaleString());
+  _set('d1',noLT.length.toLocaleString());
+  _set('d2',alt.length.toLocaleString());
+  _set('d3',saved.length.toLocaleString());
+  _set('d4',hasSafe.length.toLocaleString());
+  _set('b-db',DB.length);
+  _set('b-recv',RECV.length);
+  _set('b-out',OUT.length);
+  _set('b-lt',noLT.length);
+  _set('b-bom',Object.keys(BOM).length);
+  _set('hstat',`DB ${DB.length}건 · 매입 ${RECV.length}건 · BOM ${Object.keys(BOM).length}건`);
+}

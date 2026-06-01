@@ -62,7 +62,18 @@ function showApp() {
   if(bproc) bproc.style.display = role==='admin' ? '' : 'none';
 
   // 앱 초기화
-  initAfterLogin();
+  // 섹션 HTML 로드 완료 후 초기화
+  function waitAndInit(tries) {
+    if(window._sectionsLoaded) {
+      initAfterLogin();
+    } else if(tries > 0) {
+      setTimeout(function(){ waitAndInit(tries-1); }, 100);
+    } else {
+      console.warn('[auth] sections load timeout, initializing anyway');
+      initAfterLogin();
+    }
+  }
+  waitAndInit(30);
 
   // ── 권한별 UI 제한 ──
   if(role === 'viewer' || role === 'guest') {

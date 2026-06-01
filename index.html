@@ -191,12 +191,16 @@ div#po-inner-tabs .po-itab.active {
 
 
 
+
 <script>
-// 섹션 HTML 동적 로드
-async function loadSections() {
-  var sections = ['pdbox','srch','po','purchase','quote'];
+// 섹션 HTML 동적 로드 (DOM 준비 후 실행)
+(async function loadSections() {
   var mc = document.getElementById('main-content');
-  if(!mc) { console.error('main-content not found'); return; }
+  while(!mc) {
+    await new Promise(function(r){ setTimeout(r, 50); });
+    mc = document.getElementById('main-content');
+  }
+  var sections = ['pdbox','srch','po','purchase','quote'];
   for (var i=0; i<sections.length; i++) {
     var name = sections[i];
     try {
@@ -208,10 +212,9 @@ async function loadSections() {
     }
   }
   console.log('[sections] all loaded');
-}
-loadSections();
+  window._sectionsLoaded = true;
+})();
 </script>
-
 </body>
 
 <!-- ── JS 모듈 ── -->
