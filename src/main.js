@@ -1,3 +1,36 @@
+// ─── 전역 변수 ───
+// ══════════════════════════════════════════════════════════
+//  API 설정
+// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  Supabase 설정
+// ══════════════════════════════════════════════════════════
+const SB_URL = 'https://zlmdxxginskguqqitsbp.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbWR4eGdpbnNrZ3VxcWl0c2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjQyMTcsImV4cCI6MjA5MzYwMDIxN30.1b1bGTNfq7a1ZTBeHVnzTRsjWgwZP4rY9ei3XqljNi0';
+
+// 구글 시트 → Supabase 테이블명 매핑
+var SB_TABLE_MAP = {
+  'db_items':     'ax_db_items',
+  'po_data':      'ax_po_data',
+  'po_delivered': 'ax_po_delivered',
+  'po_history':   'ax_po_data',
+  'recv_items':   'ax_recv_items',
+  'out_items':    'ax_out_items',
+  'stock_items':  'ax_stock_items',
+  'bom_data':     'ax_bom_data',
+  'quote_hist':   'ax_quote_hist',
+  'pdbox_data':   'ax_pdbox',
+  'users':        'ax_users',
+  'todo_items':   'ax_pdbox',
+};
+
+// 현재 로그인 사용자
+var CURRENT_USER    = null;
+var CURRENT_TOKEN   = null;
+var CURRENT_COMPANY = 'AXCELIS';
+var _syncQueue = [];
+var _syncing   = false;
+
 // ─── 공통 변수 및 API ───
 
 // ══════════════════════════════════════════════════════════

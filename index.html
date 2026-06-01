@@ -169,6 +169,15 @@ div#po-inner-tabs .po-itab.active {
       <button class="sb-top-btn" id="appbtn-srch" onclick="switchApp('srch');closeSidebarMobile()">🔍 자재조회</button>
     </div>
     <div class="app-divider"></div>
+    <!-- 구매관리 -->
+    <div class="sb-item" data-app="purchase">
+      <button class="sb-group-hdr" id="appbtn-purchase" onclick="sbToggle('purchase')">📦 구매관리<span class="sb-arrow">▾</span></button>
+      <div class="sb-sub" id="sbsub-purchase">
+        <button class="sb-sub-btn active" id="sbpurchase-db" onclick="switchApp('purchase');ptTab('db');setSbSub('purchase','db');closeSidebarMobile()">품목 DB</button>
+        <button class="sb-sub-btn" id="sbpurchase-bom" onclick="switchApp('purchase');ptTab('bom');setSbSub('purchase','bom');closeSidebarMobile()">BOM 관리</button>
+      </div>
+    </div>
+    <div class="app-divider"></div>
     <!-- PO 관리 -->
     <div class="sb-item" data-app="po">
       <button class="sb-group-hdr" id="appbtn-po" onclick="sbToggle('po')">📋 PO 관리<span class="sb-arrow">▾</span></button>
@@ -200,7 +209,7 @@ div#po-inner-tabs .po-itab.active {
     await new Promise(function(r){ setTimeout(r, 50); });
     mc = document.getElementById('main-content');
   }
-  var sections = ['pdbox','srch','po','purchase','quote'];
+  var sections = ['pdbox','srch','purchase','po','quote'];
   for (var i=0; i<sections.length; i++) {
     var name = sections[i];
     try {
@@ -220,6 +229,7 @@ div#po-inner-tabs .po-itab.active {
 <!-- ── JS 모듈 ── -->
 <script src="src/main.js"></script>
 <script src="src/auth.js"></script>
+<script src="src/util.js"></script>
 <script src="src/sidebar.js"></script>
 <script src="src/po/po.js"></script>
 <script src="src/pdbox/pdbox.js"></script>

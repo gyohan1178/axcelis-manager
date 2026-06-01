@@ -39,12 +39,12 @@ function switchApp(app) {
   var sq  = document.getElementById('sect-quote');
   var spb = document.getElementById('sect-pdbox');
   var spr = document.getElementById('sect-process');
-  sp.style.display  = (app==='purchase') ? 'block':'none';
-  so.style.display  = (app==='po')       ? 'block':'none';
-  if(ss)  ss.style.display  = (app==='srch')   ? 'block':'none';
+  if(sp)  sp.style.cssText  = (app==='purchase') ? 'display:block!important' : 'display:none!important';
+  if(so)  so.style.cssText  = (app==='po')       ? 'display:block!important' : 'display:none!important';
+  if(ss)  ss.style.cssText  = (app==='srch')   ? 'display:block!important' : 'display:none!important';
   if(st)  { st.style.display = (app==='todo')  ? 'block':'none'; if(app==='todo') st.style.cssText='display:block!important'; }
   if(sq)  { sq.style.display = (app==='quote') ? 'block':'none'; if(app==='quote') sq.style.cssText='display:block!important'; }
-  if(spb) { spb.style.display=(app==='pdbox')  ? 'block':'none'; if(app==='pdbox') spb.style.cssText='display:block!important'; }
+  if(spb) spb.style.cssText  = (app==='pdbox') ? 'display:block!important' : 'display:none!important';
   if(spr) { spr.style.display=(app==='process')? 'block':'none'; }
   sp.classList.toggle('on', app==='purchase');
   so.classList.toggle('on', app==='po');
