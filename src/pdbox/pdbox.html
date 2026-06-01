@@ -1,0 +1,303 @@
+<div class="sect-wrap" id="sect-pdbox">
+<div class="pb-page">
+
+  <!-- 툴바 -->
+  <!-- ── 뷰 탭 ── -->
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:8px;border-bottom:1px solid var(--border2)">
+    <button class="pb-view-tab on" id="pbt-list"  onclick="pbSetView('list')">📋 기본</button>
+    <button class="pb-view-tab"   id="pbt-cal"   onclick="pbSetView('cal')">📅 캘린더</button>
+    <button class="pb-view-tab"   id="pbt-bypn"  onclick="pbSetView('bypn')">🔢 품번별</button>
+    <button class="pb-view-tab"   id="pbt-fa"    onclick="pbSetView('fa')">#FA 초도품</button>
+  </div>
+
+  <!-- ── 툴바: 필터 + 액션 ── -->
+  <div class="pb-toolbar">
+    <div class="pb-flt">
+      <select id="pb-flt-status" onchange="pbRender()">
+        <option value="">전체 상태</option>
+        <option value="PO접수">PO 접수</option>
+        <option value="자재발주">자재 발주</option>
+        <option value="제작중">제작 중</option>
+        <option value="품질검수">품질 검수</option>
+        <option value="납품대기">납품 대기</option>
+        <option value="완료">완료</option>
+      </select>
+      <select id="pb-flt-po" onchange="pbRender()">
+        <option value="">PO 전체</option>
+        <option value="N">PO 미접수</option>
+        <option value="Y">PO 접수</option>
+      </select>
+      <input type="text" id="pb-flt-q" placeholder="PD명 / 품번 / 호기..." oninput="pbRender()" style="width:150px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 10px">
+        <input type="checkbox" id="pb-flt-hidedone" checked onchange="pbRender()" style="accent-color:var(--teal);width:13px;height:13px">완료 숨김
+      </label>
+    </div>
+    <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
+    <button onclick="pbOpenNew()" style="padding:6px 13px;background:var(--teal);color:#051515;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ 등록</button>
+    <div id="pb-sel-actions" style="display:flex;gap:6px;align-items:center"></div>
+    <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
+    <button onclick="document.getElementById('pb-import-in').click()" style="padding:6px 10px;background:none;border:1px solid var(--border2);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap">📂 가져오기</button>
+    <input type="file" id="pb-import-in" accept=".csv,.xlsx,.xls" style="display:none" onchange="pbImportCSV(this)">
+    <button onclick="pbExportCSV()" style="padding:6px 10px;background:none;border:1px solid var(--border2);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap">↓ CSV</button>
+    <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
+    <button onclick="pbSyncFromServer(function(){pbRender();qToast('✓ 완료','ok');})" style="padding:6px 10px;background:none;border:1px solid var(--teal);border-radius:7px;font-size:11px;color:var(--teal);cursor:pointer;white-space:nowrap">🔄 수신</button>
+    <button id="pb-force-push" onclick="pbForcePush()" style="padding:6px 10px;background:none;border:1px solid var(--amb);border-radius:7px;font-size:11px;color:var(--amb);cursor:pointer;font-weight:600;white-space:nowrap">⬆ 업로드</button>
+    <div id="pb-bulk-bar" style="display:none;align-items:center;gap:6px;background:rgba(45,212,191,.1);border:1px solid var(--teal);border-radius:8px;padding:4px 10px">
+      <span id="pb-sel-cnt" style="font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap">0건 선택</span>
+      <button onclick="pbBulkEdit()" style="padding:3px 10px;background:var(--teal);color:#051515;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">수정</button>
+      <button onclick="pbBulkDelete()" style="padding:3px 10px;background:none;border:1px solid var(--red);border-radius:5px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>
+      <button onclick="pbClearSel()" style="padding:3px 7px;background:none;border:1px solid var(--border2);border-radius:5px;font-size:10px;color:var(--text2);cursor:pointer">✕</button>
+    </div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="pb-stats" id="pb-stats"></div>
+
+  <!-- 캘린더 뷰 -->
+  <div id="pb-cal-wrap" style="display:none;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <button onclick="pbCalMove(-1)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 12px;color:var(--text);cursor:pointer">◀</button>
+      <span id="pb-cal-title" style="font-size:14px;font-weight:700;color:var(--text);min-width:120px;text-align:center"></span>
+      <button onclick="pbCalMove(1)" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 12px;color:var(--text);cursor:pointer">▶</button>
+      <button onclick="pbCalToday()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;color:var(--teal);cursor:pointer;font-size:12px">오늘</button>
+    </div>
+    <div id="pb-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="pb-tw">
+    <table id="pb-table">
+      <thead>
+        <!-- 그룹 헤더 -->
+        <tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">
+          <th rowspan="2" style="width:34px;text-align:center">
+            <input type="checkbox" id="pb-chk-all" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer" onchange="pbSelAll(this.checked)" title="전체 선택">
+          </th>
+          <th rowspan="2" style="width:90px;white-space:nowrap" data-sort="pn" onclick="pbSortBy('pn')" style="cursor:pointer">품번 <span class="pb-sort-arr" style="font-size:9px;color:var(--text3)">⇅</span></th>
+          <th rowspan="2" style="min-width:80px" data-sort="name" onclick="pbSortBy('name')" style="cursor:pointer">PD 명 <span class="pb-sort-arr" style="font-size:9px;color:var(--text3)">⇅</span></th>
+          <th rowspan="2" style="width:60px;white-space:nowrap" data-sort="hogi" onclick="pbSortBy('hogi')" style="cursor:pointer">호기 <span class="pb-sort-arr" style="font-size:9px;color:var(--text3)">⇅</span></th>
+          <th rowspan="2" style="width:60px;font-size:10px;white-space:nowrap">REV</th>
+          <th rowspan="2" style="width:100px;white-space:nowrap" data-sort="status" onclick="pbSortBy('status')" style="cursor:pointer">상태 <span class="pb-sort-arr" style="font-size:9px;color:var(--text3)">⇅</span></th>
+          <th rowspan="2" style="width:80px;white-space:nowrap;background:rgba(79,124,255,.08);color:var(--accent)" data-sort="reqDate" onclick="pbSortBy('reqDate')" style="cursor:pointer">납품일 <span class="pb-sort-arr" style="font-size:9px;color:var(--text3)">▲</span></th>
+          <th colspan="2" style="background:rgba(255,181,71,.12);color:var(--amb);text-align:center;font-size:11px;border-left:2px solid rgba(255,181,71,.3)">⚙ 가공물</th>
+          <th colspan="2" style="background:rgba(45,212,191,.12);color:var(--teal);text-align:center;font-size:11px;border-left:2px solid rgba(45,212,191,.3)">🧵 하네스</th>
+          <th colspan="2" style="background:rgba(167,139,250,.12);color:var(--purple,#a78bfa);text-align:center;font-size:11px;border-left:2px solid rgba(167,139,250,.3)">⚡ 전장</th>
+          <th rowspan="2" style="width:60px;white-space:normal;line-height:1.3;font-size:10px">미불<br>출품</th>
+          <th rowspan="2" style="min-width:300px">비고</th>
+        </tr>
+        <tr style="background:var(--bg3);border-bottom:2px solid var(--border2)">
+          <th style="width:20px;background:rgba(255,181,71,.08);color:var(--text2);font-size:10px;text-align:center;border-left:2px solid rgba(255,181,71,.3)">발주</th>
+          <th style="width:120px;background:rgba(255,181,71,.08);color:var(--text2);font-size:10px;line-height:1.4">입고예정<br><span style="font-size:8px;color:rgba(245,158,11,.8)">✔클릭시완료</span></th>
+          <th style="width:20px;background:rgba(45,212,191,.08);color:var(--text2);font-size:10px;text-align:center;border-left:2px solid rgba(45,212,191,.3)">불출</th>
+          <th style="width:120px;background:rgba(45,212,191,.08);color:var(--text2);font-size:10px;line-height:1.4">완료예정<br><span style="font-size:8px;color:rgba(16,185,129,.8)">✔클릭시완료</span></th>
+          <th style="width:20px;background:rgba(167,139,250,.08);color:var(--text2);font-size:10px;text-align:center;border-left:2px solid rgba(167,139,250,.3)">불출</th>
+          <th style="width:120px;background:rgba(167,139,250,.08);color:var(--purple,#a78bfa);font-size:10px">완료요청</th>
+          
+        </tr>
+      </thead>
+      <tbody id="pb-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 품번별 뷰 -->
+  <div id="pb-bypn-wrap" style="display:none"></div>
+
+</div>
+</div><!-- /#sect-pdbox -->
+
+<!-- ══ PD BOX 등록/수정 모달 ══ -->
+<div class="mbg" id="m-pdbox">
+<div class="modal" style="max-width:560px;width:95vw;max-height:90vh;overflow-y:auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--teal)">🗂 PD BOX <span id="pb-modal-title">등록</span></h3>
+    <button class="mx" onclick="closeM('m-pdbox')">✕</button>
+  </div>
+
+  <!-- 기본정보 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:13px">
+    <colgroup><col style="width:120px"><col></colgroup>
+    <thead>
+      <tr>
+        <th style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:600">항목</th>
+        <th style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:600">내용</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px;white-space:nowrap">PD 명 <span style="color:var(--red)">*</span></td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="text" id="pb-name" placeholder="ASSY TERM PD 480VAC" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px">품번 (ASSY)</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="text" id="pb-pn" placeholder="110171800" style="width:100%;box-sizing:border-box;font-family:var(--mono)"></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px">호기 <span style="color:var(--red)">*</span></td>
+        <td style="border:1px solid var(--border2);padding:4px 6px;display:flex;gap:6px;align-items:center">
+          <select class="pb-inp" id="pb-hogi" onchange="document.getElementById('pb-hogi-custom').style.display=this.value==='기타'?'inline-block':'none'" style="flex:1">
+            <option value="#FA">#FA (초도품)</option>
+            <option value="#1">#1</option><option value="#2">#2</option><option value="#3">#3</option>
+            <option value="#4">#4</option><option value="#5">#5</option><option value="#6">#6</option>
+            <option value="#7">#7</option><option value="#8">#8</option><option value="#9">#9</option>
+            <option value="#10">#10</option><option value="#11">#11</option><option value="#12">#12</option>
+            <option value="#13">#13</option><option value="#14">#14</option><option value="#15">#15</option>
+            <option value="#16">#16</option><option value="#17">#17</option><option value="#18">#18</option>
+            <option value="#19">#19</option><option value="#20">#20</option><option value="#21">#21</option>
+            <option value="#22">#22</option><option value="#23">#23</option>
+            <option value="#FA1">#FA1</option>
+            <option value="기타">기타</option>
+          </select>
+          <input class="pb-inp" type="text" id="pb-hogi-custom" placeholder="직접입력" style="display:none;width:100px">
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px">CCN / REV</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px;display:flex;gap:6px">
+          <input class="pb-inp" type="text" id="pb-ccn" placeholder="B" style="width:60px">
+          <input class="pb-inp" type="text" id="pb-rev" placeholder="REV" style="flex:1">
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px">상태</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px">
+          <select class="pb-inp" id="pb-status" style="width:100%;box-sizing:border-box">
+            <option value="PO접수">PO 접수</option>
+            <option value="자재발주">자재 발주</option>
+            <option value="제작중">제작 중</option>
+            <option value="품질검수">품질 검수</option>
+            <option value="납품대기">납품 대기</option>
+            <option value="완료">완료</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px">PO 미접수</td>
+        <td style="border:1px solid var(--border2);padding:6px 10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--amb)">
+            <input type="checkbox" id="pb-no-po" style="accent-color:var(--amb);width:14px;height:14px">
+            PO 미접수 선진행 (체크 시 주황 표시)
+          </label>
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid var(--border2);padding:6px 10px;color:var(--text2);font-size:12px">비고</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="text" id="pb-note" placeholder="" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 일정 -->
+  <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px">
+    <colgroup><col style="width:120px"><col></colgroup>
+    <thead>
+      <tr>
+        <th style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:600">항목</th>
+        <th style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:600">날짜</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:rgba(79,124,255,.05)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--accent);font-weight:600">📅 납품요청일</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-req-date" onchange="pbAutoElecDate()" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr style="background:rgba(255,181,71,.04)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--amb)">⚙ 가공물 발주일</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-machine-date" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr style="background:rgba(255,181,71,.04)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--amb)">⚙ 가공물 입고예정</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-arrival-date" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr style="background:rgba(45,212,191,.04)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--teal)">🧵 하네스 자재불출</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-harness-issue" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr style="background:rgba(45,212,191,.04)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--teal)">🧵 하네스 완료요청</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-harness-done" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr style="background:rgba(167,139,250,.04)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--purple,#a78bfa)">⚡ 전장 자재불출</td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-part-issue" style="width:100%;box-sizing:border-box"></td>
+      </tr>
+      <tr style="background:rgba(167,139,250,.06)">
+        <td style="border:1px solid var(--border2);padding:6px 10px;font-size:12px;color:var(--purple,#a78bfa)">⚡ 전장 완료요청<br><span style="font-size:10px;color:var(--text3)">(납품-4일 자동)</span></td>
+        <td style="border:1px solid var(--border2);padding:4px 6px"><input class="pb-inp" type="date" id="pb-elec-done" readonly style="width:100%;box-sizing:border-box;background:rgba(167,139,250,.08);cursor:default" title="납품요청일 기준 -4영업일 자동계산"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 파트 미불출 현황 -->
+  <div class="pb-sec" style="margin-bottom:10px">
+    <div class="pb-sec-t">
+      ⚠ 파트 미불출 현황
+      <button onclick="pbAddMissingPart()" style="background:none;border:1px solid var(--teal);border-radius:5px;padding:2px 10px;color:var(--teal);font-size:11px;cursor:pointer;font-weight:600">+ 추가</button>
+    </div>
+    <div id="pb-missing-rows"></div>
+    <div id="pb-missing-empty" style="font-size:12px;color:var(--text3);padding:8px 0">미불출 파트 없음</div>
+  </div>
+
+  <input type="hidden" id="pb-edit-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--border)">
+    <button onclick="closeM('m-pdbox')" style="padding:8px 18px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;cursor:pointer">취소</button>
+    <button onclick="pbSave()" style="padding:8px 22px;background:var(--teal);color:#051515;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">💾 저장</button>
+  </div>
+</div>
+</div>
+<!-- ══ PD BOX 플로팅 액션 패널 ══ -->
+<div id="pb-row-act">
+  <div class="pb-act-name" id="pb-act-name">—</div>
+  <button id="pb-act-edit" onclick="pbActEdit()" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">✏ 편집</button>
+  <button id="pb-act-del" onclick="pbActDelete()" style="padding:6px 14px;background:none;border:1px solid rgba(255,85,85,.4);border-radius:6px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">🗑 삭제</button>
+</div>
+
+<!-- ══ PD BOX 일괄 수정 모달 ══ -->
+<div class="mbg" id="m-pb-bulk">
+<div class="modal" style="max-width:480px;width:95vw">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--teal)">✏ 일괄 수정</h3>
+    <button class="mx" onclick="closeM('m-pb-bulk')">✕</button>
+  </div>
+  <div style="font-size:12px;color:var(--amb);background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.3);border-radius:7px;padding:8px 12px;margin-bottom:14px">
+    <b id="pb-bulk-cnt">0건</b>에 적용됩니다. 체크된 항목만 변경됩니다.
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;cursor:pointer">
+      <input type="checkbox" id="pb-bulk-chg-status" style="accent-color:var(--teal);width:15px;height:15px">
+      <span style="font-size:12px;color:var(--text2);min-width:70px;font-weight:600">상태 변경</span>
+      <select id="pb-bulk-status" class="pb-inp" style="flex:1;padding:5px 8px;font-size:12px">
+        <option value="">-- 선택 --</option>
+        <option value="PO접수">PO 접수</option>
+        <option value="자재발주">자재 발주</option>
+        <option value="제작중">제작 중</option>
+        <option value="품질검수">품질 검수</option>
+        <option value="납품대기">납품 대기</option>
+        <option value="완료">완료</option>
+      </select>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;cursor:pointer">
+      <input type="checkbox" id="pb-bulk-chg-po" style="accent-color:var(--teal);width:15px;height:15px">
+      <span style="font-size:12px;color:var(--text2);min-width:70px;font-weight:600">PO 미접수</span>
+      <input type="checkbox" id="pb-bulk-po" style="accent-color:var(--amb);width:15px;height:15px">
+      <span style="font-size:12px;color:var(--amb)">PO 미접수 선진행으로 변경</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;cursor:pointer">
+      <input type="checkbox" id="pb-bulk-chg-note" style="accent-color:var(--teal);width:15px;height:15px">
+      <span style="font-size:12px;color:var(--text2);min-width:70px;font-weight:600">비고 변경</span>
+      <input type="text" id="pb-bulk-note" class="pb-inp" placeholder="비고 내용" style="flex:1;padding:5px 8px;font-size:12px">
+    </label>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+    <button onclick="closeM('m-pb-bulk')" style="padding:7px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;cursor:pointer">취소</button>
+    <button onclick="pbBulkSaveEdit()" style="padding:7px 20px;background:var(--teal);color:#051515;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">✓ 적용</button>
+  </div>
+</div>
+</div>
+
+<div id="q-toast"></div>
+
+
+
+
+<!-- 메인 콘텐츠 래퍼 -->
+<div id="main-content">
