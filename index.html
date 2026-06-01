@@ -190,6 +190,28 @@ div#po-inner-tabs .po-itab.active {
 </nav>
 
 
+
+<script>
+// 섹션 HTML 동적 로드
+async function loadSections() {
+  var sections = ['pdbox','srch','po','purchase','quote'];
+  var mc = document.getElementById('main-content');
+  if(!mc) { console.error('main-content not found'); return; }
+  for (var i=0; i<sections.length; i++) {
+    var name = sections[i];
+    try {
+      var res = await fetch('src/' + name + '/' + name + '.html');
+      var html = await res.text();
+      mc.insertAdjacentHTML('beforeend', html);
+    } catch(e) {
+      console.error('Failed to load ' + name, e);
+    }
+  }
+  console.log('[sections] all loaded');
+}
+loadSections();
+</script>
+
 </body>
 
 <!-- ── JS 모듈 ── -->

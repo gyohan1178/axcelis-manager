@@ -410,3 +410,47 @@ function setSyncStatus(status, msg) {
     banner.style.display = 'none';
   }
 }
+
+
+
+function initAfterLogin() {
+  // sv 동기화 버전으로 교체
+  sv = function(k, v) { svWithSync(k, v); };
+
+  // 캐시 있으면 즉시 표시 (로딩 없이 바로 보임)
+  var cachedDB = (function(){ try{ return JSON.parse(localStorage.getItem('jst_db2')||'null'); }catch(e){ return null; }})();
+  if(cachedDB && cachedDB.length) {
+    DB = cachedDB;
+    renderDB(); updateStat();
+    setSyncStatus('syncing', 'DB ' + DB.length + '건 (캐시) · 최신화 중...');
+  }
+
+  // 서버에서 최신 데이터 로드 (백그라운드)
+  loadAllFromServer();
+
+  // PO 초기화 (po_data 캐시 우선 — saveHist는 메타만 저장)
+  var hist = getHist();
+  var poCache2 = (function(){ try{ return JSON.parse(localStorage.getItem('po_data')||'[]'); }catch{ return []; }})();
+  if(poCache2.length > 0 || (hist.length > 0 && hist[0].data && hist[0].data.length > 0)) {
+    PO = poCache2.length > 0 ? poCache2 : hist[0].data;
+    var lu = document.getElementById('last-updated');
+    if(lu && hist.length > 0) lu.textContent = '마지막 PO: ' + hist[0].date;
+    if(PO.length) refreshAll();
+  } else {
+    var da = document.getElementById('dash-alert');
+    if(da) da.innerHTML = '<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">PO 엑셀을 업로드하세요</div></div>';
+    var ds = document.getElementById('dash-soon');
+    if(ds) ds.innerHTML = '<div class="empty" style="padding:30px"><div>데이터 없음</div></div>';
+  }
+  buildHistSelect();
+  ['chg-all','trk-all','sl-all'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.classList.add('on','default');
+  });
+  var dvData = getDelivered();
+  if(dvData.length) {
+    buildYearTabs(dvData);
+    var inp = document.getElementById('exrate-input');
+    if(inp) inp.value = getExrate();
+  }
+  updateDeliveredBadge();
+}
