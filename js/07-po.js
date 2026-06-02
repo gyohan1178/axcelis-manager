@@ -443,9 +443,11 @@ function renderChanges() {
   });
 
   const badge = document.getElementById('badge-changes');
-  badge.textContent = chgs.length; badge.style.display = chgs.length?'':'none';
+  if(badge){ badge.textContent = chgs.length; badge.style.display = chgs.length?'':'none'; }
 
-  document.getElementById('changes-body').innerHTML = Object.entries(groups).map(([g,items])=>`
+  const _cb = document.getElementById('changes-body');
+  if(!_cb) return;
+  _cb.innerHTML = Object.entries(groups).map(([g,items])=>`
     <div class="change-section">
       <div class="change-title">${g} <span style="color:var(--text3);font-size:11px;font-weight:400">${items.length}건</span></div>
       <div class="change-cards">${items.map(changeCard).join('')}</div>

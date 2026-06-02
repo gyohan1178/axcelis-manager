@@ -387,9 +387,7 @@ function handleReceivedUpload(inp) {
         return (b.deliveredDate||'').localeCompare(a.deliveredDate||'');
       });
       saveDelivered(merged);
-      if(CURRENT_TOKEN) {
-        apiPost({action:'setSheet', sheet:'po_delivered', data:merged}).catch(function(){});
-      }
+      // (중복 직접호출 제거 — saveDelivered가 서버 PK 기준 dedup 포함하여 저장)
       var dateStr = new Date().toLocaleString('ko-KR');
       try {
         updateDeliveredBadge();
