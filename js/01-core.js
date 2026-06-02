@@ -32,6 +32,69 @@ var CURRENT_COMPANY = 'AXCELIS';
 var _syncQueue = [];
 var _syncing   = false;
 
+// 서버(po_data 컬럼) → 앱 PO 객체 역매핑 + overdue/gap 재계산
+function rowsToPO(rows){
+  if(!Array.isArray(rows)) return [];
+  return rows.map(function(r){
+    var promise  = r.promise || r.promise_date || '';
+    var required = r.required || r.required_date || '';
+    var srev = r.srev||'', brev = r.brev||'';
+    var shipped = (typeof r.shipped==='boolean') ? r.shipped : (String(r.chuldo||'')==='발송 완료');
+    var gap = (typeof calcGap==='function') ? calcGap(promise, required) : (Number(r.gap)||0);
+    var overdue = shipped ? 0 : ((typeof calcOverdue==='function') ? calcOverdue(promise) : (Number(r.overdue)||0));
+    return {
+      item: r.item||'',
+      desc: r.desc||r.description||'',
+      pn: r.pn||'',
+      rv: r.rv||'',
+      ccn: r.ccn||'',
+      type: r.type||'',
+      order: r.order_num||r.order||'',
+      orderLine: r.order_line||r.orderLine||'',
+      delLine: r.del_line||r.delLine||'',
+      qty: Number(r.qty)||0,
+      unit: r.unit||'EA',
+      promise: promise,
+      required: required,
+      srev: srev, brev: brev,
+      rev_chg: !!(srev && brev && srev !== brev),
+      gap: gap, overdue: overdue, shipped: shipped,
+      delay: gap,
+      status: r.status||'',
+      placed: r.placed||'',
+      lt: Number(r.lt)||0,
+      unit_price: Number(r.unit_price)||0,
+      extended_price: Number(r.extended_price||r.amount)||0,
+      amount: Number(r.amount||r.extended_price)||0,
+      chuldo: r.chuldo||'',
+      trackNum: r.track_num||r.trackNum||'',
+      alt: r.alt||'',
+      note: r.note||''
+    };
+  });
+}
+// 서버(po_delivered 컬럼) → 앱 납품 객체 역매핑
+function rowsToDelivered(rows){
+  if(!Array.isArray(rows)) return [];
+  return rows.map(function(r){
+    return {
+      item: r.item||'',
+      desc: r.desc||r.description||'',
+      pn: r.pn||'',
+      order: r.order_num||r.order||'',
+      orderLine: r.order_line||r.orderLine||'',
+      delLine: r.del_line||r.delLine||'',
+      qty: Number(r.qty)||0,
+      unit: r.unit||'EA',
+      unitPrice: Number(r.unit_price||r.unitPrice)||0,
+      amount: Number(r.amount||r.extended_price)||0,
+      deliveredDate: r.delivered_date||r.deliveredDate||'',
+      ccn: r.ccn||'',
+      trackNum: r.track_num||r.trackNum||'',
+      note: r.note||''
+    };
+  });
+}
 function sbMapRow(r, sheet, company){
   var row = {};
   // po_data 필드 매핑 (앱 내부명 → DB 컬럼명)
@@ -247,6 +310,17 @@ function apiPost(body) {
         var rows = data.map(function(r){
           return sbMapRow(r, body.sheet, company);
         });
+        // uid(기본키) 중복 제거 — 같은 키는 마지막 값만 유지 (duplicate key 에러 방지)
+        if(rows.length && rows[0] && rows[0].uid !== undefined){
+          var _seen={}, _dedup=[];
+          for(var di=rows.length-1; di>=0; di--){
+            var _k=rows[di].uid;
+            if(_seen[_k]) continue;
+            _seen[_k]=1; _dedup.push(rows[di]);
+          }
+          _dedup.reverse();
+          rows=_dedup;
+        }
         var chunks = [];
         for(var i=0;i<rows.length;i+=500) chunks.push(rows.slice(i,i+500));
         var _fail=null, _ins=0;
@@ -614,7 +688,7 @@ function loadAllFromServer() {
       if(res1 && res1.ok && res1.data) {
         var d1 = res1.data;
         if(d1['po_data'] && d1['po_data'].length) {
-          var poData = d1['po_data'];
+          var poData = rowsToPO(d1['po_data']);
           try { localStorage.setItem('po_data', JSON.stringify(poData.slice(0,500))); } catch(e){}
           PO = poData;
           var h = getHist();
@@ -624,7 +698,7 @@ function loadAllFromServer() {
           refreshAll(); buildHistSelect();
         }
         if(d1['po_delivered'] && d1['po_delivered'].length) {
-          var dvData = d1['po_delivered'];
+          var dvData = rowsToDelivered(d1['po_delivered']);
           try { localStorage.setItem(LS_DELIVERED, JSON.stringify(dvData)); } catch(e){}
           updateDeliveredBadge(); buildYearTabs(dvData); renderDelivered(); renderSalesDash();
         }
