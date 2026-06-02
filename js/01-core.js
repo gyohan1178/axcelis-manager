@@ -168,6 +168,10 @@ function sbMapRow(r, sheet, company){
     row.harness_done  = r.harnessDone||'';
     row.part_issue    = r.partIssue||'';
     row.elec_done     = r.elecDone||'';
+    row.machine_recv  = !!r.machineRecv;
+    row.harness_recv  = !!r.harnessRecv;
+    row.elec_recv     = !!r.elecRecv;
+    row.qc_done       = !!r.qcDone;
     row.note          = r.note||'';
     row.missing_parts = JSON.stringify(r.missingParts||[]);
     row.changes       = JSON.stringify(r.changes||[]);
