@@ -1086,3 +1086,59 @@ function renderGrandTotal(){
   s('grand-cnt',grandCnt.toLocaleString()+'건');
 }
 
+
+// ══════════════════ PO 대시보드 납기 캘린더 (Promise Date 기준) ══════════════════
+var _dashCalM = null; // 표시 중인 달 (Date, 매월 1일)
+function dashCalMove(d){ if(!_dashCalM){ _dashCalM=new Date(); _dashCalM.setDate(1); } _dashCalM.setMonth(_dashCalM.getMonth()+d); renderDashCal(); }
+function dashCalToday(){ _dashCalM=new Date(); _dashCalM.setDate(1); renderDashCal(); }
+function renderDashCal(){
+  var grid=document.getElementById('dash-cal-grid');
+  var titleEl=document.getElementById('dash-cal-title');
+  if(!grid) return;
+  if(!_dashCalM){ _dashCalM=new Date(); _dashCalM.setDate(1); }
+  var y=_dashCalM.getFullYear(), m=_dashCalM.getMonth();
+  if(titleEl) titleEl.textContent = y+'년 '+(m+1)+'월';
+
+  // Promise Date 기준 그룹 (미납품 건만: _delivered 아닌 것)
+  var byDate={};
+  (PO||[]).forEach(function(r){
+    if(!r.promise || r._delivered) return;
+    var d=String(r.promise).slice(0,10);
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push(r);
+  });
+
+  var days=['일','월','화','수','목','금','토'];
+  var html=days.map(function(d,i){ return '<div class="dash-cal-hdr '+(i===0?'sun':i===6?'sat':'')+'">'+d+'</div>'; }).join('');
+
+  var first=new Date(y,m,1), last=new Date(y,m+1,0);
+  var today=new Date(); today.setHours(0,0,0,0);
+
+  for(var i=0;i<first.getDay();i++) html+='<div class="pb-cal-day other-month"></div>';
+
+  for(var day=1; day<=last.getDate(); day++){
+    var key=y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var dt=new Date(y,m,day);
+    var isToday=dt.getTime()===today.getTime();
+    var overdue=dt.getTime()<today.getTime();
+    var items=byDate[key]||[];
+    // 품번별 수량 합산
+    var byItem={};
+    items.forEach(function(r){ var k=r.item||'?'; byItem[k]=(byItem[k]||0)+(Number(r.qty)||0); });
+    var keys=Object.keys(byItem);
+    html+='<div class="pb-cal-day'+(isToday?' today':'')+'">';
+    html+='<div class="pb-cal-daynum">'+(isToday?'✦ ':'')+day
+        +(keys.length?' <span style="float:right;color:var(--accent);font-size:10px">'+keys.length+'건</span>':'')+'</div>';
+    keys.slice(0,4).forEach(function(it){
+      html+='<div class="pb-cal-item po'+(overdue?' overdue':'')+'" title="'+it+' · '+byItem[it].toLocaleString()+'개">'
+          + it + ' <span style="float:right">'+byItem[it].toLocaleString()+'</span></div>';
+    });
+    if(keys.length>4) html+='<div class="dash-cal-more">+'+(keys.length-4)+' 더…</div>';
+    html+='</div>';
+  }
+
+  var remain=(7-(first.getDay()+last.getDate())%7)%7;
+  for(var i=0;i<remain;i++) html+='<div class="pb-cal-day other-month"></div>';
+
+  grid.innerHTML=html;
+}

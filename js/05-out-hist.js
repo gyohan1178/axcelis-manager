@@ -721,10 +721,10 @@ function poTab(t) {
   document.querySelectorAll('#po-inner-tabs .po-itab').forEach(function(el){
     el.classList.toggle('active', el.dataset.tab===t);
   });
+  if(t==='dash') renderDash();
   if(t==='sales') renderSalesDash();
   if(t==='delivered') renderDelivered();
   if(t==='ordtrend') renderOrdTrend();
-  if(t==='tracking') renderTracking();
   var tblMap={po:'po-tbl',delivered:'dv-tbl'};
   if(tblMap[t]) { initColResize(tblMap[t]); setTimeout(function(){ initColResize(tblMap[t]); },300); }
 }

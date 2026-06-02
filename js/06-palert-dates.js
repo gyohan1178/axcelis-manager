@@ -682,6 +682,7 @@ function refreshAll() {
 
 // ══ 대시보드 ══
 function renderDash() {
+  if(typeof renderDashCal==='function') renderDashCal();
   if(!PO || !PO.length) return;
   const today = new Date();
   const overdues = PO.filter(r => r.overdue > 0);
