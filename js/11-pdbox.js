@@ -226,9 +226,27 @@ function pbRender(){
   });
 
   if(!items.length){ tb.innerHTML='<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--text3)">등록된 PD가 없습니다</td></tr>'; return; }
+  var _byMonth = (_pbSortKey==='reqDate');  // 납품일 정렬일 때만 월별 구분 행
+  var _prevMonth = null;
   tb.innerHTML=items.map(function(r){
+    var _divider='';
+    if(_byMonth){
+      var _rd=pbNormDate(r.reqDate);
+      var _mk=_rd?_rd.slice(0,7):'미정';
+      if(_mk!==_prevMonth){
+        _prevMonth=_mk;
+        var _mTitle = _mk==='미정' ? '납품일 미정' : (_mk.slice(0,4)+'년 '+(+_mk.slice(5,7))+'월');
+        var _mItems=items.filter(function(x){var d=pbNormDate(x.reqDate);return (d?d.slice(0,7):'미정')===_mk;});
+        var _mDelay=_mItems.filter(function(x){return _pbCardHasDelay(x);}).length;
+        _divider='<tr class="pb-month-row"><td colspan="17" style="background:var(--bg3);padding:8px 14px;font-weight:700;font-size:12.5px;color:var(--text);border-top:2px solid var(--border2)">'
+          +'📦 '+_mTitle+' <span style="font-weight:400;color:var(--text3);font-size:11px">· '+_mItems.length+'건</span>'
+          +(_mDelay?' <span style="color:var(--red);font-size:11px;font-weight:700;margin-left:8px">⚠ 지연 '+_mDelay+'건</span>':'')
+          +'</td></tr>';
+      }
+    }
+    return _divider + (function(){
     var hogiCls=r.hogi==='#FA'?'pb-hogi fa':'pb-hogi';
-    var rowCls=r.poReceived?'':'pb-pre-row';
+    var rowCls=(r.poReceived?'':'pb-pre-row')+(_pbCardHasDelay(r)?' pb-delay-row':'');
     var mp=r.missingParts||[];
     var mpCnt=mp.length;
     var mpBadge=mpCnt?'<span style="background:rgba(255,85,85,.18);color:var(--red);border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer" onclick="pbToggleMissing(event,\'pb-mp-'+r.id+'\')">'+mpCnt+' ▼</span>':'<span style="color:var(--text3);font-size:11px">—</span>';
@@ -282,6 +300,7 @@ function pbRender(){
       })()
       +'</tr>'
       +mpDetail;
+    })();
   }).join('');
   // 컬럼 리사이즈 초기화
   // 더블클릭 편집
@@ -923,7 +942,7 @@ var _pbView = 'list'; // list | cal | bypn | fa
 function pbSetView(v){
   _pbView = v;
   // 탭 active
-  ['list','card','cal','bypn','fa'].forEach(function(k){
+  ['list','cal','bypn','fa'].forEach(function(k){
     var btn = document.getElementById('pbt-'+k);
     if(btn) btn.classList.toggle('on', k===v);
   });
@@ -931,16 +950,13 @@ function pbSetView(v){
   var calWrap = document.getElementById('pb-cal-wrap');
   var tblWrap = document.querySelector('#sect-pdbox .pb-table-wrap');
   var bypnWrap = document.getElementById('pb-bypn-wrap');
-  var cardWrap = document.getElementById('pb-card-wrap');
 
   if(calWrap)  calWrap.style.display  = (v==='cal')  ? 'block' : 'none';
   if(tblWrap)  tblWrap.style.display  = (v==='list'||v==='fa') ? '' : 'none';
   if(bypnWrap) { bypnWrap.style.display = (v==='bypn') ? 'block' : 'none'; if(v==='bypn'&&calWrap) calWrap.parentNode.insertBefore(bypnWrap, calWrap); }
-  if(cardWrap) cardWrap.style.display = (v==='card') ? 'block' : 'none';
 
   if(v==='cal')  pbRenderCal();
   else if(v==='bypn') pbRenderByPN();
-  else if(v==='card') pbRenderCards();
   else pbRender();
 }
 
@@ -1049,17 +1065,22 @@ function pbRenderCal(){
   for(var i=0;i<first.getDay();i++) html+='<div class="pb-cal-day other-month"></div>';
 
   for(var day=1; day<=last.getDate(); day++){
-    // UTC 변환 없이 로컬 날짜 키 생성
     var key = _pbCalYear+'-'+String(_pbCalMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
     var dt = new Date(_pbCalYear, _pbCalMonth, day);
+    var dow = dt.getDay();
     var isToday = dt.getTime()===today.getTime();
-    html += '<div class="pb-cal-day'+(isToday?' today':'')+'">';
+    var isWknd = (dow===0||dow===6);
+    html += '<div class="pb-cal-day'+(isToday?' today':'')+(isWknd?' weekend':'')+'">';
     html += '<div class="pb-cal-daynum">'+(isToday?'✦ ':'')+day+'</div>';
     (byDate[key]||[]).forEach(function(r){
       var sc='s-'+(r.status||'').replace(/\s/g,'');
       var statusShort={'PO접수':'준비','자재발주':'준비','제작중':'제작','품질검수':'검수','납품대기':'포장','완료':'완료'}[r.status]||r.status||'';
-      var text='['+statusShort+'] '+(r.name||r.pn||'')+(r.hogi?' '+r.hogi:'');
-      html+='<div class="pb-cal-item '+sc+'" title="'+[r.pn,r.name,r.hogi,r.status].join(' | ')+'" onclick="pbOpenEdit(\''+r.id+'\')">'+text+'</div>';
+      var delay = (typeof _pbCardHasDelay==='function') && _pbCardHasDelay(r);
+      var titleAttr=[r.pn,r.name,r.hogi,r.status].filter(Boolean).join(' | ');
+      html+='<div class="pb-cal-item '+sc+(delay?' is-delay':'')+'" title="'+titleAttr+'" onclick="pbOpenEdit(\''+r.id+'\')">'
+        + '<div class="ci-top"><span class="ci-tag">'+statusShort+'</span>'+(r.pn||'')+(delay?' ⚠':'')+'</div>'
+        + '<div class="ci-sub">'+(r.name||'')+(r.hogi?' · '+r.hogi:'')+'</div>'
+        + '</div>';
     });
     html += '</div>';
   }
@@ -1261,69 +1282,6 @@ function _pbDelayDays(dateStr){
   var t=new Date(); t.setHours(0,0,0,0);
   return Math.round((t-d)/86400000);
 }
-// 한 공정 칸: issueDate(불출/시작) → doneDate(완료요청일), doneChecked(완료체크)
-function _pbStageHtml(label, icon, issueDate, doneDate, doneChecked){
-  var issued = !!pbNormDate(issueDate);
-  if(!issued){
-    return '<div class="pb-stage waiting"><div class="pb-stage-l">'+icon+' '+label+'</div>'
-         + '<div class="pb-stage-v" style="color:var(--text3)">불출 대기</div></div>';
-  }
-  var dn=pbNormDate(doneDate), md=dn?dn.slice(5):'—';
-  var badge;
-  if(doneChecked){ badge='<span class="pb-badge done">✓ '+md+'</span>'; }
-  else {
-    var dd=_pbDelayDays(doneDate);
-    if(dd!==null && dd>0)       badge='<span class="pb-badge late">'+md+' · +'+dd+'일</span>';
-    else if(dd!==null && dd>=-3)badge='<span class="pb-badge soon">'+md+' · D'+(dd===0?'0':dd)+'</span>';
-    else                        badge='<span style="color:var(--text2)">'+md+'</span>';
-  }
-  var iss=pbNormDate(issueDate); var issMd=iss?iss.slice(5):'';
-  return '<div class="pb-stage active"><div class="pb-stage-l"><span>'+icon+' '+label+'</span><span style="color:var(--text3);font-size:10px">불출 '+issMd+'</span></div>'
-       + '<div class="pb-stage-v">'+badge+'</div></div>';
-}
-function pbRenderCards(){
-  pbLoad();
-  var wrap=document.getElementById('pb-card-wrap');
-  if(!wrap) return;
-  var fStatus=(document.getElementById('pb-flt-status')||{value:''}).value;
-  var fPO=(document.getElementById('pb-flt-po')||{value:''}).value;
-  var fQ=((document.getElementById('pb-flt-q')||{value:''}).value||'').toLowerCase();
-  var fHide=(document.getElementById('pb-flt-hidedone')||{}).checked;
-
-  var items=_pbData.filter(function(r){
-    if(fHide&&r.status==='완료') return false;
-    if(fStatus&&r.status!==fStatus) return false;
-    if(fPO==='Y'&&!r.poReceived) return false;
-    if(fPO==='N'&&r.poReceived) return false;
-    if(fQ&&!(String(r.name||'').toLowerCase().includes(fQ)||String(r.pn||'').toLowerCase().includes(fQ)||String(r.hogi||'').toLowerCase().includes(fQ))) return false;
-    return true;
-  });
-
-  // 납품일(reqDate) 기준 월별 그룹
-  var groups={};
-  items.forEach(function(r){
-    var rd=pbNormDate(r.reqDate);
-    var key=rd?rd.slice(0,7):'미정';
-    (groups[key]=groups[key]||[]).push(r);
-  });
-  var keys=Object.keys(groups).sort(function(a,b){
-    if(a==='미정') return 1; if(b==='미정') return -1; return a.localeCompare(b);
-  });
-
-  if(!items.length){ wrap.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px">표시할 PD가 없습니다</div>'; return; }
-
-  var html='';
-  keys.forEach(function(k){
-    var rows=groups[k].sort(function(a,b){return (pbNormDate(a.reqDate)||'').localeCompare(pbNormDate(b.reqDate)||'');});
-    var title = k==='미정' ? '납품일 미정' : (k.slice(0,4)+'년 '+(+k.slice(5,7))+'월');
-    // 그룹 내 지연 건수
-    var delayCnt=rows.filter(function(r){return _pbCardHasDelay(r);}).length;
-    html+='<div class="pb-month-hdr">📦 '+title+' <span class="cnt">'+rows.length+'건</span>'
-        + (delayCnt?'<span class="delay">⚠ 지연 '+delayCnt+'건</span>':'')+'</div>';
-    rows.forEach(function(r){ html+=_pbCardHtml(r); });
-  });
-  wrap.innerHTML=html;
-}
 function _pbCardHasDelay(r){
   if(r.status==='완료') return false;
   var st=[
@@ -1338,42 +1296,8 @@ function _pbCardHasDelay(r){
     var dd=_pbDelayDays(s[1]); return dd!==null && dd>0;
   });
 }
-function _pbCardHtml(r){
-  var delay=_pbCardHasDelay(r);
-  var reqMd=pbNormDate(r.reqDate)?pbNormDate(r.reqDate).slice(5):'—';
-  var reqDD=_pbDelayDays(r.reqDate);
-  var reqBadge;
-  if(r.status==='완료') reqBadge='<span class="pb-badge done">납품 '+reqMd+'</span>';
-  else if(reqDD!==null&&reqDD>0) reqBadge='<span class="pb-badge late">납품 '+reqMd+' · +'+reqDD+'일</span>';
-  else if(reqDD!==null&&reqDD>=-3) reqBadge='<span class="pb-badge soon">납품 '+reqMd+' · D'+(reqDD===0?'0':reqDD)+'</span>';
-  else reqBadge='<span class="pb-pcard-tag">납품 '+reqMd+'</span>';
-
-  var poTag = r.poReceived ? '' : '<span class="pb-pcard-tag" style="color:var(--amb)">PO미접수</span>';
-  var arrow='<div class="pb-stage-arrow">→</div>';
-
-  return '<div class="pb-pcard'+(delay?' has-delay':'')+'" onclick="pbOpenEdit(\''+r.id+'\')" style="cursor:pointer">'
-    + '<div class="pb-pcard-head">'
-    +   '<div style="min-width:0">'
-    +     '<div class="pb-pcard-tags"><span class="pb-pcard-pn">'+(r.pn||'(품번없음)')+'</span>'
-    +       '<span class="pb-pcard-tag">'+(r.hogi||'')+'</span>'
-    +       '<span class="pb-pcard-tag">'+(r.status||'')+'</span>'+poTag+'</div>'
-    +     '<div class="pb-pcard-name">'+(r.name||'<span style="color:var(--text3)">(품명 없음)</span>')+'</div>'
-    +   '</div>'
-    +   '<div style="flex-shrink:0">'+reqBadge+'</div>'
-    + '</div>'
-    + '<div class="pb-stages">'
-    +   _pbStageHtml('가공물 입고','⚙', r.machineDate, r.arrivalDate, r.machineRecv)+arrow
-    +   _pbStageHtml('하네스 완료','🧵', r.harnessIssue, r.harnessDone, r.harnessRecv)+arrow
-    +   _pbStageHtml('전장 완료','⚡', r.partIssue, pbCalcElec(r), r.elecRecv)+arrow
-    +   _pbStageHtml('품질검수','🔍', (r.partIssue||r.elecDone), pbCalcQC(r), r.qcDone)
-    + '</div>'
-    + '</div>';
-}
-
-// 현재 활성 뷰 갱신 (필터 변경 시 뷰에 맞게 다시 그림)
 function pbRefreshView(){
-  if(_pbView==='card') pbRenderCards();
-  else if(_pbView==='cal') pbRenderCal();
+  if(_pbView==='cal') pbRenderCal();
   else if(_pbView==='bypn') pbRenderByPN();
   else pbRender();
 }
