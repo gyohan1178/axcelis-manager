@@ -391,12 +391,16 @@ function handleReceivedUpload(inp) {
         apiPost({action:'setSheet', sheet:'po_delivered', data:merged}).catch(function(){});
       }
       var dateStr = new Date().toLocaleString('ko-KR');
-      updateDeliveredBadge();
-      buildYearTabs(merged);
-      renderSalesDash();
-      renderDelivered();
-      updateTrackFromDelivered(merged, dateStr);
-      if(typeof renderTracking === 'function') renderTracking();
+      try {
+        updateDeliveredBadge();
+        buildYearTabs(merged);
+        renderSalesDash();
+        renderDelivered();
+        updateTrackFromDelivered(merged, dateStr);
+        if(typeof renderTracking === 'function') renderTracking();
+      } catch(rerr) {
+        console.warn('납품 화면 갱신 일부 실패 (저장은 완료됨):', rerr.message, rerr.stack);
+      }
       var dupCnt = rparsed.length - deduped.length;
       alert('납품이력 업로드 완료\n' +
             'Received 파싱: ' + rparsed.length + '건\n' +

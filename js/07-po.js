@@ -482,6 +482,8 @@ function toggleTrkFilter(f) {
 }
 
 function renderTracking() {
+  var _tb=document.getElementById('tracking-body');
+  if(!_tb) return; // CCN B 트레킹 페이지 제거됨 → 안전 no-op
   const track = getTrack();
   const q = document.getElementById('trk-q')?.value.toLowerCase()||'';
   let entries = Object.values(track);
