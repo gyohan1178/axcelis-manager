@@ -1130,14 +1130,16 @@ function renderDashCal(){
     var byItem={};
     items.forEach(function(r){ var k=r.item||'?'; byItem[k]=(byItem[k]||0)+(Number(r.qty)||0); });
     var keys=Object.keys(byItem);
-    html+='<div class="pb-cal-day'+(isToday?' today':'')+'">';
+    var clickable = keys.length>0;
+    html+='<div class="pb-cal-day'+(isToday?' today':'')+(clickable?' clickable':'')+'"'
+        + (clickable?(' onclick="dashCalDay(\''+key+'\')" title="클릭하면 '+key+' 납품예정 전체 보기"'):'') + '>';
     html+='<div class="pb-cal-daynum">'+(isToday?'✦ ':'')+day
         +(keys.length?' <span style="float:right;color:var(--accent);font-size:10px">'+keys.length+'건</span>':'')+'</div>';
     keys.slice(0,4).forEach(function(it){
       html+='<div class="pb-cal-item po'+(overdue?' overdue':'')+'" title="'+it+' · '+byItem[it].toLocaleString()+'개">'
           + it + ' <span style="float:right">'+byItem[it].toLocaleString()+'</span></div>';
     });
-    if(keys.length>4) html+='<div class="dash-cal-more">+'+(keys.length-4)+' 더…</div>';
+    if(keys.length>4) html+='<div class="dash-cal-more">+'+(keys.length-4)+' 더 보기 ▾</div>';
     html+='</div>';
   }
 
@@ -1146,3 +1148,42 @@ function renderDashCal(){
 
   grid.innerHTML=html;
 }
+
+// 캘린더 날짜 클릭 → 그날 납품예정 전체 팝업
+function dashCalDay(key){
+  var rows=(PO||[]).filter(function(r){ return r.promise && !r._delivered && String(r.promise).slice(0,10)===key; });
+  if(!rows.length) return;
+  // 품번별 수량합산 + 오더 모음
+  var byItem={};
+  rows.forEach(function(r){
+    var k=r.item||'?';
+    if(!byItem[k]) byItem[k]={item:k, desc:r.desc||'', qty:0, orders:[]};
+    byItem[k].qty += Number(r.qty)||0;
+    if(r.order && byItem[k].orders.indexOf(r.order)<0) byItem[k].orders.push(r.order);
+  });
+  var list=Object.keys(byItem).map(function(k){return byItem[k];})
+            .sort(function(a,b){return b.qty-a.qty;});
+  var totalQty=list.reduce(function(s,x){return s+x.qty;},0);
+  var body=document.getElementById('dash-calday-body');
+  var title=document.getElementById('dash-calday-title');
+  if(title) title.textContent='📅 '+key+' 납품 예정';
+  if(body){
+    body.innerHTML=
+      '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">'+list.length+'개 품번 · 총 '+totalQty.toLocaleString()+'개</div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="border-bottom:1px solid var(--border2);color:var(--text3);text-align:left">'
+      +'<th style="padding:6px 8px">품번</th><th style="padding:6px 8px">품명</th>'
+      +'<th style="padding:6px 8px;text-align:right">수량</th><th style="padding:6px 8px">오더</th></tr></thead><tbody>'
+      +list.map(function(x){
+         return '<tr style="border-bottom:1px solid var(--border)">'
+           +'<td style="padding:6px 8px;font-family:var(--mono);color:var(--accent)">'+x.item+'</td>'
+           +'<td style="padding:6px 8px">'+(x.desc||'<span style=\"color:var(--text3)\">—</span>')+'</td>'
+           +'<td style="padding:6px 8px;text-align:right;font-family:var(--mono);font-weight:700">'+x.qty.toLocaleString()+'</td>'
+           +'<td style="padding:6px 8px;color:var(--text3);font-size:11px">'+(x.orders.join(', ')||'—')+'</td></tr>';
+       }).join('')
+      +'</tbody></table>';
+  }
+  var modal=document.getElementById('m-dash-calday');
+  if(modal) modal.classList.add('on');
+}
+function dashCalDayClose(){ var m=document.getElementById('m-dash-calday'); if(m) m.classList.remove('on'); }
