@@ -685,12 +685,15 @@ function saveHist(h) {
   }
   // 서버 동기화
   if(CURRENT_TOKEN) {
-    var histRows = h.map(function(entry){
-      return {upload_date:entry.date, changes_count:(entry.changes||[]).length};
-    });
-    apiPost({action:'setSheet', sheet:'po_history', data:histRows}).catch(function(){});
+    // po_history는 ax_po_data와 테이블이 겹쳐 충돌하므로 서버 저장 안 함 (변경이력은 localStorage 보관)
     if(h.length > 0 && h[0].data && h[0].data.length > 0) {
-      apiPost({action:'setSheet', sheet:'po_data', data:h[0].data}).catch(function(){});
+      var _pn = h[0].data.length;
+      apiPost({action:'setSheet', sheet:'po_data', data:h[0].data})
+        .then(function(res){
+          if(res && res.ok){ if(typeof setSyncStatus==='function') setSyncStatus('ok','PO '+_pn+'건 서버 저장 완료'); }
+          else { console.error('po_data 서버 저장 실패:', res); if(typeof setSyncStatus==='function') setSyncStatus('error','PO 서버 저장 실패: '+String((res&&res.error)||'').slice(0,140)); }
+        })
+        .catch(function(e){ console.error('po_data 동기화 오류:', e); if(typeof setSyncStatus==='function') setSyncStatus('error','PO 동기화 오류: '+e.message); });
     }
   }
 }
@@ -699,7 +702,13 @@ function getDelivered() { try { return JSON.parse(localStorage.getItem(LS_DELIVE
 function saveDelivered(d) {
   // Supabase에 전체 저장
   if(typeof CURRENT_TOKEN !== 'undefined' && CURRENT_TOKEN) {
-    apiPost({action:'setSheet', sheet:'po_delivered', data:d}).catch(function(){});
+    var _dn = d.length;
+    apiPost({action:'setSheet', sheet:'po_delivered', data:d})
+      .then(function(res){
+        if(res && res.ok){ if(typeof setSyncStatus==='function') setSyncStatus('ok','납품 '+_dn+'건 서버 저장 완료'); }
+        else { console.error('po_delivered 서버 저장 실패:', res); if(typeof setSyncStatus==='function') setSyncStatus('error','납품 서버 저장 실패: '+String((res&&res.error)||'').slice(0,140)); }
+      })
+      .catch(function(e){ console.error('po_delivered 동기화 오류:', e); if(typeof setSyncStatus==='function') setSyncStatus('error','납품 동기화 오류: '+e.message); });
   }
   // 로컬 캐시 (용량 허용 범위 내 최대한 저장)
   var limit = d.length;
@@ -921,13 +930,7 @@ function handleUnifiedUpload(inp) {
         saveHist(hist);
         updateTracking(parsed, dateStr);
         document.getElementById('last-updated').textContent = '업로드: '+dateStr;
-        // 서버 동기화
-        if(CURRENT_TOKEN) {
-          var histRows = hist.map(function(entry){
-            return {upload_date:entry.date, changes_count:(entry.changes||[]).length, data_json:JSON.stringify(entry.data||[])};
-          });
-          apiPost({action:'setSheet', sheet:'po_history', data:histRows}).catch(function(){});
-        }
+        // po_history 서버 동기화 제거 (po_data는 saveHist가 처리 · 변경이력은 localStorage 보관)
         msgs.push('PO '+parsed.length+'건');
         if(changes.length > 0) {
           var b = document.getElementById('badge-changes');

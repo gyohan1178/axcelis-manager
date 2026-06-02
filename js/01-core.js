@@ -15,7 +15,6 @@ var SB_TABLE_MAP = {
   'db_items':     'ax_db_items',
   'po_data':      'ax_po_data',
   'po_delivered': 'ax_po_delivered',
-  'po_history':   'ax_po_data',
   'recv_items':   'ax_recv_items',
   'out_items':    'ax_out_items',
   'stock_items':  'ax_stock_items',
@@ -183,8 +182,16 @@ function apiGet(params) {
   if(action === 'getSheets'){
     var names = (params.sheets||'').split(',').filter(Boolean);
     return Promise.all(names.map(function(n){
-      return apiGet({action:'getSheet', sheet:n, limit:0, offset:0})
-        .then(function(r){ return {name:n, data:r.data||[]}; });
+      // 1000행씩 전체 페이지네이션 로드 (이전엔 1000행에서 잘림)
+      var acc=[];
+      function _pg(off){
+        return apiGet({action:'getSheet', sheet:n, limit:1000, offset:off}).then(function(r){
+          acc=acc.concat(r.data||[]);
+          if(r.hasMore) return _pg(off+1000);
+          return acc;
+        });
+      }
+      return _pg(0).then(function(rows){ return {name:n, data:rows}; });
     })).then(function(results){
       var data={};
       results.forEach(function(r){ data[r.name]=r.data; });
@@ -242,6 +249,7 @@ function apiPost(body) {
         });
         var chunks = [];
         for(var i=0;i<rows.length;i+=500) chunks.push(rows.slice(i,i+500));
+        var _fail=null, _ins=0;
         return chunks.reduce(function(p,chunk){
           return p.then(function(){
             return fetch(SB_URL+'/rest/v1/'+tbl, {
@@ -249,12 +257,16 @@ function apiPost(body) {
               headers:sbHeaders({'Prefer':'return=minimal'}),
               body:JSON.stringify(chunk)
             }).then(function(r){
-              if(!r.ok) return r.text().then(function(t){console.error('SB insert error:',t);});
+              if(!r.ok) return r.text().then(function(t){ if(!_fail) _fail=t; console.error('SB insert error:',t); });
+              _ins += chunk.length;
             });
           });
-        }, Promise.resolve());
+        }, Promise.resolve()).then(function(){ return {fail:_fail, ins:_ins}; });
       })
-      .then(function(){ return {ok:true, count:data.length}; })
+      .then(function(res){
+        if(res.fail) return {ok:false, error:res.fail, count:res.ins};
+        return {ok:true, count:data.length};
+      })
       .catch(function(e){ console.error('setSheet error:',e); return {ok:false, error:e.message}; });
   }
 
@@ -638,7 +650,7 @@ function loadAllFromServer() {
 
   // ── 3단계: 나머지 시트 (가장 나중, 영향 없음) ──
   setTimeout(function(){
-    var bg_sheets = 'po_history,recv_items,out_items';
+    var bg_sheets = 'recv_items,out_items';
     apiGet({ action:'getSheets', sheets: bg_sheets })
       .then(function(res2) {
         if(!res2 || !res2.ok || !res2.data) { setSyncStatus('ok'); return; }

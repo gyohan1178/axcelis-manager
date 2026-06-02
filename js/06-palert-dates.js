@@ -444,13 +444,7 @@ function processFile(file, _preloadedWb) {
       
       document.getElementById('last-updated').textContent = '업로드: ' + dateStr;
       // 서버에 PO 이력 동기화
-      if(CURRENT_TOKEN) {
-        var _histRows = hist.map(function(entry){
-          return { upload_date: entry.date, changes_count: (entry.changes||[]).length, data_json: JSON.stringify(entry.data||[]) };
-        });
-        apiPost({ action:'setSheet', sheet:'po_history', data: _histRows })
-          .catch(function(e){ console.warn('PO 서버 저장 오류:', e.message); });
-      }
+      // po_history 서버 동기화 제거 (ax_po_data 충돌 방지 · 변경이력은 localStorage 보관)
 
       alert('✅ PO 업로드 완료: ' + parsed.length + '건\n납품이력은 [납품이력 업로드] 버튼을 사용하세요.\n업로드: ' + dateStr);
       
