@@ -266,8 +266,11 @@ function caRun(){
   // Target 미입력 시 권장가를 기준으로 (두 모드 공통)
   if(targetUsd<=0){ targetUsd=suggestUsd; targetKrw=targetUsd*cfg.sellRate; }
 
+  // 현재 판매금액($) — 네고 전 기준
+  var currentUsd = caToN((document.getElementById('ca-current-usd')||{}).value)||0;
+
   caRenderResults({cfg:cfg,items:items,impKrw:impKrw,domKrw:domKrw,impUsd:impUsd,laborKrw:laborKrw,totalBuyKrw:totalBuyKrw,
-    targetUsd:targetUsd,targetKrw:targetKrw,suggestUsd:suggestUsd,noPrice:noPrice,targetInput:(perItemTarget>0||totalTargetInput>0)});
+    targetUsd:targetUsd,targetKrw:targetKrw,currentUsd:currentUsd,suggestUsd:suggestUsd,noPrice:noPrice,targetInput:(perItemTarget>0||totalTargetInput>0)});
 }
 
 function caClearResults(){
@@ -291,28 +294,40 @@ function caRenderResults(R){
 
   var clsOf=function(mp){ return mp>=15?'good':(mp>=8?'warn':'bad'); };
   var usingSuggest = !R.targetInput;
-
-  // 요약 레이아웃: [매입원가(세로 2칸)] | [기준환율: Target·마진] / [실제환율: Target·마진]
-  var clsTxt=function(mp){ return mp>=15?'good':(mp>=8?'warn':'bad'); };
-  var labelKind=usingSuggest?'권장가':'Target';
+  var clsTxt=clsOf;
   function miniCard(lbl,val,sub,cls){
     return '<div class="ca-mini'+(cls?' '+cls:'')+'"><div class="cm-l">'+lbl+'</div><div class="cm-v">'+val+'</div><div class="cm-s">'+(sub||'')+'</div></div>';
   }
+  // 현재가/타겟가 마진 (견적 기준환율로 환산)
+  var sr=cfg.sellRate;
+  var curUsd=R.currentUsd||0;
+  var curSell=curUsd*sr, curMK=curSell-R.totalBuyKrw, curMP=curSell>0?curMK/curSell*100:0;
+  var tgtSell=R.targetUsd*sr, tgtMK=tgtSell-R.totalBuyKrw, tgtMP=tgtSell>0?tgtMK/tgtSell*100:0;
+  var diffUsd=curUsd>0?(R.targetUsd-curUsd):0;       // 타겟−현재 (음수=네고로 하락)
+  var diffMK=curUsd>0?(tgtMK-curMK):0;
+
   var rightRows='';
-  // 기준환율 행
-  rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag base">기준환율 @'+cfg.sellRate+'</div>'
-    +miniCard(labelKind+' 매출가','$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(baseSell).toLocaleString(),'')
-    +miniCard('마진액','₩'+Math.round(baseMK).toLocaleString(),'마진율 '+baseMP.toFixed(1)+'%',clsTxt(baseMP))
-    +'</div>';
-  // 실제환율 행
-  if(real>0){
-    rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag real">실제환율 @'+real+'</div>'
-      +miniCard(labelKind+' 매출가','$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(realSell).toLocaleString(),'')
-      +miniCard('마진액','₩'+Math.round(realMK).toLocaleString(),'마진율 '+realMP.toFixed(1)+'%',clsTxt(realMP))
+  // 현재 판매단가 행 (입력 시에만)
+  if(curUsd>0){
+    rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag base">현재 판매가</div>'
+      +miniCard('매출단가','$'+curUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(curSell).toLocaleString()+' @'+sr,'')
+      +miniCard('마진액','₩'+Math.round(curMK).toLocaleString(),'마진율 '+curMP.toFixed(1)+'%',clsTxt(curMP))
       +'</div>';
-  } else {
-    rightRows+='<div class="ca-rate-row" style="opacity:.5"><div class="ca-rate-tag real">실제환율</div>'
-      +'<div class="ca-mini" style="grid-column:span 2;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px">설정 바에 현재 실제환율을 입력하면 표시됩니다</div></div>';
+  }
+  // 타겟 판매단가 행
+  rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag real">'+(usingSuggest?'권장가':'Target가')+'</div>'
+    +miniCard('매출단가','$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(tgtSell).toLocaleString()+' @'+sr,'')
+    +miniCard('마진액','₩'+Math.round(tgtMK).toLocaleString(),'마진율 '+tgtMP.toFixed(1)+'%',clsTxt(tgtMP))
+    +'</div>';
+  // 현재→타겟 변화 요약 (둘 다 있을 때)
+  if(curUsd>0){
+    var dcls=diffMK>=0?'good':'bad';
+    rightRows+='<div class="ca-diff-row '+dcls+'">'
+      +'현재 → '+(usingSuggest?'권장':'Target')+' 변화: '
+      +'<b>'+(diffUsd>=0?'+':'')+'$'+diffUsd.toLocaleString(undefined,{maximumFractionDigits:0})+'</b>'
+      +' · 마진 <b>'+(diffMK>=0?'+':'')+'₩'+Math.round(diffMK).toLocaleString()+'</b>'
+      +' ('+curMP.toFixed(1)+'% → '+tgtMP.toFixed(1)+'%)'
+      +'</div>';
   }
   var html=''
     +'<div class="ca-cost-big">'
@@ -324,40 +339,46 @@ function caRenderResults(R){
     +'<div class="ca-right-rows">'+rightRows+'</div>';
   document.getElementById('ca-sum-cards').innerHTML=html;
 
-  var marginKrw=baseMK, marginPct=baseMP, cls=clsTxt(baseMP);
+  var marginKrw=tgtMK, marginPct=tgtMP, cls=clsTxt(tgtMP);
 
-  // 원가 구성
-  var bd='';
-  var pct=function(v){ return R.totalBuyKrw>0?(v/R.totalBuyKrw*100).toFixed(1):'0.0'; };
-  bd+=caCostLine('수입 자재비','₩'+Math.round(R.impKrw).toLocaleString()+' ('+pct(R.impKrw)+'%)');
-  bd+=caCostLine('국내 자재비','₩'+Math.round(R.domKrw).toLocaleString()+' ('+pct(R.domKrw)+'%)');
-  if(R.laborKrw>0) bd+=caCostLine('작업비','₩'+Math.round(R.laborKrw).toLocaleString()+' ('+pct(R.laborKrw)+'%)');
-  bd+='<div class="ca-cost-line total"><span class="nm">매입원가 합계</span><span class="amt">₩'+Math.round(R.totalBuyKrw).toLocaleString()+'</span></div>';
+  // 원가 구성 — 카드 + 비율 막대
+  var pct=function(v){ return R.totalBuyKrw>0?(v/R.totalBuyKrw*100):0; };
+  function costCard(lbl,val,p,color){
+    return '<div class="ca-cost-card">'
+      +'<div class="cc-top"><span class="cc-l">'+lbl+'</span><span class="cc-p">'+p.toFixed(1)+'%</span></div>'
+      +'<div class="cc-v">₩'+Math.round(val).toLocaleString()+'</div>'
+      +'<div class="cc-bar"><span style="width:'+Math.min(p,100).toFixed(1)+'%;background:'+color+'"></span></div>'
+      +'</div>';
+  }
+  var bd='<div class="ca-cost-cards">';
+  bd+=costCard('수입 자재비',R.impKrw,pct(R.impKrw),'#60a5fa');
+  bd+=costCard('국내 자재비',R.domKrw,pct(R.domKrw),'#a78bfa');
+  if(R.laborKrw>0) bd+=costCard('작업비',R.laborKrw,pct(R.laborKrw),'#f59e0b');
+  bd+='<div class="ca-cost-card total"><div class="cc-top"><span class="cc-l">매입원가 합계</span></div><div class="cc-v">₩'+Math.round(R.totalBuyKrw).toLocaleString()+'</div></div>';
+  bd+='</div>';
   if(R.noPrice>0) bd+='<div style="font-size:11px;color:var(--amb);margin-top:8px">⚠ 매입가 없는 품목 '+R.noPrice+'건 (DB k5/k6 등록 필요 — 합계에서 제외됨)</div>';
   document.getElementById('ca-cost-breakdown').innerHTML=bd;
 
   // 환율 시나리오 — 환율값(원/$) + 마진액 + 마진율. 판매환율 기준 ±5/10%, 수입매입도 동일비율
   var scn='';
   if(R.targetUsd>0){
-    var baseRate=cfg.sellRate;
-    var scenarios=[
-      {nm:'↑10%',f:1.10},{nm:'↑5%',f:1.05},{nm:'현재 견적',f:1.0},{nm:'↓5%',f:0.95},{nm:'↓10%',f:0.90}
-    ];
+    var baseRate = (cfg.realRate>0?cfg.realRate:cfg.sellRate);  // 현재 실제환율 기준
+    var deltas=[ {d:+100}, {d:+50}, {d:0}, {d:-50}, {d:-100}, {d:-150}, {d:-200} ];
     scn+='<table class="ca-table" style="width:100%"><thead><tr>'
-       +'<th>시나리오</th><th class="num">적용 환율</th><th class="num">매출(₩)</th><th class="num">매입(₩)</th><th class="num">마진액(₩)</th><th class="num">마진율</th>'
+       +'<th>환율 변동</th><th class="num">적용 환율</th><th class="num">매출(₩)</th><th class="num">매입(₩)</th><th class="num">마진액(₩)</th><th class="num">마진율</th>'
        +'</tr></thead><tbody>';
-    scenarios.forEach(function(s){
-      var rate=baseRate*s.f;
-      // 수입자재: 달러원가 고정 → 원화는 환율 비례. 국내·작업비 고정.
+    deltas.forEach(function(s){
+      var rate=baseRate+s.d;
       var buyAdj = R.impUsd*rate + R.domKrw + R.laborKrw;
       var sellAdj = R.targetUsd*rate;
       var mK = sellAdj - buyAdj;
       var mP = sellAdj>0?(mK/sellAdj*100):0;
       var c = mK<0?'#ff5a5a':(mP>=15?'#2dd4bf':(mP>=8?'#f59e0b':'#ffa94d'));
-      var bg = s.f===1.0?'rgba(79,124,255,.12)':'transparent';
+      var bg = s.d===0?'rgba(45,212,191,.12)':'transparent';
       var tag = mK<0?' <span style="font-size:10px;color:#ff5a5a">역마진</span>':'';
+      var lbl = s.d===0?'현재 ('+Math.round(baseRate).toLocaleString()+')':(s.d>0?'+'+s.d+'원':s.d+'원');
       scn+='<tr style="background:'+bg+'">'
-         +'<td style="font-weight:600">'+s.nm+'</td>'
+         +'<td style="font-weight:600">'+lbl+'</td>'
          +'<td class="num" style="font-family:var(--mono)">'+Math.round(rate).toLocaleString()+'</td>'
          +'<td class="num">'+Math.round(sellAdj).toLocaleString()+'</td>'
          +'<td class="num">'+Math.round(buyAdj).toLocaleString()+'</td>'
@@ -393,46 +414,32 @@ function caRenderResults(R){
     if(!real || R.targetUsd<=0){
       fxEl.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">현재 실제환율과 Target 매출가를 입력하면, 환차손익과 네고 가능 금액이 표시됩니다.</div>';
     } else {
-      // base*/real* 값은 상단에서 계산됨 (재사용)
-      // 환차손익(실제−기준) = 매출환차 + 매입환차
-      var sellFx = realSell - baseSell;             // 매출 환차익(+)
-      var buyFx  = (R.impUsd*real) - R.impKrw;      // 수입매입 환차손(+면 비용증가)
-      var netFx  = realMK - baseMK;                 // 순 환차손익
-      // 네고 여력: 실제 마진을 기준 마진(baseMK)까지 떨어뜨릴 수 있는 매출 감소액
-      var negoRoomKrw = realMK - baseMK;            // 이만큼 깎아도 기준마진 유지
-      var negoRoomUsd = negoRoomKrw/real;           // 달러 환산(실제환율 기준 고객 부담)
+      var sellFx = realSell - baseSell;
+      var buyFx  = (R.impUsd*real) - R.impKrw;
+      var netFx  = realMK - baseMK;
+      var negoRoomKrw = realMK - baseMK;
+      var negoRoomUsd = negoRoomKrw/real;
       var negoPct = realSell>0?negoRoomKrw/realSell*100:0;
-
       var col=function(v){return v>=0?'#2dd4bf':'#ff5a5a';};
       fxEl.innerHTML=
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">'
-        + '<div style="background:var(--bg3);border-radius:8px;padding:10px 12px">'
-        +   '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">기준 (견적 제출 @'+cfg.sellRate+'/'+cfg.buyRate+')</div>'
-        +   '<div class="ca-cost-line"><span class="nm">매출(₩)</span><span class="amt">'+Math.round(baseSell).toLocaleString()+'</span></div>'
-        +   '<div class="ca-cost-line"><span class="nm">매입(₩)</span><span class="amt">'+Math.round(baseBuy).toLocaleString()+'</span></div>'
-        +   '<div class="ca-cost-line total"><span class="nm">마진</span><span class="amt" style="color:'+col(baseMK)+'">'+Math.round(baseMK).toLocaleString()+' ('+baseMP.toFixed(1)+'%)</span></div>'
-        + '</div>'
-        + '<div style="background:rgba(45,212,191,.06);border:1px solid #2dd4bf;border-radius:8px;padding:10px 12px">'
-        +   '<div style="font-size:11px;color:#2dd4bf;margin-bottom:6px">실제 (현재환율 @'+real+')</div>'
-        +   '<div class="ca-cost-line"><span class="nm">매출(₩)</span><span class="amt">'+Math.round(realSell).toLocaleString()+'</span></div>'
-        +   '<div class="ca-cost-line"><span class="nm">매입(₩)</span><span class="amt">'+Math.round(realBuy).toLocaleString()+'</span></div>'
-        +   '<div class="ca-cost-line total"><span class="nm">마진</span><span class="amt" style="color:'+col(realMK)+'">'+Math.round(realMK).toLocaleString()+' ('+realMP.toFixed(1)+'%)</span></div>'
-        + '</div>'
-        + '</div>'
-        + '<div class="ca-sum-cards" style="margin-bottom:0">'
-        +   caCard('순 환차손익','₩'+Math.round(netFx).toLocaleString(), (netFx>=0?'환율 상승 이득':'환율로 손해'), netFx>=0?'good':'bad')
-        +   caCard('└ 매출 환차익','₩'+Math.round(sellFx).toLocaleString(),'Target×('+real+'−'+cfg.sellRate+')','')
-        +   caCard('└ 수입매입 환차','₩'+Math.round(-buyFx).toLocaleString(), buyFx>0?'매입비 증가':'매입비 감소','')
-        +   caCard('네고 여력','$'+(negoRoomUsd>0?negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0}):'0'),
-              (negoRoomKrw>0?('₩'+Math.round(negoRoomKrw).toLocaleString()+' · '+negoPct.toFixed(1)+'%까지'):'여력 없음'),
-              negoRoomKrw>0?'good':'warn')
-        + '</div>'
-        + '<div style="font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.6">'
-        +   '💡 현재 실제환율 기준 마진이 <b style="color:'+col(realMK)+'">'+realMP.toFixed(1)+'%</b>입니다. '
-        +   (negoRoomKrw>0
-              ? '고객 네고를 <b style="color:#2dd4bf">최대 $'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})+' (₩'+Math.round(negoRoomKrw).toLocaleString()+')</b>까지 받아줘도 기준 견적 마진('+baseMP.toFixed(1)+'%)은 유지됩니다.'
+        '<div class="ca-fx-cards">'
+        +  '<div class="ca-fx-card '+(netFx>=0?'good':'bad')+'">'
+        +    '<div class="fx-l">순 환차손익</div>'
+        +    '<div class="fx-v">₩'+Math.round(netFx).toLocaleString()+'</div>'
+        +    '<div class="fx-s">'+(netFx>=0?'환율 상승 이득':'환율로 손해')+' · 기준환율 @'+cfg.sellRate+' → 실제 @'+real+'</div>'
+        +  '</div>'
+        +  '<div class="ca-fx-card '+(negoRoomKrw>0?'good':'warn')+'">'
+        +    '<div class="fx-l">네고 여력</div>'
+        +    '<div class="fx-v">'+(negoRoomKrw>0?('$'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})):'없음')+'</div>'
+        +    '<div class="fx-s">'+(negoRoomKrw>0?('₩'+Math.round(negoRoomKrw).toLocaleString()+' · 매출의 '+negoPct.toFixed(1)+'%까지'):'실제환율 마진이 기준보다 낮음')+'</div>'
+        +  '</div>'
+        +'</div>'
+        +'<div class="ca-fx-note">'
+        +  '💡 현재 실제환율 기준 마진 <b style="color:'+col(realMK)+'">'+realMP.toFixed(1)+'%</b> · '
+        +  (negoRoomKrw>0
+              ? '고객 네고를 <b style="color:#2dd4bf">최대 $'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})+'</b>까지 받아줘도 기준 견적 마진('+baseMP.toFixed(1)+'%)은 유지됩니다.'
               : '실제환율 마진이 기준 마진보다 낮아 네고 여력이 없습니다.')
-        + '</div>';
+        +'</div>';
     }
   }
 
@@ -598,6 +605,14 @@ function caPrintReport(){
     +'.ca-rate-tag.real{background:#e7faf6;color:#12b886;border:1px solid #b6ece1}'
     +'.ca-mini{border:1px solid #e2e2e2;border-radius:7px;padding:8px 11px}.ca-mini .cm-l{font-size:9.5px;color:#888}.ca-mini .cm-v{font-size:16px;font-weight:700;margin-top:2px}.ca-mini .cm-s{font-size:9px;color:#999;margin-top:1px}'
     +'.ca-mini.good .cm-v{color:#12b886}.ca-mini.warn .cm-v{color:#f59f00}.ca-mini.bad .cm-v{color:#e03131}'
+    +'.ca-diff-row{background:#f7f8fa;border:1px solid #e2e2e2;border-radius:8px;padding:8px 12px;font-size:11.5px;color:#444;margin-top:8px}'
+    +'.ca-fx-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}'
+    +'.ca-fx-card{border:1px solid #ddd;border-radius:9px;padding:11px 13px}.ca-fx-card .fx-l{font-size:11px;color:#888}.ca-fx-card .fx-v{font-size:20px;font-weight:800;margin:4px 0}.ca-fx-card .fx-s{font-size:10px;color:#999}'
+    +'.ca-fx-card.good{border-left:3px solid #12b886}.ca-fx-card.good .fx-v{color:#12b886}.ca-fx-card.bad{border-left:3px solid #e03131}.ca-fx-card.bad .fx-v{color:#e03131}.ca-fx-card.warn{border-left:3px solid #f59f00}.ca-fx-card.warn .fx-v{color:#f59f00}'
+    +'.ca-fx-note{font-size:11px;color:#555;background:#f7f8fa;border-radius:7px;padding:9px 12px;line-height:1.5}'
+    +'.ca-cost-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px}'
+    +'.ca-cost-card{border:1px solid #ddd;border-radius:9px;padding:10px 12px}.ca-cost-card .cc-top{display:flex;justify-content:space-between}.ca-cost-card .cc-l{font-size:10px;color:#888}.ca-cost-card .cc-p{font-size:10px;font-weight:700;color:#666}.ca-cost-card .cc-v{font-size:15px;font-weight:700;margin:5px 0 7px}.ca-cost-card .cc-bar{height:5px;background:#eee;border-radius:3px;overflow:hidden}.ca-cost-card .cc-bar span{display:block;height:100%}'
+    +'.ca-cost-card.total{background:#f4f5f7;border-left:3px solid #4f7cff}.ca-cost-card.total .cc-v{color:#4f7cff}'
     +'.ca-cost-line{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}'
     +'.ca-cost-line.total{border-top:2px solid #999;border-bottom:none;font-weight:700;padding-top:8px}'
     +'table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{border:1px solid #e2e2e2;padding:5px 8px;text-align:left}th{background:#f4f5f7;font-weight:600}.num{text-align:right;font-variant-numeric:tabular-nums}'
