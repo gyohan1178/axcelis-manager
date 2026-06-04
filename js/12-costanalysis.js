@@ -75,6 +75,7 @@ function caCfg(){
   var g=function(id,d){ var e=document.getElementById(id); return e?(+e.value||d):d; };
   return {
     buyRate:g('ca-buy-rate',1450), sellRate:g('ca-sell-rate',1250),
+    realRate:g('ca-real-rate',0),
     laborMarg:g('ca-labor-marg',25)/100,
     tiers:[{min:1000000,m:g('ca-m1',20)/100},{min:100000,m:g('ca-m2',25)/100},{min:10000,m:g('ca-m3',35)/100},{min:0,m:g('ca-m4',45)/100}]
   };
@@ -228,11 +229,12 @@ function caRun(){
   CA._items=items;
 
   // 원가 집계: 제외(excluded) 품목은 합계에서 제외 → 상위/하위 중복 방지
-  var impKrw=0, domKrw=0, noPrice=0;
+  var impKrw=0, domKrw=0, noPrice=0, impUsd=0;
   items.forEach(function(it){
     if(it.excluded) return;
     if(it.buyKrwTotal==null){ noPrice++; return; }
-    if(it.origin==='imp') impKrw+=it.buyKrwTotal; else domKrw+=it.buyKrwTotal;
+    if(it.origin==='imp'){ impKrw+=it.buyKrwTotal; impUsd+=it.buyKrwTotal/cfg.buyRate; } // 수입: 기준매입환율로 달러원가 역산
+    else domKrw+=it.buyKrwTotal;
   });
   var laborKrw = caToN((document.getElementById('ca-labor-krw')||{}).value)||0;
   var totalBuyKrw = impKrw+domKrw+laborKrw;
@@ -255,7 +257,7 @@ function caRun(){
   // Target 미입력 시 권장가를 기준으로 (두 모드 공통)
   if(targetUsd<=0){ targetUsd=suggestUsd; targetKrw=targetUsd*cfg.sellRate; }
 
-  caRenderResults({cfg:cfg,items:items,impKrw:impKrw,domKrw:domKrw,laborKrw:laborKrw,totalBuyKrw:totalBuyKrw,
+  caRenderResults({cfg:cfg,items:items,impKrw:impKrw,domKrw:domKrw,impUsd:impUsd,laborKrw:laborKrw,totalBuyKrw:totalBuyKrw,
     targetUsd:targetUsd,targetKrw:targetKrw,suggestUsd:suggestUsd,noPrice:noPrice,targetInput:(perItemTarget>0||totalTargetInput>0)});
 }
 
@@ -317,6 +319,65 @@ function caRenderResults(R){
     scn='<div style="font-size:12px;color:var(--text3);padding:10px">Target 매출가를 입력하면 환율 시나리오별 마진이 표시됩니다</div>';
   }
   document.getElementById('ca-scenario').innerHTML=scn;
+
+  // ── 기준 vs 실제환율: 환차손익 + 네고 여력 ──
+  var fxEl=document.getElementById('ca-fx-body');
+  if(fxEl){
+    var real=cfg.realRate||0;
+    if(!real || R.targetUsd<=0){
+      fxEl.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">현재 실제환율과 Target 매출가를 입력하면, 환차손익과 네고 가능 금액이 표시됩니다.</div>';
+    } else {
+      // 기준: 매출=Target×판매환율, 매입수입=impKrw(기준매입환율 기반)
+      var baseSell = R.targetUsd*cfg.sellRate;
+      var baseBuy  = R.impKrw + R.domKrw + R.laborKrw;
+      var baseMK   = baseSell - baseBuy;
+      var baseMP   = baseSell>0?baseMK/baseSell*100:0;
+      // 실제: 매출=Target×실제환율, 수입자재=impUsd×실제환율 (국내·작업비 고정)
+      var realSell = R.targetUsd*real;
+      var realBuy  = R.impUsd*real + R.domKrw + R.laborKrw;
+      var realMK   = realSell - realBuy;
+      var realMP   = realSell>0?realMK/realSell*100:0;
+      // 환차손익(실제−기준) = 매출환차 + 매입환차
+      var sellFx = realSell - baseSell;             // 매출 환차익(+)
+      var buyFx  = (R.impUsd*real) - R.impKrw;      // 수입매입 환차손(+면 비용증가)
+      var netFx  = realMK - baseMK;                 // 순 환차손익
+      // 네고 여력: 실제 마진을 기준 마진(baseMK)까지 떨어뜨릴 수 있는 매출 감소액
+      var negoRoomKrw = realMK - baseMK;            // 이만큼 깎아도 기준마진 유지
+      var negoRoomUsd = negoRoomKrw/real;           // 달러 환산(실제환율 기준 고객 부담)
+      var negoPct = realSell>0?negoRoomKrw/realSell*100:0;
+
+      var col=function(v){return v>=0?'#2dd4bf':'#ff5a5a';};
+      fxEl.innerHTML=
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">'
+        + '<div style="background:var(--bg3);border-radius:8px;padding:10px 12px">'
+        +   '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">기준 (견적 제출 @'+cfg.sellRate+'/'+cfg.buyRate+')</div>'
+        +   '<div class="ca-cost-line"><span class="nm">매출(₩)</span><span class="amt">'+Math.round(baseSell).toLocaleString()+'</span></div>'
+        +   '<div class="ca-cost-line"><span class="nm">매입(₩)</span><span class="amt">'+Math.round(baseBuy).toLocaleString()+'</span></div>'
+        +   '<div class="ca-cost-line total"><span class="nm">마진</span><span class="amt" style="color:'+col(baseMK)+'">'+Math.round(baseMK).toLocaleString()+' ('+baseMP.toFixed(1)+'%)</span></div>'
+        + '</div>'
+        + '<div style="background:rgba(45,212,191,.06);border:1px solid #2dd4bf;border-radius:8px;padding:10px 12px">'
+        +   '<div style="font-size:11px;color:#2dd4bf;margin-bottom:6px">실제 (현재환율 @'+real+')</div>'
+        +   '<div class="ca-cost-line"><span class="nm">매출(₩)</span><span class="amt">'+Math.round(realSell).toLocaleString()+'</span></div>'
+        +   '<div class="ca-cost-line"><span class="nm">매입(₩)</span><span class="amt">'+Math.round(realBuy).toLocaleString()+'</span></div>'
+        +   '<div class="ca-cost-line total"><span class="nm">마진</span><span class="amt" style="color:'+col(realMK)+'">'+Math.round(realMK).toLocaleString()+' ('+realMP.toFixed(1)+'%)</span></div>'
+        + '</div>'
+        + '</div>'
+        + '<div class="ca-sum-cards" style="margin-bottom:0">'
+        +   caCard('순 환차손익','₩'+Math.round(netFx).toLocaleString(), (netFx>=0?'환율 상승 이득':'환율로 손해'), netFx>=0?'good':'bad')
+        +   caCard('└ 매출 환차익','₩'+Math.round(sellFx).toLocaleString(),'Target×('+real+'−'+cfg.sellRate+')','')
+        +   caCard('└ 수입매입 환차','₩'+Math.round(-buyFx).toLocaleString(), buyFx>0?'매입비 증가':'매입비 감소','')
+        +   caCard('네고 여력','$'+(negoRoomUsd>0?negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0}):'0'),
+              (negoRoomKrw>0?('₩'+Math.round(negoRoomKrw).toLocaleString()+' · '+negoPct.toFixed(1)+'%까지'):'여력 없음'),
+              negoRoomKrw>0?'good':'warn')
+        + '</div>'
+        + '<div style="font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.6">'
+        +   '💡 현재 실제환율 기준 마진이 <b style="color:'+col(realMK)+'">'+realMP.toFixed(1)+'%</b>입니다. '
+        +   (negoRoomKrw>0
+              ? '고객 네고를 <b style="color:#2dd4bf">최대 $'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})+' (₩'+Math.round(negoRoomKrw).toLocaleString()+')</b>까지 받아줘도 기준 견적 마진('+baseMP.toFixed(1)+'%)은 유지됩니다.'
+              : '실제환율 마진이 기준 마진보다 낮아 네고 여력이 없습니다.')
+        + '</div>';
+    }
+  }
 
   // 품목 상세 테이블 (레벨 들여쓰기 · 제외 토글 · 품목별 마진)
   var th='<tr><th>제외</th><th>LV</th><th>품번</th><th>품명</th><th class="num">수량</th><th>구매처</th><th>구분</th><th class="num">매입가(₩)</th><th class="num">합계(₩)</th><th class="num">마진%</th>'+(CA.mode==='target'?'<th class="num">Target($)</th>':'')+'</tr>';
