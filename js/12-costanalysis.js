@@ -277,22 +277,35 @@ function caClearResults(){
 
 function caRenderResults(R){
   var cfg=R.cfg;
-  var marginKrw = R.targetKrw - R.totalBuyKrw;
-  var marginPct = R.targetKrw>0 ? (marginKrw/R.targetKrw*100) : 0;
-  var cls = marginPct>=15?'good':(marginPct>=8?'warn':'bad');
+  var real=cfg.realRate||0;
+  // 기준환율 기반
+  var baseSell = R.targetKrw;                       // = targetUsd × sellRate
+  var baseBuy  = R.totalBuyKrw;                      // 수입(기준매입환율)+국내+작업비
+  var baseMK   = baseSell - baseBuy;
+  var baseMP   = baseSell>0?baseMK/baseSell*100:0;
+  // 실제환율 기반 (수입자재·매출 모두 실제환율, 국내·작업비 고정)
+  var realSell = real>0 ? R.targetUsd*real : null;
+  var realBuy  = real>0 ? (R.impUsd*real + R.domKrw + R.laborKrw) : null;
+  var realMK   = real>0 ? realSell-realBuy : null;
+  var realMP   = (real>0&&realSell>0) ? realMK/realSell*100 : 0;
 
-  // 요약 카드
-  var usingSuggest = !R.targetInput;  // Target 직접입력 없으면 권장가 기준
+  var clsOf=function(mp){ return mp>=15?'good':(mp>=8?'warn':'bad'); };
+  var usingSuggest = !R.targetInput;
+
+  // 요약 카드: 매입원가 / Target(기준) / Target(실제) / 마진(기준) / 마진(실제)
   var cards='';
   cards+=caCard('매입원가 합계', '₩'+Math.round(R.totalBuyKrw).toLocaleString(), '수입+국내'+(R.laborKrw>0?'+작업비':''),'');
-  cards+=caCard(usingSuggest?'권장 판매가':'Target 매출가',
+  cards+=caCard((usingSuggest?'권장가':'Target')+' · 기준환율',
     '$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),
-    (usingSuggest?'마진율표 기준 산출 · ':'')+'₩'+Math.round(R.targetKrw).toLocaleString()+' @'+cfg.sellRate,'');
-  cards+=caCard('마진액', '₩'+Math.round(marginKrw).toLocaleString(), '매출−매입원가', cls);
-  cards+=caCard('마진율', marginPct.toFixed(1)+'%', cls==='good'?'양호(15%↑)':(cls==='warn'?'주의(8~15%)':'낮음(8%↓)'), cls);
-  if(R.targetInput) cards+=caCard('권장가 대비', '$'+R.suggestUsd.toLocaleString(undefined,{maximumFractionDigits:0}),
-    (R.targetUsd>=R.suggestUsd?'Target이 권장가 이상':'Target이 권장가보다 낮음'), R.targetUsd>=R.suggestUsd?'good':'warn');
+    '₩'+Math.round(baseSell).toLocaleString()+' @'+cfg.sellRate,'');
+  if(real>0) cards+=caCard((usingSuggest?'권장가':'Target')+' · 실제환율',
+    '$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),
+    '₩'+Math.round(realSell).toLocaleString()+' @'+real,'');
+  cards+=caCard('마진액 · 기준환율', '₩'+Math.round(baseMK).toLocaleString(), '매출−매입 ('+baseMP.toFixed(1)+'%)', clsOf(baseMP));
+  if(real>0) cards+=caCard('마진액 · 실제환율', '₩'+Math.round(realMK).toLocaleString(), '매출−매입 ('+realMP.toFixed(1)+'%)', clsOf(realMP));
   document.getElementById('ca-sum-cards').innerHTML=cards;
+
+  var marginKrw=baseMK, marginPct=baseMP, cls=clsOf(baseMP);
 
   // 원가 구성
   var bd='';
@@ -356,20 +369,10 @@ function caRenderResults(R){
   // ── 기준 vs 실제환율: 환차손익 + 네고 여력 ──
   var fxEl=document.getElementById('ca-fx-body');
   if(fxEl){
-    var real=cfg.realRate||0;
     if(!real || R.targetUsd<=0){
       fxEl.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">현재 실제환율과 Target 매출가를 입력하면, 환차손익과 네고 가능 금액이 표시됩니다.</div>';
     } else {
-      // 기준: 매출=Target×판매환율, 매입수입=impKrw(기준매입환율 기반)
-      var baseSell = R.targetUsd*cfg.sellRate;
-      var baseBuy  = R.impKrw + R.domKrw + R.laborKrw;
-      var baseMK   = baseSell - baseBuy;
-      var baseMP   = baseSell>0?baseMK/baseSell*100:0;
-      // 실제: 매출=Target×실제환율, 수입자재=impUsd×실제환율 (국내·작업비 고정)
-      var realSell = R.targetUsd*real;
-      var realBuy  = R.impUsd*real + R.domKrw + R.laborKrw;
-      var realMK   = realSell - realBuy;
-      var realMP   = realSell>0?realMK/realSell*100:0;
+      // base*/real* 값은 상단에서 계산됨 (재사용)
       // 환차손익(실제−기준) = 매출환차 + 매입환차
       var sellFx = realSell - baseSell;             // 매출 환차익(+)
       var buyFx  = (R.impUsd*real) - R.impKrw;      // 수입매입 환차손(+면 비용증가)
