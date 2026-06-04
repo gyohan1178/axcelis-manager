@@ -86,6 +86,14 @@ function caMarg(buyKrw,cfg){
   return cfg.tiers[cfg.tiers.length-1].m;
 }
 function caToN(v){ if(v==null||v==='') return null; var n=parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?null:n; }
+/* 천단위 콤마 포맷 (입력 중 커서 유지 간단버전) */
+function caFmtNum(el){
+  var raw=el.value.replace(/[^\d.]/g,'');
+  if(raw==='') { el.value=''; return; }
+  var parts=raw.split('.');
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  el.value=parts.length>1?parts[0]+'.'+parts[1]:parts[0];
+}
 function caIsAssy(pn){ return /^(10|11|12|16)/.test(String(pn)); }
 
 /* ── BOM 입력 (엑셀/붙여넣기) ── */
@@ -220,6 +228,7 @@ function caRun(){
     return {
       idx:idx, uid:p.uid, pn:p.pn, lv:p.lv!=null?p.lv:0,
       desc:(item&&item.d)||p.desc||'', rev:p.rev||(item&&item.rv)||'',
+      mfg:(item&&item.mg)||p.mfg||'', mfgpn:(item&&item.mp)||p.mfgPn||'',
       qty:qty, rawQty:p.qty, unit:p.unit||'', vendor:vendor, origin:origin, status:status,
       excluded:!!p.excluded, marginOverride:p.marginOverride,
       buyKrw:buyKrw, buyKrwTotal:buyKrw!=null?buyKrw*qty:null,
@@ -295,26 +304,50 @@ function caRenderResults(R){
   if(R.noPrice>0) bd+='<div style="font-size:11px;color:var(--amb);margin-top:8px">⚠ 매입가 없는 품목 '+R.noPrice+'건 (DB k5/k6 등록 필요 — 합계에서 제외됨)</div>';
   document.getElementById('ca-cost-breakdown').innerHTML=bd;
 
-  // 환율 시나리오 — 수입품만 환율 변동, 국내·작업비 고정. Target가($) 고정 가정 → 매출 원화는 sellRate 변동
+  // 환율 시나리오 — 환율값(원/$) + 마진액 + 마진율. 판매환율 기준 ±5/10%, 수입매입도 동일비율
   var scn='';
   if(R.targetUsd>0){
+    var baseRate=cfg.sellRate;
     var scenarios=[
-      {nm:'환율 ↑10%',f:1.10},{nm:'환율 ↑5%',f:1.05},{nm:'현재',f:1.0},{nm:'환율 ↓5%',f:0.95},{nm:'환율 ↓10%',f:0.90}
+      {nm:'↑10%',f:1.10},{nm:'↑5%',f:1.05},{nm:'현재 견적',f:1.0},{nm:'↓5%',f:0.95},{nm:'↓10%',f:0.90}
     ];
+    scn+='<table class="ca-table" style="width:100%"><thead><tr>'
+       +'<th>시나리오</th><th class="num">적용 환율</th><th class="num">매출(₩)</th><th class="num">매입(₩)</th><th class="num">마진액(₩)</th><th class="num">마진율</th>'
+       +'</tr></thead><tbody>';
     scenarios.forEach(function(s){
-      // 수입 자재비는 매입환율 변동에 비례 (달러 고정 → 원화 변동)
-      var impAdj = R.impKrw * s.f;
-      var buyAdj = impAdj + R.domKrw + R.laborKrw;
-      // 매출: Target는 달러 고정 → 판매환율도 같은 비율로 움직인다고 보면 매출 원화도 변동
-      var sellAdj = R.targetUsd * (cfg.sellRate*s.f);
+      var rate=baseRate*s.f;
+      // 수입자재: 달러원가 고정 → 원화는 환율 비례. 국내·작업비 고정.
+      var buyAdj = R.impUsd*rate + R.domKrw + R.laborKrw;
+      var sellAdj = R.targetUsd*rate;
       var mK = sellAdj - buyAdj;
       var mP = sellAdj>0?(mK/sellAdj*100):0;
-      var c = mP>=15?'#2dd4bf':(mP>=8?'#f59e0b':'#ff5a5a');
-      var bg = s.f===1.0?'rgba(79,124,255,.10)':'var(--bg3)';
-      scn+='<div class="ca-scn-row" style="background:'+bg+'"><span class="sc-name">'+s.nm+'</span>'
-         +'<span style="font-size:11px;color:var(--text3)">매입 ₩'+Math.round(buyAdj).toLocaleString()+'</span>'
-         +'<span class="sc-marg" style="color:'+c+'">'+mP.toFixed(1)+'%</span></div>';
+      var c = mK<0?'#ff5a5a':(mP>=15?'#2dd4bf':(mP>=8?'#f59e0b':'#ffa94d'));
+      var bg = s.f===1.0?'rgba(79,124,255,.12)':'transparent';
+      var tag = mK<0?' <span style="font-size:10px;color:#ff5a5a">역마진</span>':'';
+      scn+='<tr style="background:'+bg+'">'
+         +'<td style="font-weight:600">'+s.nm+'</td>'
+         +'<td class="num" style="font-family:var(--mono)">'+Math.round(rate).toLocaleString()+'</td>'
+         +'<td class="num">'+Math.round(sellAdj).toLocaleString()+'</td>'
+         +'<td class="num">'+Math.round(buyAdj).toLocaleString()+'</td>'
+         +'<td class="num" style="color:'+c+';font-weight:700">'+Math.round(mK).toLocaleString()+tag+'</td>'
+         +'<td class="num" style="color:'+c+';font-weight:700">'+mP.toFixed(1)+'%</td>'
+         +'</tr>';
     });
+    scn+='</tbody></table>';
+    // 역마진 전환 환율: 매출(targetUsd×r) = 매입(impUsd×r + domKrw + laborKrw) → r(targetUsd−impUsd)=dom+labor
+    var fixed=R.domKrw+R.laborKrw;
+    var denom=R.targetUsd-R.impUsd;
+    if(denom>0){
+      var breakRate=fixed/denom;  // 이 환율 이하로 내려가면 역마진
+      var dropPct=(1-breakRate/baseRate)*100;
+      scn+='<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.3);font-size:12.5px;line-height:1.6">'
+         +'⚠ <b>역마진 전환 환율: <span style="color:#ff5a5a">₩'+Math.round(breakRate).toLocaleString()+'/$</span></b>'
+         +' — 판매환율이 이 아래로 내려가면 손해입니다. '
+         +(dropPct>0?'(현재 견적환율 '+baseRate.toLocaleString()+'에서 <b>'+dropPct.toFixed(1)+'% 하락</b> 시점)':'(이미 역마진 구간)')
+         +'</div>';
+    } else {
+      scn+='<div style="margin-top:10px;font-size:12px;color:var(--text3)">매출 달러가 수입 달러원가보다 작거나 같아 역마진 전환점이 없습니다.</div>';
+    }
   } else {
     scn='<div style="font-size:12px;color:var(--text3);padding:10px">Target 매출가를 입력하면 환율 시나리오별 마진이 표시됩니다</div>';
   }
@@ -380,7 +413,7 @@ function caRenderResults(R){
   }
 
   // 품목 상세 테이블 (레벨 들여쓰기 · 제외 토글 · 품목별 마진)
-  var th='<tr><th>제외</th><th>LV</th><th>품번</th><th>품명</th><th class="num">수량</th><th>구매처</th><th>구분</th><th class="num">매입가(₩)</th><th class="num">합계(₩)</th><th class="num">마진%</th>'+(CA.mode==='target'?'<th class="num">Target($)</th>':'')+'</tr>';
+  var th='<tr><th>제외</th><th>LV</th><th>품번</th><th>품명</th><th>제조사</th><th>제조사품번</th><th class="num">수량</th><th>구매처</th><th>구분</th><th class="num">매입가(₩)</th><th class="num">합계(₩)</th><th class="num">마진%</th>'+(CA.mode==='target'?'<th class="num">Target($)</th>':'')+'</tr>';
   document.getElementById('ca-detail-table').querySelector('thead').innerHTML=th;
   var tb='';
   R.items.forEach(function(it){
@@ -396,6 +429,8 @@ function caRenderResults(R){
       +'<td>'+lvBadge+'</td>'
       +'<td style="font-family:var(--mono);color:var(--accent);padding-left:'+(9+lvPad)+'px">'+it.pn+'</td>'
       +'<td>'+(it.desc||'')+'</td>'
+      +'<td style="font-size:11px;color:var(--text3)">'+(it.mfg||'—')+'</td>'
+      +'<td style="font-size:11px;color:var(--text3);font-family:var(--mono)">'+(it.mfgpn||'—')+'</td>'
       +'<td class="num">'+(it.qty%1===0?it.qty:it.qty.toFixed(2))+(it.unit&&it.unit!=='Each'?' '+it.unit:'')+'</td>'
       +'<td style="color:var(--text2)">'+(it.vendor||'—')+'</td>'
       +'<td><span class="ca-toggle-imp '+(it.origin==='imp'?'imp':'dom')+'" onclick="caToggleItemOrigin('+it.idx+')" title="클릭하여 수입/국내 전환">'+origLbl+'</span></td>'
@@ -500,4 +535,41 @@ function caSetVendor(vendor,origin){
 function caResetVendors(){
   if(!confirm('수동 수정한 구매처 분류를 모두 초기화하고 자동판정으로 되돌릴까요?')) return;
   CA.vendorMap={}; caSaveVendorMap(); caRenderVendors();
+}
+
+/* ── 보고용 한 장 출력 ── */
+function caPrintReport(){
+  var cards=document.getElementById('ca-sum-cards').innerHTML;
+  var fx=document.getElementById('ca-fx-body').innerHTML;
+  var cost=document.getElementById('ca-cost-breakdown').innerHTML;
+  var scn=document.getElementById('ca-scenario').innerHTML;
+  var modeLbl = CA.mode==='target'?'Target가 분석':(CA.mode==='rean'?'기존 BOM 재분석':'분석');
+  var nItems = (CA._items||[]).filter(function(x){return !x.excluded;}).length;
+  var today=new Date().toLocaleDateString('ko-KR');
+  var w=window.open('','_ca_report','width=900,height=1100');
+  if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  var css='body{font-family:-apple-system,"Malgun Gothic",sans-serif;color:#1a1a1a;margin:0;padding:28px 32px;background:#fff}'
+    +'h1{font-size:19px;margin:0 0 2px}.sub{font-size:12px;color:#777;margin-bottom:18px}'
+    +'.sec{margin-bottom:18px}.sec-t{font-size:14px;font-weight:700;border-left:4px solid #4f7cff;padding-left:8px;margin-bottom:10px}'
+    +'.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}'
+    +'.ca-sum-card{border:1px solid #ddd;border-radius:8px;padding:9px 11px}'
+    +'.ca-sum-card .lbl{font-size:10px;color:#888}.ca-sum-card .val{font-size:16px;font-weight:700;margin-top:3px}.ca-sum-card .sub{font-size:9px;color:#999;margin:0}'
+    +'.ca-sum-card.good{border-left:3px solid #12b886}.ca-sum-card.good .val{color:#12b886}'
+    +'.ca-sum-card.warn{border-left:3px solid #f59f00}.ca-sum-card.warn .val{color:#f59f00}'
+    +'.ca-sum-card.bad{border-left:3px solid #e03131}.ca-sum-card.bad .val{color:#e03131}'
+    +'.ca-cost-line{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}'
+    +'.ca-cost-line.total{border-top:2px solid #999;border-bottom:none;font-weight:700;padding-top:8px}'
+    +'table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{border:1px solid #e2e2e2;padding:5px 8px;text-align:left}th{background:#f4f5f7;font-weight:600}.num{text-align:right;font-variant-numeric:tabular-nums}'
+    +'.fxgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}'
+    +'@media print{button{display:none}body{padding:12px}}';
+  w.document.write('<html><head><meta charset="utf-8"><title>원가분석 보고서</title><style>'+css+'</style></head><body>'
+    +'<h1>원가분석 보고서 — '+modeLbl+'</h1>'
+    +'<div class="sub">진선테크 · 작성일 '+today+' · 분석품목 '+nItems+'건</div>'
+    +'<div class="sec"><div class="sec-t">요약</div><div class="cards">'+cards+'</div></div>'
+    +'<div class="sec"><div class="sec-t">기준환율 vs 현재 실제환율 — 환차손익 · 네고 여력</div>'+fx+'</div>'
+    +'<div class="sec"><div class="sec-t">원가 구성</div>'+cost+'</div>'
+    +'<div class="sec"><div class="sec-t">환율 시나리오 분석</div>'+scn+'</div>'
+    +'<button onclick="window.print()" style="margin-top:10px;padding:8px 18px;background:#4f7cff;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer">🖨 인쇄 / PDF 저장</button>'
+    +'</body></html>');
+  w.document.close();
 }
