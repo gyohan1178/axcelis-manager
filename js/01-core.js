@@ -22,7 +22,6 @@ var SB_TABLE_MAP = {
   'quote_hist':   'ax_quote_hist',
   'pdbox_data':   'ax_pdbox',
   'users':        'ax_users',
-  'todo_items':   'ax_pdbox',
 };
 
 // 현재 로그인 사용자
@@ -686,7 +685,7 @@ function loadAllFromServer() {
     .catch(function(e){ console.warn('BOM 로드 실패:', e.message); });
 
   // ── 1단계: PO + 소형 시트 (병렬) ──
-  var fast_sheets = 'po_data,po_delivered,todo_items';
+  var fast_sheets = 'po_data,po_delivered';
   apiGet({ action:'getSheets', sheets: fast_sheets })
     .then(function(res1) {
       if(res1 && res1.ok && res1.data) {
@@ -714,9 +713,6 @@ function loadAllFromServer() {
             trkObj[key].history.push({date:r.date||'', trackNum:r.trackNum||'', chuldo:r.chuldo||'', promise:r.promise||''});
           });
           try { localStorage.setItem(LS_TRACK, JSON.stringify(trkObj)); } catch(e){}
-        }
-        if(d1['todo_items']) {
-          try { localStorage.setItem('jst_todo', JSON.stringify(d1['todo_items'])); } catch(e){}
         }
         setSyncStatus('syncing', 'PO 로드 완료 · DB 로드 중...');
       }

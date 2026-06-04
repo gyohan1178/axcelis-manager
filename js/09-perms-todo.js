@@ -48,9 +48,7 @@ var todoEditId = null;
 function ldTodo(){ try{ return JSON.parse(localStorage.getItem(K_TODO)||'[]'); }catch{ return []; } }
 function svTodo(d){
   localStorage.setItem(K_TODO, JSON.stringify(d));
-  if(CURRENT_TOKEN) {
-    apiPost({action:'setSheet', sheet:'todo_items', data:d}).catch(function(){});
-  }
+  // todo_items 서버 동기화 제거 (ax_pdbox 테이블과 충돌해 PD BOX 데이터를 덮어쓰던 문제)
 }
 
 function openTodoModal(id){
