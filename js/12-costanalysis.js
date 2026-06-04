@@ -65,7 +65,7 @@ function caSetMode(m){
   document.getElementById('ca-cfg-bar').style.display      = (m==='vendor')?'none':'';
   document.getElementById('ca-input-target').style.display = (m==='target')?'':'none';
   document.getElementById('ca-input-rean').style.display   = (m==='rean')?'':'none';
-  document.getElementById('ca-target-row').style.display   = (m==='rean')?'none':'';  // 재분석은 Target 없이 현재 마진만
+  document.getElementById('ca-target-row').style.display   = '';  // Target+작업비: 두 모드 모두 표시
   if(m==='vendor') caRenderVendors();
   else caRun();
 }
@@ -110,10 +110,9 @@ function caParsePaste(){
   var rows=txt.split(/\r?\n/).map(function(l){ return l.split('\t'); });
   caParseBOMRows(rows);
 }
-// 헤더 자동 인식 + 종류(Part/Document/Mfr Part) 필터
+// 레벨 트리 보존 + 전개수량(상위수량 누적곱) 계산
 function caParseBOMRows(rows){
   if(!rows||!rows.length){ qToast('데이터 없음','info'); return; }
-  // 헤더행 찾기 (PN/품번 + QTY/수량 포함)
   var hi=-1;
   for(var i=0;i<Math.min(rows.length,8);i++){
     var joined=(rows[i]||[]).map(function(c){return String(c||'').toUpperCase();}).join('|');
@@ -133,44 +132,43 @@ function caParseBOMRows(rows){
     });
     startRow=hi+1;
   } else {
-    // 헤더 없음 → 지정 양식: A=레벨 B=종류 C=품번 D=품명 E=수량 F=단위 G=버전
     colMap={lv:0,kind:1,pn:2,desc:3,qty:4,unit:5,rev:6}; startRow=0;
   }
-  var out=[], skipDoc=0, skipMfr=0;
+  var out=[], skip=0;
+  var qtyByLevel={};   // 레벨별 현재 수량 (전개수량 계산용)
+  var uid=0;
   for(var r=startRow;r<rows.length;r++){
     var row=rows[r]; if(!row) continue;
     var pn=String(row[colMap.pn]!=null?row[colMap.pn]:'').trim();
     if(!pn||/^PN$|품번/i.test(pn)) continue;
-    // 종류 필터: Part 만 (Document / Mfr Part 제외)
     var kind=colMap.kind!=null?String(row[colMap.kind]||'').trim().toLowerCase():'';
-    if(kind){
-      if(kind.indexOf('document')>=0||kind==='doc'){ skipDoc++; continue; }
-      if(kind.indexOf('mfr')>=0||kind.indexOf('manufactur')>=0){ skipMfr++; continue; }
-      if(kind!=='part' && kind!=='부품') { /* 알 수 없는 종류는 일단 포함 */ }
-    }
-    // 품번에 .DRW/.ASM/.PRT 등 도면 확장자 → 제외
-    if(/\.(DRW|ASM|PRT|PDF|DXF|STEP|STP|IGS)$/i.test(pn)){ skipDoc++; continue; }
-    var lv=colMap.lv!=null?parseInt(row[colMap.lv]):null;
-    if(lv===0) continue; // 최상위 ASSY 자체 제외
-    var qty=caToN(row[colMap.qty]);
-    if(qty==null) continue;  // 수량 없는 행(문서 등) 제외
+    var isDoc = (kind.indexOf('document')>=0||kind==='doc'||kind.indexOf('mfr')>=0||kind.indexOf('manufactur')>=0)
+             || /\.(DRW|ASM|PRT|PDF|DXF|STEP|STP|IGS)$/i.test(pn);
+    if(isDoc){ skip++; continue; }
+    var lv=parseInt(row[colMap.lv]); if(isNaN(lv)) lv=0;
+    var rawQty=caToN(row[colMap.qty]); if(rawQty==null) rawQty=1;
+    // 전개수량 = 상위 레벨의 전개수량 × 자기 수량
+    var parentMul = lv>0 ? (qtyByLevel[lv-1]||1) : 1;
+    var expQty = (lv===0) ? rawQty : parentMul*rawQty;
+    qtyByLevel[lv]=expQty;
+    // 하위 레벨 캐시 정리 (자기보다 깊은 레벨 무효화)
+    Object.keys(qtyByLevel).forEach(function(k){ if(+k>lv) delete qtyByLevel[k]; });
     out.push({
-      pn:pn,
+      uid:'r'+(uid++), pn:pn, lv:lv,
       desc:colMap.desc!=null?String(row[colMap.desc]||'').trim():'',
-      qty:qty||1,
+      qty:rawQty,          // 원본(상위 1개 기준) 수량
+      expQty:expQty,       // 전개 수량 (상위 수량 반영)
       unit:colMap.unit!=null?String(row[colMap.unit]||'').trim():'',
-      rev:colMap.rev!=null?String(row[colMap.rev]||'').trim():''
+      rev:colMap.rev!=null?String(row[colMap.rev]||'').trim():'',
+      excluded:(lv===0),   // 최상위(L0)는 기본 제외 (보통 KIT 자체는 매입대상 아님)
+      marginOverride:null  // 품목별 마진 직접지정(% 0~100), null이면 자동
     });
   }
-  // 같은 품번 중복 합산 (수량 합치기)
-  var merged={};
-  out.forEach(function(p){
-    if(merged[p.pn]) merged[p.pn].qty+=p.qty;
-    else merged[p.pn]=p;
-  });
-  CA.rows=Object.keys(merged).map(function(k){return merged[k];});
-  var msg='✓ '+CA.rows.length+'개 품목 로드';
-  if(skipDoc||skipMfr) msg+=' (문서·제조사정보 '+(skipDoc+skipMfr)+'행 제외)';
+  CA.rows=out;
+  var msg='✓ '+out.length+'개 품목 (L0:'+out.filter(function(x){return x.lv===0;}).length
+        +' L1:'+out.filter(function(x){return x.lv===1;}).length
+        +' L2+:'+out.filter(function(x){return x.lv>=2;}).length+')';
+  if(skip) msg+=' · 문서/제조사 '+skip+'행 제외';
   document.getElementById('ca-bom-count').textContent=msg;
   caRun();
 }
@@ -216,25 +214,27 @@ function caRun(){
     var buyKrw = item ? (caToN(item.k6)||caToN(item.k5)||null) : null;
     var vendor = item ? (item.by||'') : '';
     var origin = caVendorOrigin(vendor);
-    var qty = caToN(p.qty)||1;
+    var qty = p.expQty!=null?p.expQty:(caToN(p.qty)||1);   // 전개수량 사용
     var status = !item ? 'unreg' : (buyKrw==null ? 'noprice' : 'ok');
     return {
-      idx:idx, pn:p.pn, desc:(item&&item.d)||p.desc||'', rev:p.rev||(item&&item.rv)||'',
-      qty:qty, vendor:vendor, origin:origin, status:status,
+      idx:idx, uid:p.uid, pn:p.pn, lv:p.lv!=null?p.lv:0,
+      desc:(item&&item.d)||p.desc||'', rev:p.rev||(item&&item.rv)||'',
+      qty:qty, rawQty:p.qty, unit:p.unit||'', vendor:vendor, origin:origin, status:status,
+      excluded:!!p.excluded, marginOverride:p.marginOverride,
       buyKrw:buyKrw, buyKrwTotal:buyKrw!=null?buyKrw*qty:null,
       targetUsd:p.targetUsd!=null?p.targetUsd:null
     };
   });
   CA._items=items;
 
-  // 원가 집계: 수입(₩=매입가, 이미 원화 저장이라 가정) / 국내(₩)
-  // ※ DB k6는 원화 매입가. 수입품은 환율 변동시 원화가 변한다고 보고 시나리오에서 재계산.
+  // 원가 집계: 제외(excluded) 품목은 합계에서 제외 → 상위/하위 중복 방지
   var impKrw=0, domKrw=0, noPrice=0;
   items.forEach(function(it){
+    if(it.excluded) return;
     if(it.buyKrwTotal==null){ noPrice++; return; }
     if(it.origin==='imp') impKrw+=it.buyKrwTotal; else domKrw+=it.buyKrwTotal;
   });
-  var laborKrw = caToN((document.getElementById('ca-labor-krw')||{}).value)||0; // (옵션, 현재 미노출)
+  var laborKrw = caToN((document.getElementById('ca-labor-krw')||{}).value)||0;
   var totalBuyKrw = impKrw+domKrw+laborKrw;
 
   // Target 매출가($) — 품목별 합계 우선, 없으면 전체 입력값
@@ -243,17 +243,20 @@ function caRun(){
   var targetUsd = perItemTarget>0 ? perItemTarget : (totalTargetInput||0);
   var targetKrw = targetUsd * cfg.sellRate;
 
-  // 모드2(재분석): Target 없으면 마진율표로 산출한 "권장 판매가"를 기준으로
+  // 권장 판매가($): 자재(품목별/자동 마진) + 작업비(작업비 마진) — 두 모드 공통
   var suggestUsd=0;
   items.forEach(function(it){
-    if(it.buyKrw==null) return;
-    var m=caMarg(it.buyKrw,cfg);
+    if(it.excluded || it.buyKrw==null) return;
+    var m=(it.marginOverride!=null)?(it.marginOverride/100):caMarg(it.buyKrw,cfg);
+    if(m>=1) m=0.99;
     suggestUsd += (it.buyKrw/(1-m)/cfg.sellRate)*it.qty;
   });
-  if(CA.mode==='rean' && targetUsd<=0){ targetUsd=suggestUsd; targetKrw=targetUsd*cfg.sellRate; }
+  if(laborKrw>0){ var lm=cfg.laborMarg>=1?0.99:cfg.laborMarg; suggestUsd += laborKrw/(1-lm)/cfg.sellRate; }
+  // Target 미입력 시 권장가를 기준으로 (두 모드 공통)
+  if(targetUsd<=0){ targetUsd=suggestUsd; targetKrw=targetUsd*cfg.sellRate; }
 
   caRenderResults({cfg:cfg,items:items,impKrw:impKrw,domKrw:domKrw,laborKrw:laborKrw,totalBuyKrw:totalBuyKrw,
-    targetUsd:targetUsd,targetKrw:targetKrw,suggestUsd:suggestUsd,noPrice:noPrice});
+    targetUsd:targetUsd,targetKrw:targetKrw,suggestUsd:suggestUsd,noPrice:noPrice,targetInput:(perItemTarget>0||totalTargetInput>0)});
 }
 
 function caClearResults(){
@@ -268,12 +271,16 @@ function caRenderResults(R){
   var cls = marginPct>=15?'good':(marginPct>=8?'warn':'bad');
 
   // 요약 카드
+  var usingSuggest = !R.targetInput;  // Target 직접입력 없으면 권장가 기준
   var cards='';
-  cards+=caCard('매입원가 합계', '₩'+Math.round(R.totalBuyKrw).toLocaleString(), '수입+국내+작업비','');
-  cards+=caCard('Target 매출가', R.targetUsd>0?('$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0})):'—', R.targetUsd>0?('₩'+Math.round(R.targetKrw).toLocaleString()+' @'+cfg.sellRate):'미입력','');
-  cards+=caCard('마진액', '₩'+Math.round(marginKrw).toLocaleString(), R.targetUsd>0?'매출−매입원가':'—', cls);
-  cards+=caCard('마진율', R.targetUsd>0?marginPct.toFixed(1)+'%':'—', cls==='good'?'양호':(cls==='warn'?'주의':'낮음'), cls);
-  if(CA.mode==='rean') cards+=caCard('권장 판매가', '$'+R.suggestUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'마진율표 기준','');
+  cards+=caCard('매입원가 합계', '₩'+Math.round(R.totalBuyKrw).toLocaleString(), '수입+국내'+(R.laborKrw>0?'+작업비':''),'');
+  cards+=caCard(usingSuggest?'권장 판매가':'Target 매출가',
+    '$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),
+    (usingSuggest?'마진율표 기준 산출 · ':'')+'₩'+Math.round(R.targetKrw).toLocaleString()+' @'+cfg.sellRate,'');
+  cards+=caCard('마진액', '₩'+Math.round(marginKrw).toLocaleString(), '매출−매입원가', cls);
+  cards+=caCard('마진율', marginPct.toFixed(1)+'%', cls==='good'?'양호(15%↑)':(cls==='warn'?'주의(8~15%)':'낮음(8%↓)'), cls);
+  if(R.targetInput) cards+=caCard('권장가 대비', '$'+R.suggestUsd.toLocaleString(undefined,{maximumFractionDigits:0}),
+    (R.targetUsd>=R.suggestUsd?'Target이 권장가 이상':'Target이 권장가보다 낮음'), R.targetUsd>=R.suggestUsd?'good':'warn');
   document.getElementById('ca-sum-cards').innerHTML=cards;
 
   // 원가 구성
@@ -311,25 +318,29 @@ function caRenderResults(R){
   }
   document.getElementById('ca-scenario').innerHTML=scn;
 
-  // 품목 상세 테이블
-  var th='<tr><th>품번</th><th>품명</th><th>REV</th><th class="num">수량</th><th>구매처</th><th>구분</th><th class="num">매입가(₩)</th><th class="num">합계(₩)</th><th class="num">마진율</th>'+(CA.mode==='target'?'<th class="num">Target($)</th>':'')+'</tr>';
+  // 품목 상세 테이블 (레벨 들여쓰기 · 제외 토글 · 품목별 마진)
+  var th='<tr><th>제외</th><th>LV</th><th>품번</th><th>품명</th><th class="num">수량</th><th>구매처</th><th>구분</th><th class="num">매입가(₩)</th><th class="num">합계(₩)</th><th class="num">마진%</th>'+(CA.mode==='target'?'<th class="num">Target($)</th>':'')+'</tr>';
   document.getElementById('ca-detail-table').querySelector('thead').innerHTML=th;
   var tb='';
   R.items.forEach(function(it){
-    var m = it.buyKrw!=null?caMarg(it.buyKrw,cfg):null;
+    var autoM = it.buyKrw!=null?caMarg(it.buyKrw,cfg):null;
+    var effM = it.marginOverride!=null?it.marginOverride:(autoM!=null?Math.round(autoM*100):null);
     var buyStr = it.buyKrw!=null?it.buyKrw.toLocaleString():(it.status==='unreg'?'<span style="color:var(--amb)">미등록</span>':'<span style="color:var(--amb)">단가없음</span>');
-    var origCls = it.origin==='imp'?'ca-imp':'ca-dom';
     var origLbl = it.origin==='imp'?'수입':'국내';
-    tb+='<tr>'
-      +'<td style="font-family:var(--mono);color:var(--accent)">'+it.pn+'</td>'
+    var lvPad = (it.lv||0)*16;
+    var rowStyle = it.excluded?'opacity:.4':'';
+    var lvBadge = it.lv===0?'<span style="color:#f59e0b;font-weight:700">L0</span>':(it.lv===1?'<span style="color:#60a5fa">L1</span>':'<span style="color:var(--text3)">L'+it.lv+'</span>');
+    tb+='<tr style="'+rowStyle+'">'
+      +'<td style="text-align:center"><input type="checkbox" '+(it.excluded?'checked':'')+' onchange="caToggleExclude('+it.idx+')" title="체크 시 원가합계에서 제외" style="accent-color:var(--red);width:14px;height:14px;cursor:pointer"></td>'
+      +'<td>'+lvBadge+'</td>'
+      +'<td style="font-family:var(--mono);color:var(--accent);padding-left:'+(9+lvPad)+'px">'+it.pn+'</td>'
       +'<td>'+(it.desc||'')+'</td>'
-      +'<td>'+(it.rev||'')+'</td>'
-      +'<td class="num">'+it.qty+'</td>'
+      +'<td class="num">'+(it.qty%1===0?it.qty:it.qty.toFixed(2))+(it.unit&&it.unit!=='Each'?' '+it.unit:'')+'</td>'
       +'<td style="color:var(--text2)">'+(it.vendor||'—')+'</td>'
       +'<td><span class="ca-toggle-imp '+(it.origin==='imp'?'imp':'dom')+'" onclick="caToggleItemOrigin('+it.idx+')" title="클릭하여 수입/국내 전환">'+origLbl+'</span></td>'
       +'<td class="num">'+buyStr+'</td>'
-      +'<td class="num">'+(it.buyKrwTotal!=null?Math.round(it.buyKrwTotal).toLocaleString():'—')+'</td>'
-      +'<td class="num">'+(m!=null?(m*100).toFixed(0)+'%':'—')+'</td>'
+      +'<td class="num">'+(it.excluded?'<span style="color:var(--text3)">제외</span>':(it.buyKrwTotal!=null?Math.round(it.buyKrwTotal).toLocaleString():'—'))+'</td>'
+      +'<td class="num"><input type="number" value="'+(effM!=null?effM:'')+'" placeholder="auto" oninput="caSetItemMargin('+it.idx+',this.value)" title="비우면 자동 마진율" style="width:56px;background:var(--bg3);border:1px solid '+(it.marginOverride!=null?'var(--accent)':'var(--border2)')+';border-radius:5px;color:var(--text);padding:4px 5px;font-size:12px;text-align:right"></td>'
       +(CA.mode==='target'?'<td class="num"><input type="number" value="'+(it.targetUsd!=null?it.targetUsd:'')+'" placeholder="-" oninput="caSetItemTarget('+it.idx+',this.value)" style="width:72px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:4px 6px;font-size:12px;text-align:right"></td>':'')
       +'</tr>';
   });
@@ -351,6 +362,46 @@ function caSetItemTarget(idx,val){
   CA.rows[idx].targetUsd = caToN(val);
   // 디바운스 없이 즉시 재계산은 무거우니 가벼운 갱신
   clearTimeout(CA._tt); CA._tt=setTimeout(caRun,400);
+}
+function caToggleExclude(idx){
+  if(!CA.rows[idx]) return;
+  CA.rows[idx].excluded = !CA.rows[idx].excluded;
+  caRun();
+}
+function caSetItemMargin(idx,val){
+  if(!CA.rows[idx]) return;
+  var n=caToN(val);
+  CA.rows[idx].marginOverride = (n==null||val==='')?null:n;
+  clearTimeout(CA._tm); CA._tm=setTimeout(caRun,400);
+}
+// 레벨 일괄 제외/포함 (상위 또는 하위 한쪽만 남기기)
+function caExcludeLevel(lv, exclude){
+  CA.rows.forEach(function(r){ if((r.lv||0)===lv) r.excluded=exclude; });
+  caRun();
+}
+// 중복 방지 프리셋
+function caKeepLevel(mode){
+  if(!CA.rows||!CA.rows.length) return;
+  var maxLv=Math.max.apply(null, CA.rows.map(function(r){return r.lv||0;}));
+  CA.rows.forEach(function(r){
+    var lv=r.lv||0;
+    if(mode==='low'){
+      // 최하위(자식 없는) 품목만 포함 — 부모인 품목은 제외
+      r.excluded = caHasChild(r);
+    } else if(mode==='mid'){
+      // L1만 포함, 나머지(L0·L2+) 제외
+      r.excluded = (lv!==1);
+    } else { // all
+      r.excluded = (lv===0);
+    }
+  });
+  caRun();
+}
+// 다음 행이 더 깊은 레벨이면 = 자식 있음(=어셈)
+function caHasChild(row){
+  var i=CA.rows.indexOf(row);
+  if(i<0||i+1>=CA.rows.length) return false;
+  return (CA.rows[i+1].lv||0) > (row.lv||0);
 }
 
 /* ── 구매처 분류 화면 ── */
