@@ -431,6 +431,24 @@ function doLogin() {
       sessionStorage.setItem('ax_token',   CURRENT_TOKEN);
       sessionStorage.setItem('ax_user',    JSON.stringify(CURRENT_USER));
       sessionStorage.setItem('ax_company', CURRENT_COMPANY);
+      // 아이디·비번 저장
+      var saveId = document.getElementById('login-save-id');
+      if(saveId && saveId.checked){
+        try { localStorage.setItem('ax_saved_cred', JSON.stringify({id:id, pw:pw})); } catch(e){}
+      } else {
+        try { localStorage.removeItem('ax_saved_cred'); } catch(e){}
+      }
+      // 자동 로그인 (탭 닫아도 유지)
+      var autoLogin = document.getElementById('login-auto');
+      if(autoLogin && autoLogin.checked){
+        try {
+          localStorage.setItem('ax_auto', JSON.stringify({
+            token: CURRENT_TOKEN, user: CURRENT_USER, company: CURRENT_COMPANY
+          }));
+        } catch(e){}
+      } else {
+        try { localStorage.removeItem('ax_auto'); } catch(e){}
+      }
       showApp();
     } else {
       errEl.textContent = res.error || '로그인 실패';
@@ -446,12 +464,22 @@ function doLogin() {
 function doLogout() {
   CURRENT_USER = null; CURRENT_TOKEN = null;
   sessionStorage.clear();
+  try { localStorage.removeItem('ax_auto'); } catch(e){}  // 자동로그인 해제 (아이디·비번 저장은 유지)
   document.getElementById('user-menu').style.display = 'none';
   document.getElementById('app-wrap').style.display = 'none';
   document.getElementById('login-overlay').style.display = 'flex';
   document.getElementById('login-id').value = '';
   document.getElementById('login-pw').value = '';
   document.getElementById('login-err').textContent = '';
+  // 저장된 아이디·비번이 있으면 다시 채워줌
+  try {
+    var cred = JSON.parse(localStorage.getItem('ax_saved_cred')||'null');
+    if(cred && cred.id){
+      document.getElementById('login-id').value = cred.id;
+      if(cred.pw) document.getElementById('login-pw').value = cred.pw;
+      var sc=document.getElementById('login-save-id'); if(sc) sc.checked=true;
+    }
+  } catch(e){}
 }
 
 function showApp() {

@@ -539,6 +539,21 @@ function resetAllData(){
   var savedToken   = sessionStorage.getItem('ax_token');
   var savedUser    = sessionStorage.getItem('ax_user');
   var savedCompany = sessionStorage.getItem('ax_company');
+  // 자동 로그인 (탭 닫고 다시 열어도 유지) — 세션이 없으면 localStorage 확인
+  if(!savedToken || !savedUser){
+    try {
+      var auto = JSON.parse(localStorage.getItem('ax_auto')||'null');
+      if(auto && auto.token && auto.user){
+        savedToken   = auto.token;
+        savedUser    = JSON.stringify(auto.user);
+        savedCompany = auto.company || 'AXCELIS';
+        // 세션에도 복사해 이후 흐름 일관되게
+        sessionStorage.setItem('ax_token', savedToken);
+        sessionStorage.setItem('ax_user', savedUser);
+        sessionStorage.setItem('ax_company', savedCompany);
+      }
+    } catch(e){}
+  }
   if(savedToken && savedUser) {
     try {
       CURRENT_TOKEN   = savedToken;
@@ -548,6 +563,18 @@ function resetAllData(){
       return; // showApp 안에서 initAll 다시 호출되지 않도록
     } catch(e) { sessionStorage.clear(); }
   }
+
+  // 자동로그인 아님 → 저장된 아이디·비번이 있으면 로그인 폼에 자동 채움
+  try {
+    var cred = JSON.parse(localStorage.getItem('ax_saved_cred')||'null');
+    if(cred && cred.id){
+      var idEl=document.getElementById('login-id'), pwEl=document.getElementById('login-pw');
+      var saveChk=document.getElementById('login-save-id');
+      if(idEl) idEl.value=cred.id;
+      if(pwEl && cred.pw) pwEl.value=cred.pw;
+      if(saveChk) saveChk.checked=true;
+    }
+  } catch(e){}
 
   // 로컬 캐시 즉시 표시
   var _initCache=(function(){try{return JSON.parse(localStorage.getItem('jst_db2')||'null');}catch(e){return null;}})();
