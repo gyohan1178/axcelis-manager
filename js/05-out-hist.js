@@ -322,7 +322,7 @@ function closeM(id){
   var el=document.getElementById(id);
   if(!el) return;
   el.classList.remove('on');
-  el.style.display='none';
+  el.style.display='';
 }
 
 function recvUpLoad(file){

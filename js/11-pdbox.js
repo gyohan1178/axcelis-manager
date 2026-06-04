@@ -203,11 +203,19 @@ function pbRender(){
   });
   // 정렬
   var sk=_pbSortKey, sd=_pbSortDir;
+  function _hogiNum(h){ var m=String(h||'').match(/\d+/); return m?parseInt(m[0],10):99999; }
   items.sort(function(a,b){
     var av=a[sk]||'', bv=b[sk]||'';
-    if(!av&&!bv) return 0;
-    if(!av) return 1; if(!bv) return -1;
-    return av.localeCompare(bv)*sd;
+    var primary;
+    if(!av&&!bv) primary=0;
+    else if(!av) return 1;
+    else if(!bv) return -1;
+    else primary=av.localeCompare(bv)*sd;
+    if(primary!==0) return primary;
+    // 1차 동률 → 호기 빠른 번호 우선 (#17 < #18 < #19, #FA는 뒤로)
+    var hn=_hogiNum(a.hogi)-_hogiNum(b.hogi);
+    if(hn!==0) return hn;
+    return String(a.hogi||'').localeCompare(String(b.hogi||''));
   });
   // 정렬 아이콘 업데이트
   document.querySelectorAll('#pb-table th[data-sort]').forEach(function(th){
@@ -270,13 +278,13 @@ function pbRender(){
       +'<td style="white-space:nowrap;min-width:36px;padding:3px 2px">'+pbDtCell(r.reqDate,true)+'</td>'
       // 가공물
       +'<td style="background:rgba(255,181,71,.04);text-align:center;width:20px;padding:0" onclick="event.stopPropagation()"><input type="checkbox"'+(r.machineDate?' checked':'')+' '+(isViewer?'disabled':('onchange="pbChkField(this,\''+r.id+'\',\'machineDate\')"'))+' style="accent-color:var(--amb);width:14px;height:14px;cursor:'+(isViewer?'not-allowed':'pointer')+'"></td>'
-      +'<td style="background:rgba(255,181,71,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'machineRecv\')" title="'+(r.machineRecv?'✔ 입고완료 · 클릭=취소':'입고예정 · 클릭하면 완료')+'">'  +(r.machineRecv?'<span style="color:#f59e0b;font-weight:700;font-size:11px">✔ '+(pbNormDate(r.arrivalDate)?pbNormDate(r.arrivalDate).slice(5,10):'완료')+'</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(r.arrivalDate)?pbNormDate(r.arrivalDate).slice(5,10):'—')+'</span>')+'</td>'
+      +'<td style="background:rgba(255,181,71,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'machineRecv\')" title="'+(r.machineRecv?'✔ 입고완료 · 클릭=취소':'입고예정 '+(pbNormDate(r.arrivalDate)?pbNormDate(r.arrivalDate).slice(5,10):'')+' · 클릭하면 완료')+'">'  +(r.machineRecv?'<span style="color:#f59e0b;font-weight:700;font-size:11px">✔ 완료</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(r.arrivalDate)?pbNormDate(r.arrivalDate).slice(5,10):'—')+'</span>')+'</td>'
       // 하네스
       +'<td style="background:rgba(45,212,191,.04);text-align:center;width:20px;padding:0" onclick="event.stopPropagation()"><input type="checkbox"'+(r.harnessIssue?' checked':'')+' '+(isViewer?'disabled':('onchange="pbChkField(this,\''+r.id+'\',\'harnessIssue\')"'))+' style="accent-color:var(--teal);width:14px;height:14px;cursor:'+(isViewer?'not-allowed':'pointer')+'"></td>'
-      +'<td style="background:rgba(45,212,191,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'harnessRecv\')" title="'+(r.harnessRecv?'✔ 완료확인 · 클릭=취소':'완료예정 · 클릭하면 완료')+'">'  +(r.harnessRecv?'<span style="color:#10b981;font-weight:700;font-size:11px">✔ '+(pbNormDate(r.harnessDone)?pbNormDate(r.harnessDone).slice(5,10):'완료')+'</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(r.harnessDone)?pbNormDate(r.harnessDone).slice(5,10):'—')+'</span>')+'</td>'
+      +'<td style="background:rgba(45,212,191,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'harnessRecv\')" title="'+(r.harnessRecv?'✔ 완료확인 · 클릭=취소':'완료예정 '+(pbNormDate(r.harnessDone)?pbNormDate(r.harnessDone).slice(5,10):'')+' · 클릭하면 완료')+'">'  +(r.harnessRecv?'<span style="color:#10b981;font-weight:700;font-size:11px">✔ 완료</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(r.harnessDone)?pbNormDate(r.harnessDone).slice(5,10):'—')+'</span>')+'</td>'
       // 전장
       +'<td style="background:rgba(167,139,250,.04);text-align:center;width:20px;padding:0" onclick="event.stopPropagation()"><input type="checkbox"'+(r.partIssue?' checked':'')+' '+(isViewer?'disabled':('onchange="pbChkField(this,\''+r.id+'\',\'partIssue\')"'))+' style="accent-color:var(--purple,#a78bfa);width:14px;height:14px;cursor:'+(isViewer?'not-allowed':'pointer')+'"></td>'
-      +'<td style="background:rgba(167,139,250,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'elecRecv\')" title="'+(r.elecRecv?'✔ 전장완료 · 클릭=취소':'완료요청 · 클릭하면 완료')+'">'  +(r.elecRecv?'<span style="color:#a78bfa;font-weight:700;font-size:11px">✔ '+(pbNormDate(pbCalcElec(r))?pbNormDate(pbCalcElec(r)).slice(5,10):'완료')+'</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(pbCalcElec(r))?pbNormDate(pbCalcElec(r)).slice(5,10):'—')+'</span>')+'</td>'
+      +'<td style="background:rgba(167,139,250,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'elecRecv\')" title="'+(r.elecRecv?'✔ 전장완료 · 클릭=취소':'완료요청 '+(pbNormDate(pbCalcElec(r))?pbNormDate(pbCalcElec(r)).slice(5,10):'')+' · 클릭하면 완료')+'">'  +(r.elecRecv?'<span style="color:#a78bfa;font-weight:700;font-size:11px">✔ 완료</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(pbCalcElec(r))?pbNormDate(pbCalcElec(r)).slice(5,10):'—')+'</span>')+'</td>'
       +'<td style="text-align:center;padding:4px 2px" onclick="event.stopPropagation()">'+mpBadge+'</td>'
       +(function(){
         var noteHtml='<span style="font-size:11.5px;color:var(--text2);white-space:pre-line">'+r.note+'</span>';
@@ -691,16 +699,13 @@ function pbOpenNew(){
   if(modal){ modal.style.display=''; modal.classList.add('on'); }
 }
 function pbOpenEdit(id){
-  var modal=document.getElementById('m-pdbox');
-  if(modal){ modal.classList.remove('on'); modal.style.display='none'; }
   pbLoad();
   var r=_pbData.find(function(x){return x.id===id;}); if(!r) return;
   document.getElementById('pb-modal-title').textContent='편집';
   document.getElementById('pb-edit-id').value=id;
   pbModalFields(r);
-  setTimeout(function(){
-    if(modal){ modal.style.display='grid'; modal.classList.add('on'); }
-  }, 30);
+  var modal=document.getElementById('m-pdbox');
+  if(modal){ modal.style.display=''; modal.classList.add('on'); }
 }
 
 function pbSave(){
