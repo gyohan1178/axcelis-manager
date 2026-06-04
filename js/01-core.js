@@ -997,6 +997,7 @@ function switchApp(app) {
   var sq  = document.getElementById('sect-quote');
   var spb = document.getElementById('sect-pdbox');
   var spr = document.getElementById('sect-process');
+  var sca = document.getElementById('sect-cost');
   sp.style.display  = (app==='purchase') ? 'block':'none';
   so.style.display  = (app==='po')       ? 'block':'none';
   if(ss)  ss.style.display  = (app==='srch')   ? 'block':'none';
@@ -1004,12 +1005,14 @@ function switchApp(app) {
   if(sq)  { sq.style.display = (app==='quote') ? 'block':'none'; if(app==='quote') sq.style.cssText='display:block!important'; }
   if(spb) { spb.style.display=(app==='pdbox')  ? 'block':'none'; if(app==='pdbox') spb.style.cssText='display:block!important'; }
   if(spr) { spr.style.display=(app==='process')? 'block':'none'; }
+  if(sca) { sca.style.display=(app==='cost')   ? 'block':'none'; if(app==='cost') sca.style.cssText='display:block!important'; }
   sp.classList.toggle('on', app==='purchase');
   so.classList.toggle('on', app==='po');
   if(ss)  ss.classList.toggle('on',  app==='srch');
   if(st)  st.classList.toggle('on',  app==='todo');
   if(sq)  sq.classList.toggle('on',  app==='quote');
   if(spb) spb.classList.toggle('on', app==='pdbox');
+  var sca2=document.getElementById('sect-cost'); if(sca2) sca2.classList.toggle('on', app==='cost');
   document.getElementById('appbtn-purchase').classList.toggle('on', app==='purchase');
   document.getElementById('appbtn-po').classList.toggle('on', app==='po');
   var bs=document.getElementById('appbtn-srch');   if(bs)  bs.classList.toggle('on', app==='srch');
@@ -1017,9 +1020,11 @@ function switchApp(app) {
   var bq=document.getElementById('appbtn-quote');  if(bq)  bq.classList.toggle('on', app==='quote');
   var bb=document.getElementById('appbtn-pdbox');  if(bb)  bb.classList.toggle('on', app==='pdbox');
   var bp=document.getElementById('appbtn-process');if(bp)  bp.classList.toggle('on', app==='process');
+  var bc=document.getElementById('appbtn-cost');   if(bc)  bc.classList.toggle('on', app==='cost');
   if(app==='srch')   { srchTab('item'); }
   if(app==='todo')   renderTodo();
   if(app==='quote')  { qInitCheck(); }
+  if(app==='cost')   { if(typeof caInit==='function') caInit(); }
   if(app==='pdbox')  {
     pbLoad();
     pbRender(); // 캐시 즉시 표시
