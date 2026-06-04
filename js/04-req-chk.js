@@ -739,12 +739,11 @@ function renderBOMChildren(){
       ?`<span style="color:var(--amb)">${c.aqty}</span>`
       :`${c.aqty??c.qty}`;
     return `<tr>
-      
-      
+      <td style="text-align:center"><span style="display:inline-block;min-width:20px;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;background:${lvCol}22;color:${lvCol}">L${lv}</span></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--tel)">${c.pn}${!inDB?` <span class="bd ba" style="font-size:9px">DB없음</span>`:''}</td>
-      <td style="color:var(--text)">${cdbr.d||'—'}</td>
-      <td style="font-size:11px;color:var(--text3)">${cdbr.mg||'—'}</td>
-      <td style="font-size:11px;color:var(--text3);font-family:var(--mono)">${cdbr.mp||'—'}</td>
+      <td style="color:var(--text)">${cdbr.d||c.desc||'—'}</td>
+      <td style="font-size:11px;color:var(--text3)">${cdbr.mg||c.mfg||'—'}</td>
+      <td style="font-size:11px;color:var(--text3);font-family:var(--mono)">${cdbr.mp||c.mfgPn||'—'}</td>
       <td style="font-family:var(--mono);font-weight:700;color:var(--pur);text-align:right">${c.qty}</td>
       <td style="font-family:var(--mono);text-align:right;font-size:11px">${aqtyTxt}</td>
       <td style="font-size:11px">${c.unit||'EA'}</td>
@@ -764,6 +763,7 @@ function renderBOMChildren(){
     <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
       <table class="bom-child-table">
         <thead><tr>
+          <th style="white-space:nowrap;width:38px">LV</th>
           <th style="white-space:nowrap">품번</th>
           <th>품명</th>
           <th style="white-space:nowrap">제조사</th>
@@ -791,13 +791,17 @@ function addChildRow(){
   tr.id='bom-new-row';
   tr.className='bom-add-row';
   tr.innerHTML=`
+    <td style="text-align:center;color:var(--text3);font-size:10px">신규</td>
     <td><input id="bnr-pn" placeholder="품번" oninput="bnrAutofill()" style="font-family:var(--mono)"></td>
     <td><input id="bnr-desc" placeholder="자동입력" readonly style="color:var(--text3)"></td>
     <td><input id="bnr-mfg" placeholder="자동입력" readonly style="color:var(--text3)"></td>
     <td><input id="bnr-mp" placeholder="자동입력" readonly style="color:var(--text3)"></td>
     <td><input id="bnr-qty" type="number" min="0" step="0.001" placeholder="1" style="text-align:right;font-family:var(--mono)"></td>
+    <td style="text-align:center;color:var(--text3);font-size:10px">—</td>
     <td><select id="bnr-unit"><option>EA</option><option>M</option><option>Foot</option><option>SET</option><option>KG</option></select></td>
+    <td style="text-align:center;color:var(--text3);font-size:10px">—</td>
     <td><input id="bnr-note" placeholder="비고"></td>
+    <td style="text-align:center;color:var(--text3);font-size:10px">—</td>
     <td>
       <div style="display:flex;gap:4px">
         <button class="btn bt-btn sm" style="padding:3px 7px;font-size:10px" onclick="saveNewChild()">✅</button>
@@ -1162,12 +1166,23 @@ function bomUpLoad(file){
       // data_only 효과 — 수식 셀은 캐시값 사용
       const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
 
-      // 헤더 행 탐색 (첫 번째 비어있지 않은 행)
-      let hdrIdx=0;
-      for(let i=0;i<Math.min(raw.length,5);i++){
-        if(raw[i]&&raw[i].some(c=>c!=null&&String(c).trim()!=='')){{hdrIdx=i;break;}}
+      // 헤더 행 탐색 — 실제 컬럼명이 들어있는 행 (상위PN/PN/LEVEL/QTY 등). 제목·빈 행 건너뜀
+      let hdrIdx=0, noHeader=false;
+      for(let i=0;i<Math.min(raw.length,10);i++){
+        const rowTxt=(raw[i]||[]).map(c=>String(c||'').toLowerCase()).join('|');
+        const looksHeader = /상위|parent/.test(rowTxt)
+          && (/level|레벨/.test(rowTxt) || /\bpn\b|품번|부품/.test(rowTxt))
+          && /qty|수량/.test(rowTxt);
+        if(looksHeader){ hdrIdx=i; break; }
+        if(hdrIdx===0 && raw[i] && raw[i].some(c=>c!=null&&String(c).trim()!=='')) hdrIdx=i;
       }
-      const hdr=raw[hdrIdx].map(c=>String(c||'').toLowerCase().trim());
+      // ABS 양식(헤더 없음): 첫 데이터행이 [레벨숫자, Part/Document, 품번, ...] 패턴
+      var r0probe = raw[0]||[];
+      var r0kindP = String(r0probe[1]||'').toLowerCase();
+      if((String(r0probe[0]).trim()==='0'||r0probe[0]===0) && (r0kindP==='part'||r0kindP==='document'||r0kindP.indexOf('mfr')>=0)){
+        noHeader=true; hdrIdx=0;
+      }
+      const hdr = noHeader ? [] : raw[hdrIdx].map(c=>String(c||'').toLowerCase().trim());
 
       // 컬럼 감지 — 이 파일 포맷: 상위PN, NO, LEVEL, PN, Desc, MFG, MFG PN, QTY, 실수량, 관리대상, UNIT, 대체품여부, Note, LOCATION
       const fi=(keywords)=>hdr.findIndex(h=>keywords.some(k=>h.includes(k)));
@@ -1184,6 +1199,10 @@ function bomUpLoad(file){
       const alti= fi(['대체품','alt','alternate']);
       const ni  = fi(['note','비고','remark']);
       const loci= fi(['location','loc','보관','위치']);
+      const cati= fi(['category','카테고리','구분','품목구분']);
+      const mfgi= hdr.findIndex(h=>h==='mfg'||h.includes('제조사')||h.includes('maker')||h.includes('manufacturer'));
+      const mpni= hdr.findIndex(h=>(h.includes('mfg')&&(h.includes('pn')||h.includes('part')))||h.includes('제조사pn')||h.includes('mfgpn'));
+      const revi= hdr.findIndex(h=>h==='rev'||h==='버전'||h.includes('revision'));
 
       const pCol=pi>=0?pi:0;
       const cCol=ciReal>=0?ciReal:(ci>=0?ci:3);
@@ -1204,6 +1223,63 @@ function bomUpLoad(file){
       const toNum=(v,def=1)=>{const n=parseFloat(v);return isNaN(n)?def:n;};
 
       let added=0, updated=0, skipped=0;
+      // 전체교체 옵션: 켜면 기존 BOM 비우고 새로 덮기
+      var replaceAll = (document.getElementById('bom-up-replace')||{}).checked;
+      if(replaceAll){ Object.keys(BOM).forEach(function(k){ delete BOM[k]; }); }
+
+      // ── ABS 양식 분기: 상위PN 열이 없음(pi<0) 또는 헤더없는 ABS → 레벨0을 상위PN으로, 종류(Part) 만 ──
+      var hasParentCol = pi>=0;
+      if(!hasParentCol || noHeader){
+        const kindCol = noHeader?1:hdr.findIndex(h=>h.includes('종류')||h.includes('kind')||h.includes('type')||h.includes('part type'));
+        const kCol = kindCol>=0?kindCol:1;
+        const pnColAbs = noHeader?2:(function(){
+          var idx=hdr.findIndex(h=>h==='pn'||h.includes('품번')||h.includes('itemno')||h.includes('item no'));
+          return idx>=0?idx:2;
+        })();
+        const lvColAbs = noHeader?0:(lvi>=0?lvi:0);
+        const dCol = noHeader?3:(dci>=0?dci:3);
+        const qColAbs = noHeader?4:(qi>=0?qi:4);
+        const uColAbs = noHeader?5:(ui>=0?ui:5);
+        const rCol = noHeader?6:(revi>=0?revi:6);
+        const catAbs = noHeader?-1:cati;   // ABS엔 Category 없음
+        const mfgAbs = noHeader?-1:mfgi;
+        const mpnAbs = noHeader?-1:mpni;
+        const startAbs = noHeader?hdrIdx:hdrIdx+1;
+        var curParent=null, noByParent={};
+        for(let i=startAbs;i<raw.length;i++){
+          const row=raw[i]; if(!row||row.every(c=>c==null)) continue;
+          const pn=toStr(row[pnColAbs]); if(!pn||/^pn$|품번/i.test(pn)) continue;
+          const kind=toStr(row[kCol]).toLowerCase();
+          var lv=parseInt(row[lvColAbs]); if(isNaN(lv)) lv=0;
+          // L0 = 새 상위PN 시작
+          if(lv===0){ curParent=pn; if(!BOM[curParent]) BOM[curParent]=[]; noByParent[curParent]=BOM[curParent].length; continue; }
+          if(!curParent) continue;
+          const isDoc = (kind.indexOf('document')>=0||kind==='doc'||kind.indexOf('mfr')>=0||kind.indexOf('manufactur')>=0)
+                     || /\.(DRW|ASM|PRT|PDF|DXF|STEP|STP|IGS)$/i.test(pn);
+          if(isDoc){ skipped++; continue; }
+          const qty=toNum(row[qColAbs]);
+          const unit=uColAbs>=0&&row[uColAbs]?toStr(row[uColAbs]):'EA';
+          const desc=dCol>=0?toStr(row[dCol]):'';
+          const cat =catAbs>=0?toStr(row[catAbs]):'';
+          const mfg =mfgAbs>=0?toStr(row[mfgAbs]):'';
+          const mfgPn=mpnAbs>=0?toStr(row[mpnAbs]):'';
+          const rev =rCol>=0?toStr(row[rCol]):'';
+          const no=++noByParent[curParent];
+          const entry={no,lv,pn,desc,qty,aqty:qty,unit};
+          if(cat) entry.cat=cat; if(mfg) entry.mfg=mfg; if(mfgPn) entry.mfgPn=mfgPn; if(rev) entry.rev=rev;
+          const ex=BOM[curParent].findIndex(c=>c.pn===pn&&c.lv===lv);
+          if(ex>=0){ BOM[curParent][ex]=entry; updated++; } else { BOM[curParent].push(entry); added++; }
+        }
+        sv(K.BOM,BOM);
+        if(CURRENT_TOKEN){ apiPost({action:'setSheet',sheet:'bom_data',data:bomToRows(BOM)}).catch(function(){}); }
+        const resEl0=document.getElementById('bom-up-result');
+        resEl0.textContent=(replaceAll?'🔄 전체교체(ABS) — ':'✅ 등록(ABS) — ')+`신규 ${added}건, 갱신 ${updated}건, 제외(문서/MFR) ${skipped}건 · 상위품번 ${Object.keys(BOM).length}개`;
+        resEl0.style.display='';
+        renderBOM(); updateBOMStat();
+        if(bomSelParent) renderBOMChildren();
+        return;
+      }
+
       for(let i=hdrIdx+1;i<raw.length;i++){
         const row=raw[i];
         if(!row||row.every(c=>c==null)) continue;
@@ -1217,12 +1293,22 @@ function bomUpLoad(file){
         const unit =uCol>=0&&row[uCol]?toStr(row[uCol]):'EA';
         const isAlt=altCol>=0?toStr(row[altCol]):'';
         const note =nCol>=0?toStr(row[nCol]):'';
+        const desc = dci>=0?toStr(row[dci]):'';
+        const cat  = cati>=0?toStr(row[cati]):'';
+        const mfg  = mfgi>=0?toStr(row[mfgi]):'';
+        const mfgPn= mpni>=0?toStr(row[mpni]):'';
+        const rev  = revi>=0?toStr(row[revi]):'';
+        const loc  = locCol>=0?toStr(row[locCol]):'';
 
         if(!BOM[parent]) BOM[parent]=[];
         // 같은 상위+하위 조합: NO 기준 갱신, 없으면 추가
         const idx=BOM[parent].findIndex(c=>c.pn===child&&c.no===no);
-        const desc = dci>=0?toStr(row[dci]):'';
         const entry={no,lv,pn:child,desc,qty,aqty,unit};
+        if(cat)   entry.cat=cat;
+        if(mfg)   entry.mfg=mfg;
+        if(mfgPn) entry.mfgPn=mfgPn;
+        if(rev)   entry.rev=rev;
+        if(loc)   entry.loc=loc;
         if(isAlt) entry.isAlt=isAlt;
         if(note)  entry.note=note;
         if(idx>=0){BOM[parent][idx]=entry;updated++;}
@@ -1233,7 +1319,7 @@ function bomUpLoad(file){
         apiPost({ action:'setSheet', sheet:'bom_data', data: bomToRows(BOM) }).catch(function(){});
       }
       const resEl=document.getElementById('bom-up-result');
-      resEl.textContent=`✅ 완료 — 신규 ${added}건 추가, ${updated}건 갱신, ${skipped}건 건너뜀 (시트: ${sheetName})`;
+      resEl.textContent=(replaceAll?'🔄 전체교체 — ':'✅ 완료 — ')+`신규 ${added}건 추가, ${updated}건 갱신, ${skipped}건 건너뜀 · 상위품번 ${Object.keys(BOM).length}개 (시트: ${sheetName})`;
       resEl.style.display='';
       renderBOM(); updateBOMStat();
       if(bomSelParent) renderBOMChildren();
