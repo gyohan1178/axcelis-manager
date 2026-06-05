@@ -10,6 +10,9 @@
 const SB_URL = 'https://zlmdxxginskguqqitsbp.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbWR4eGdpbnNrZ3VxcWl0c2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjQyMTcsImV4cCI6MjA5MzYwMDIxN30.1b1bGTNfq7a1ZTBeHVnzTRsjWgwZP4rY9ei3XqljNi0';
 
+// 테이블별 "서버에 없는 컬럼" 기억 (setSheet/appendRows 공유 — 재시도 폭주 방지)
+var SB_DROPPED_COLS = {};
+
 // 구글 시트 → Supabase 테이블명 매핑
 var SB_TABLE_MAP = {
   'db_items':     'ax_db_items',
@@ -365,7 +368,7 @@ function apiPost(body) {
         }
         var chunks = [];
         for(var i=0;i<rows.length;i+=500) chunks.push(rows.slice(i,i+500));
-        var _fail=null, _ins=0, _dropped={};
+        var _fail=null, _ins=0, _dropped=SB_DROPPED_COLS[tbl]||(SB_DROPPED_COLS[tbl]={});
         // 컬럼없음(PGRST204)/타입오류(22P02)/빈값(23502) 자동 대응 + 명확한 로깅
         function _postChunk(chunk, retries){
           if(Object.keys(_dropped).length){
@@ -434,7 +437,7 @@ function apiPost(body) {
       rows = rows.filter(function(r){ return (r.child_pn||r.pn) && String(r.child_pn||r.pn).trim()!==''; });
     }
     if(!rows.length) return Promise.resolve({ok:true, count:0});
-    var _adropped={};
+    var _adropped=SB_DROPPED_COLS[tbl]||(SB_DROPPED_COLS[tbl]={});
     function _appendTry(arr, retries){
       if(Object.keys(_adropped).length){ arr.forEach(function(o){ for(var dk in _adropped) delete o[dk]; }); }
       return fetch(SB_URL+'/rest/v1/'+tbl, {
@@ -813,15 +816,26 @@ function loadAllFromServer() {
     _loadDBPage(0);
   })();
 
-  // ── BOM 단독 로드 ──
-  apiGet({ action:'getSheet', sheet:'bom_data' })
-    .then(function(r) {
-      if(r && r.ok && r.data && r.data.length) {
-        BOM = rowsToBom(r.data);
+  // ── BOM 단독 로드 (전체 페이지네이션 — 1000행 절단 방지) ──
+  (function(){
+    var allRows=[];
+    function _bomPage(off){
+      return apiGet({ action:'getSheet', sheet:'bom_data', limit:1000, offset:off })
+        .then(function(r){
+          if(r && r.ok && r.data){
+            allRows=allRows.concat(r.data);
+            if(r.hasMore) return _bomPage(off+1000);
+          }
+          return allRows;
+        });
+    }
+    _bomPage(0).then(function(rows){
+      if(rows && rows.length){
+        BOM = rowsToBom(rows);
         try { localStorage.setItem('jst_bom2', JSON.stringify(BOM)); } catch(e){}
       }
-    })
-    .catch(function(e){ console.warn('BOM 로드 실패:', e.message); });
+    }).catch(function(e){ console.warn('BOM 로드 실패:', e.message); });
+  })();
 
   // ── 1단계: PO + 소형 시트 (병렬) ──
   var fast_sheets = 'po_data,po_delivered';
