@@ -311,7 +311,19 @@ function resetDB(){
   renderDB();updateStat();
   alert('품목 DB가 초기화되었습니다.');
 }
+function setDBDensity(mode){
+  var tbl=document.getElementById('db-tbl'); if(!tbl) return;
+  tbl.classList.remove('dens-compact','dens-normal','dens-wide');
+  tbl.classList.add('dens-'+mode);
+  try{ localStorage.setItem('ax_db_density', mode); }catch(e){}
+}
+function applyDBDensity(){
+  var mode='normal';
+  try{ mode=localStorage.getItem('ax_db_density')||'normal'; }catch(e){}
+  var tbl=document.getElementById('db-tbl'); if(tbl){ tbl.classList.remove('dens-compact','dens-normal','dens-wide'); tbl.classList.add('dens-'+mode); }
+}
 function renderDB(){
+  applyDBDensity();
   updateStat();
   const data=filtDB(),tot=data.length,pages=Math.ceil(tot/DP)||1;
   if(dPn>pages)dPn=1;
