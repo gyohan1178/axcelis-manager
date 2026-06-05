@@ -1373,7 +1373,7 @@ function upLoad(file){
           var findCol=function(cands, fb){ for(var ci=0;ci<ph.length;ci++){ for(var j=0;j<cands.length;j++){ if(ph[ci]===cands[j]) return ci; } } return fb; };
           var cPn=findCol(['품번'],0);
           var cK5=findCol(['25년(₩)','25년(\\)','25년매입가'],8);
-          var cK6=findCol(['26년(₩)','26년(\\)','26년매입가'],10);
+          var cK6=findCol(['매입가(₩)','매입가(\\)'],2);  // C열: 현재 적용 매입가(26년 신규 없으면 25년 딸려옴)
           var cBy=findCol(['구매처'],11);
           var cLt=findCol(['납기','LT㈜','LT(주)'],12);
           var cMq=findCol(['MOQ'],13);
