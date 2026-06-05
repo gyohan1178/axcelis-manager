@@ -29,11 +29,11 @@ function buildMapGrid(){
     cl:['classification'],
     lc:['보관좌표'],
     by:['구매처'],
-    lt:['납기','lt(주)'],
+    lt:['납기','lt(주)','lt㈜','lt(주)'],
     mq:['moq'],
-    k4:['k4','24년'],
-    k5:['매입가','25년매입가','k5'],
-    k6:['26년매입가','k6'],
+    k4:['k4','24년','24년매입가','24년매입가(\\)'],
+    k5:['매입가','25년매입가','k5','25년매입가(\\)'],
+    k6:['26년매입가','k6','26년매입가(\\)'],
     op:['기존품품번','기존품번'],
     om:['기존품제조사','기존제조사'],
     managed:['관리대상'],
@@ -50,11 +50,11 @@ function buildMapGrid(){
     cl:['class'],
     lc:['location','위치','좌표'],
     by:['vendor','supplier'],
-    lt:['lead_time','leadtime','리드타임'],
+    lt:['lead_time','leadtime','리드타임','lt(주)','lt㈜','lt('],
     mq:['min_order','최소수량'],
-    k4:['2024','price_2024'],
-    k5:['2025','price_2025'],
-    k6:['2026','price_2026'],
+    k4:['2024','price_2024','24년'],
+    k5:['2025','price_2025','25년'],
+    k6:['2026','price_2026','26년'],
     op:['orig_pn','original_pn'],
     om:['orig_mfg'],
     managed:['관리'],
@@ -122,6 +122,9 @@ function upImport(){
   });
 
   let added=0,updated=0;
+  // 전체교체 옵션
+  var dbReplace = (document.getElementById('up-replace')||{}).checked;
+  if(dbReplace){ DB.length=0; }
   upRows.forEach(r=>{
     const pn=toStr(r[pi]);
     if(!pn)return;

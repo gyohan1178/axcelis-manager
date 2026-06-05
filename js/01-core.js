@@ -1189,6 +1189,7 @@ let upRows=[],upHeaders=[];
 function openUpload(){
   // 초기화
   upRows=[];upHeaders=[];
+  var rc=document.getElementById('up-replace'); if(rc) rc.checked=false;
   document.getElementById('up-file').value='';
   document.getElementById('up-s1').classList.add('on');
   document.getElementById('up-s2').classList.remove('on');
