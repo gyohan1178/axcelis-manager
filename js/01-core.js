@@ -366,9 +366,8 @@ function apiPost(body) {
         var chunks = [];
         for(var i=0;i<rows.length;i+=500) chunks.push(rows.slice(i,i+500));
         var _fail=null, _ins=0, _dropped={};
-        // PGRST204(컬럼 없음) 발생 시 해당 컬럼 제거 후 재시도. 제거한 컬럼은 기억해 다음 청크에도 적용.
+        // 컬럼없음(PGRST204)/타입오류(22P02)/빈값(23502) 자동 대응 + 명확한 로깅
         function _postChunk(chunk, retries){
-          // 이미 없다고 확인된 컬럼은 미리 제거
           if(Object.keys(_dropped).length){
             chunk.forEach(function(o){ for(var dk in _dropped) delete o[dk]; });
           }
@@ -379,18 +378,41 @@ function apiPost(body) {
           }).then(function(r){
             if(r.ok){ _ins += chunk.length; return; }
             return r.text().then(function(t){
+              // 1) 컬럼 없음 → 그 컬럼 제거 후 재시도
               var mm = t && t.match(/Could not find the '([^']+)' column/);
               if(mm && retries>0){
                 _dropped[mm[1]] = 1;
                 chunk.forEach(function(o){ delete o[mm[1]]; });
                 return _postChunk(chunk, retries-1);
               }
-              if(!_fail) _fail=t; console.error('SB insert error:',t);
+              // 2) boolean 타입 오류(22P02) → is_alt 등을 boolean으로 강제 변환 후 재시도
+              if(t && t.indexOf('invalid input syntax for type boolean')>=0 && retries>0){
+                chunk.forEach(function(o){
+                  ['is_alt','isAlt'].forEach(function(k){
+                    if(o[k]!==undefined){
+                      var v=o[k];
+                      o[k] = (v===true)||(v==='true')||(v==='Y')||(v==='1')||(v==='승인')||(v==='대체') ? true : false;
+                    }
+                  });
+                });
+                return _postChunk(chunk, retries-1);
+              }
+              // 3) not-null 빈값(23502) → 해당 행 제거 후 재시도
+              var nm = t && t.match(/null value in column "([^"]+)"/);
+              if(nm && retries>0){
+                var col=nm[1];
+                var before=chunk.length;
+                chunk = chunk.filter(function(o){ return o[col]!=null && String(o[col]).trim()!==''; });
+                if(chunk.length<before) return _postChunk(chunk, retries-1);
+              }
+              // 그 외 → 크게 로깅하고 중단
+              if(!_fail) _fail=t;
+              console.error('🔴 SB insert 실패 ['+tbl+']:', t);
             });
           });
         }
         return chunks.reduce(function(p,chunk){
-          return p.then(function(){ return _postChunk(chunk, 20); });
+          return p.then(function(){ return _postChunk(chunk, 25); });
         }, Promise.resolve()).then(function(){ return {fail:_fail, ins:_ins}; });
       })
       .then(function(res){
@@ -405,14 +427,37 @@ function apiPost(body) {
     var rows = (body.rows||[]).map(function(r){
       return sbMapRow(r, body.sheet, company);
     });
+    // not-null 키 빈 행 제거 (23502 방지)
+    if(body.sheet === 'db_items'){
+      rows = rows.filter(function(r){ return r['품번'] && String(r['품번']).trim()!==''; });
+    } else if(body.sheet === 'bom_data'){
+      rows = rows.filter(function(r){ return (r.child_pn||r.pn) && String(r.child_pn||r.pn).trim()!==''; });
+    }
     if(!rows.length) return Promise.resolve({ok:true, count:0});
-    return fetch(SB_URL+'/rest/v1/'+tbl, {
-      method:'POST',
-      headers:sbHeaders({'Prefer':'return=minimal'}),
-      body:JSON.stringify(rows)
-    }).then(function(r){
-      return r.ok ? {ok:true, count:rows.length} : r.json().then(function(e){ return {ok:false, error:e.message||JSON.stringify(e)}; });
-    }).catch(function(e){ return {ok:false, error:e.message}; });
+    var _adropped={};
+    function _appendTry(arr, retries){
+      if(Object.keys(_adropped).length){ arr.forEach(function(o){ for(var dk in _adropped) delete o[dk]; }); }
+      return fetch(SB_URL+'/rest/v1/'+tbl, {
+        method:'POST',
+        headers:sbHeaders({'Prefer':'return=minimal'}),
+        body:JSON.stringify(arr)
+      }).then(function(r){
+        if(r.ok) return {ok:true, count:arr.length};
+        return r.text().then(function(t){
+          var mm = t && t.match(/Could not find the '([^']+)' column/);
+          if(mm && retries>0){ _adropped[mm[1]]=1; arr.forEach(function(o){ delete o[mm[1]]; }); return _appendTry(arr, retries-1); }
+          if(t && t.indexOf('invalid input syntax for type boolean')>=0 && retries>0){
+            arr.forEach(function(o){ ['is_alt','isAlt'].forEach(function(kk){ if(o[kk]!==undefined){ var v=o[kk]; o[kk]=(v===true)||(v==='true')||(v==='Y')||(v==='1')||(v==='승인')||(v==='대체')?true:false; } }); });
+            return _appendTry(arr, retries-1);
+          }
+          var nm = t && t.match(/null value in column "([^"]+)"/);
+          if(nm && retries>0){ var c=nm[1], b=arr.length; arr=arr.filter(function(o){ return o[c]!=null && String(o[c]).trim()!==''; }); if(arr.length<b) return _appendTry(arr, retries-1); }
+          console.error('🔴 SB appendRows 실패 ['+tbl+']:', t);
+          return {ok:false, error:t};
+        });
+      }).catch(function(e){ return {ok:false, error:e.message}; });
+    }
+    return _appendTry(rows, 25);
   }
 
   // ── 행 업데이트 ──
