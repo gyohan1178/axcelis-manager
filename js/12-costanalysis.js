@@ -86,6 +86,8 @@ function caMarg(buyKrw,cfg){
   return cfg.tiers[cfg.tiers.length-1].m;
 }
 function caToN(v){ if(v==null||v==='') return null; var n=parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?null:n; }
+var _caRunTimer=null;
+function caRunDebounced(){ clearTimeout(_caRunTimer); _caRunTimer=setTimeout(function(){ caRun(); }, 400); }
 /* 천단위 콤마 포맷 (입력 중 커서 유지 간단버전) */
 function caFmtNum(el){
   var raw=el.value.replace(/[^\d.]/g,'');
@@ -336,13 +338,13 @@ function caRenderResults(R){
   if(curUsd>0){
     rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag base">현재 판매가</div>'
       +miniCard('매출단가','$'+curUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(curSell).toLocaleString()+' @'+sr,'')
-      +miniCard('마진액','₩'+Math.round(curMK).toLocaleString(),'마진율 '+curMP.toFixed(1)+'%',clsTxt(curMP))
+      +miniCard('마진액','₩'+Math.round(curMK).toLocaleString(),'마진율 '+curMP.toFixed(1)+'% · 기준환율',clsTxt(curMP))
       +'</div>';
   }
   // 타겟 판매단가 행
   rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag real">'+(usingSuggest?'권장가':'Target가')+'</div>'
     +miniCard('매출단가','$'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(tgtSell).toLocaleString()+' @'+sr,'')
-    +miniCard('마진액','₩'+Math.round(tgtMK).toLocaleString(),'마진율 '+tgtMP.toFixed(1)+'%',clsTxt(tgtMP))
+    +miniCard('마진액','₩'+Math.round(tgtMK).toLocaleString(),'마진율 '+tgtMP.toFixed(1)+'% · 기준환율',clsTxt(tgtMP))
     +'</div>';
   // 현재→타겟 변화 요약 (둘 다 있을 때)
   if(curUsd>0){
@@ -381,7 +383,18 @@ function caRenderResults(R){
   if(R.laborKrw>0) bd+=costCard('작업비',R.laborKrw,pct(R.laborKrw),'#f59e0b');
   bd+='<div class="ca-cost-card total"><div class="cc-top"><span class="cc-l">매입원가 합계</span></div><div class="cc-v">₩'+Math.round(R.totalBuyKrw).toLocaleString()+'</div></div>';
   bd+='</div>';
-  if(R.noPrice>0) bd+='<div style="font-size:11px;color:var(--amb);margin-top:8px">⚠ 매입가 없는 품목 '+R.noPrice+'건 (DB k5/k6 등록 필요 — 합계에서 제외됨)</div>';
+  if(R.noPrice>0){
+    var npComment=(document.getElementById('ca-noprice-comment')||{}).value||'';
+    if(npComment.trim()){
+      bd+='<div style="font-size:11.5px;color:var(--text2);margin-top:10px;padding:9px 12px;background:var(--bg3);border-radius:8px;border-left:3px solid #2dd4bf;line-height:1.55">'
+         +'✔ <b>매입가 미연결 품목 '+R.noPrice+'건</b> — 담당자 확인: '+npComment.replace(/</g,'&lt;')
+         +'</div>';
+    } else {
+      bd+='<div style="font-size:11.5px;color:var(--text2);margin-top:10px;padding:9px 12px;background:var(--bg3);border-radius:8px;line-height:1.55">'
+         +'ℹ <b>매입가 미연결 품목 '+R.noPrice+'건</b> — 도면번호·작업사양 등 단가와 직접 연결되지 않은 품목일 수 있습니다. 아래 "확인 코멘트"에 적으면 보고서에 반영됩니다.'
+         +'</div>';
+    }
+  }
   document.getElementById('ca-cost-breakdown').innerHTML=bd;
 
   // 환율 시나리오 — 환율값(원/$) + 마진액 + 마진율. 판매환율 기준 ±5/10%, 수입매입도 동일비율
@@ -454,16 +467,18 @@ function caRenderResults(R){
         +    '<div class="fx-s">'+(netFx>=0?'환율 상승 이득':'환율로 손해')+' · 기준환율 @'+cfg.sellRate+' → 실제 @'+real+'</div>'
         +  '</div>'
         +  '<div class="ca-fx-card '+(negoRoomKrw>0?'good':'warn')+'">'
-        +    '<div class="fx-l">네고 여력</div>'
+        +    '<div class="fx-l">네고 여력 <span style="font-size:9px;color:var(--text3)">· 실제환율 @'+real+' 유지 시</span></div>'
         +    '<div class="fx-v">'+(negoRoomKrw>0?('$'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})):'없음')+'</div>'
         +    '<div class="fx-s">'+(negoRoomKrw>0?('₩'+Math.round(negoRoomKrw).toLocaleString()+' · 매출의 '+negoPct.toFixed(1)+'%까지'):'실제환율 마진이 기준보다 낮음')+'</div>'
         +  '</div>'
         +'</div>'
         +'<div class="ca-fx-note">'
-        +  '💡 현재 실제환율 기준 마진 <b style="color:'+col(realMK)+'">'+realMP.toFixed(1)+'%</b> · '
+        +  '💡 마진은 환율 기준에 따라 둘로 봐야 합니다 — '
+        +  '<b>견적 기준환율 @'+cfg.sellRate+'</b>에서는 <b style="color:'+col(baseMK)+'">'+baseMP.toFixed(1)+'%</b>, '
+        +  '<b>현재 실제환율 @'+real+'</b>가 유지되면 <b style="color:'+col(realMK)+'">'+realMP.toFixed(1)+'%</b>입니다.'
         +  (negoRoomKrw>0
-              ? '고객 네고를 <b style="color:#2dd4bf">최대 $'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})+'</b>까지 받아줘도 기준 견적 마진('+baseMP.toFixed(1)+'%)은 유지됩니다.'
-              : '실제환율 마진이 기준 마진보다 낮아 네고 여력이 없습니다.')
+              ? ' 환율 강세가 유지된다는 전제에서 고객 네고를 <b style="color:#2dd4bf">최대 $'+negoRoomUsd.toLocaleString(undefined,{maximumFractionDigits:0})+'</b>까지 받아줘도 기준 견적 마진('+baseMP.toFixed(1)+'%)은 지켜집니다. <span style="color:var(--text3)">단, 정산 시 환율이 기준환율('+cfg.sellRate+')로 내려가면 이 여력은 사라집니다.</span>'
+              : ' 실제환율 마진이 기준 마진보다 낮아 네고 여력이 없습니다.')
         +'</div>';
     }
   }
