@@ -927,7 +927,7 @@ function caBuildSheetHTML(payload){
     +'<h3 style="color:#2c5cc5">💱 기준 환율 조정 — 환율을 바꾸면 전체 마진이 다시 계산됩니다</h3>'
     +'<div class="ctrl-row">'
     +'<div class="ctrl-item"><label>기준 환율 (원/$)</label><input type="number" id="x-rate" value="RATEVAL" step="10" style="width:140px;font-weight:700;font-size:14px"></div>'
-    +'<div class="ctrl-item"><button type="button" onclick="document.getElementById(\'x-rate\').value=RATEVAL;render();" style="padding:6px 12px;border:1px solid #c7d8f5;border-radius:6px;background:#fff;cursor:pointer">기준값(RATEVAL) 복원</button></div>'
+    +'<div class="ctrl-item"><label>&nbsp;</label><button type="button" onclick="document.getElementById(\'x-rate\').value=RATEVAL;render();" style="padding:7px 14px;border:none;border-radius:6px;background:#4f7cff;color:#fff;font-weight:600;cursor:pointer;white-space:nowrap">↺ RATEVAL원 복원</button></div>'
     +'<div class="ctrl-item" style="flex:1;min-width:200px"><label>&nbsp;</label><div id="rate-hint" style="font-size:11px;color:#5a7bc5;padding-top:6px"></div></div>'
     +'</div></div>'
     +'<div class="ctrl">'
