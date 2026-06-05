@@ -8,6 +8,7 @@ var CA_SEED_DOM = ['KCD','L-COM','MALIN CO.','OMEGA','TURCK','가견적','가나
 
 function caInit(){
   caLoadVendorMap();
+  caLoadCfg();
   caRenderConfigDefaults();
   if(CA.mode==='vendor') caRenderVendors();
 }
@@ -77,8 +78,23 @@ function caCfg(){
     buyRate:g('ca-buy-rate',1450), sellRate:g('ca-sell-rate',1250),
     realRate:g('ca-real-rate',0),
     laborMarg:g('ca-labor-marg',25)/100,
+    rebate:g('ca-rebate',0)/100,
     tiers:[{min:1000000,m:g('ca-m1',20)/100},{min:100000,m:g('ca-m2',25)/100},{min:10000,m:g('ca-m3',35)/100},{min:0,m:g('ca-m4',45)/100}]
   };
+}
+// 설정값 저장/복원 (마지막 입력값 유지)
+var CA_CFG_KEYS=['ca-buy-rate','ca-sell-rate','ca-real-rate','ca-labor-marg','ca-rebate','ca-m1','ca-m2','ca-m3','ca-m4'];
+function caSaveCfg(){
+  try{
+    var o={}; CA_CFG_KEYS.forEach(function(id){ var e=document.getElementById(id); if(e) o[id]=e.value; });
+    localStorage.setItem('ax_ca_cfg', JSON.stringify(o));
+  }catch(e){}
+}
+function caLoadCfg(){
+  try{
+    var o=JSON.parse(localStorage.getItem('ax_ca_cfg')||'{}');
+    CA_CFG_KEYS.forEach(function(id){ var e=document.getElementById(id); if(e && o[id]!=null && o[id]!=='') e.value=o[id]; });
+  }catch(e){}
 }
 function caMarg(buyKrw,cfg){
   if(!buyKrw||buyKrw<=0) return cfg.tiers[cfg.tiers.length-1].m;
@@ -356,6 +372,19 @@ function caRenderResults(R){
       +' ('+curMP.toFixed(1)+'% → '+tgtMP.toFixed(1)+'%)'
       +'</div>';
   }
+  // 연말 리베이트 참고 표기 (마진 계산엔 미반영, 참고용)
+  var reb=cfg.rebate||0;
+  if(reb>0){
+    var rebKrw=tgtSell*reb;                       // 리베이트 금액 = 타겟 매출 × %
+    var tgtMKr=tgtMK-rebKrw;                       // 리베이트 반영 실질 마진액
+    var tgtMPr=tgtSell>0?tgtMKr/tgtSell*100:0;
+    var rcls=tgtMKr>=0?'good':'bad';
+    rightRows+='<div class="ca-diff-row '+rcls+'" style="border-style:dashed">'
+      +'📎 <b>연말 리베이트 '+(reb*100).toFixed(0)+'% 참고</b> — '+(usingSuggest?'권장':'Target')+'가 기준 리베이트 ₩'+Math.round(rebKrw).toLocaleString()+' 차감 시 '
+      +'실질 마진 <b style="color:'+(tgtMKr>=0?'#2dd4bf':'#ff5a5a')+'">₩'+Math.round(tgtMKr).toLocaleString()+' ('+tgtMPr.toFixed(1)+'%)</b> '
+      +'<span style="color:var(--text3)">· 위 마진율에는 미반영</span>'
+      +'</div>';
+  }
   var html=''
     +'<div class="ca-cost-big">'
     +  '<div class="cb-l">매입원가 합계</div>'
@@ -430,7 +459,7 @@ function caRenderResults(R){
            +'</tr>';
       });
       scn+='</tbody></table>';
-      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px">· 청록 행 = 현재 실제환율 · 주황 열 = 네고가(Target) · 매입은 두 경우 동일</div>';
+      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">· 청록 행 = 현재 실제환율 · 주황 열 = 네고가(Target)<br>· 이 표는 <b>환율이 통째로 변동</b>하는 가정입니다 — 매출뿐 아니라 <b>수입 매입원가도 적용 환율로 재계산</b>되므로, 매입을 확정원가(매입환율 기준)로 고정한 위 \'요약\' 마진과는 값이 다를 수 있습니다.</div>';
     } else {
       scn+='<table class="ca-table" style="width:100%"><thead><tr>'
          +'<th>환율 변동</th><th class="num">적용 환율</th><th class="num">매출(₩)</th><th class="num">매입(₩)</th><th class="num">마진액(₩)</th><th class="num">마진율</th>'
@@ -455,6 +484,7 @@ function caRenderResults(R){
            +'</tr>';
       });
       scn+='</tbody></table>';
+      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">· 이 표는 <b>환율이 통째로 변동</b>하는 가정입니다 — 매출뿐 아니라 <b>수입 매입원가도 적용 환율로 재계산</b>되므로, 매입을 확정원가(매입환율 기준)로 고정한 위 \'요약\' 마진과는 값이 다를 수 있습니다.</div>';
     }
     // 손익분기 환율: 매출(targetUsd×r) = 매입(impUsd×r + domKrw + laborKrw) → r(targetUsd−impUsd)=dom+labor
     var fixed=R.domKrw+R.laborKrw;
@@ -710,7 +740,21 @@ function caPrintReport(){
     +'.ca-cost-line.total{border-top:2px solid #999;border-bottom:none;font-weight:700;padding-top:8px}'
     +'table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{border:1px solid #e2e2e2;padding:5px 8px;text-align:left}th{background:#f4f5f7;font-weight:600}.num{text-align:right;font-variant-numeric:tabular-nums}'
     +'.foot{margin-top:26px;border-top:1px solid #ddd;padding-top:8px;font-size:10px;color:#aaa;text-align:center}'
-    +'@media print{button{display:none}body{padding:14px}.sec{page-break-inside:avoid}}';
+    +'@page{size:A4 portrait;margin:8mm}'
+    +'@media print{'
+    +  'button{display:none}'
+    +  'body{padding:0;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +  '.rpt-head{padding-bottom:7px;margin-bottom:9px}h1{font-size:15px}.subj{font-size:11px}.sub{font-size:9px}'
+    +  '.sec{margin-bottom:8px;page-break-inside:avoid}.sec-t{font-size:11px;margin-bottom:5px}'
+    +  '#rpt-sum{gap:5px;margin-bottom:3px}.ca-cost-big{padding:7px 9px}.ca-cost-big .cb-v{font-size:16px;margin:2px 0}'
+    +  '.ca-right-rows{gap:4px}.ca-rate-row{gap:5px}.ca-mini{padding:5px 7px}.ca-mini .cm-v{font-size:13px}'
+    +  '.ca-diff-row{padding:5px 8px;font-size:10px;margin-top:4px}'
+    +  '.ca-fx-cards{gap:6px;margin-bottom:5px}.ca-fx-card{padding:7px 9px}.ca-fx-card .fx-v{font-size:15px;margin:2px 0}'
+    +  '.ca-fx-note{padding:6px 9px;font-size:9.5px;line-height:1.4}'
+    +  '.ca-cost-cards{gap:5px}.ca-cost-card{padding:6px 8px}.ca-cost-card .cc-v{font-size:12px;margin:3px 0 4px}'
+    +  'table{font-size:9px}th,td{padding:3px 5px}'
+    +  '.foot{margin-top:8px;padding-top:5px;font-size:8px}'
+    +'}';
   w.document.write('<html><head><meta charset="utf-8"><title>'+fname+'</title><style>'+css+'</style></head><body>'
     +'<div class="rpt-head">'
     +'<h1>원가분석 보고서</h1>'
