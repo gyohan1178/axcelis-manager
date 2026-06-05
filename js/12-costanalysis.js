@@ -923,6 +923,13 @@ function caBuildSheetHTML(payload){
     +'@page{size:A4 landscape;margin:8mm}@media print{.ctrl,.btns{display:none}body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
   var body=''
     +'<div class="rpt-head"><h1 id="rpt-title"></h1><div class="sub" id="rpt-sub"></div></div>'
+    +'<div class="ctrl" style="background:#eef4ff;border-color:#c7d8f5">'
+    +'<h3 style="color:#2c5cc5">💱 기준 환율 조정 — 환율을 바꾸면 전체 마진이 다시 계산됩니다</h3>'
+    +'<div class="ctrl-row">'
+    +'<div class="ctrl-item"><label>기준 환율 (원/$)</label><input type="number" id="x-rate" value="RATEVAL" step="10" style="width:140px;font-weight:700;font-size:14px"></div>'
+    +'<div class="ctrl-item"><button type="button" onclick="document.getElementById(\'x-rate\').value=RATEVAL;render();" style="padding:6px 12px;border:1px solid #c7d8f5;border-radius:6px;background:#fff;cursor:pointer">기준값(RATEVAL) 복원</button></div>'
+    +'<div class="ctrl-item" style="flex:1;min-width:200px"><label>&nbsp;</label><div id="rate-hint" style="font-size:11px;color:#5a7bc5;padding-top:6px"></div></div>'
+    +'</div></div>'
     +'<div class="ctrl">'
     +'<h3>➕ 추가비용 반영 (금융비·간접비 등) — 입력하면 마진이 다시 계산됩니다</h3>'
     +'<div class="ctrl-row">'
@@ -959,9 +966,10 @@ function caBuildSheetHTML(payload){
     +'  return sum;\n'
     +'}\n'
     +'function render(){\n'
+    +'  var br=parseFloat(document.getElementById("x-rate").value)||D.baseRate;\n'
     +'  document.getElementById("rpt-title").textContent=D.title;\n'
-    +'  document.getElementById("rpt-sub").textContent="진선테크 구매자재 · 작성일 "+D.ymd+" · 대상 "+D.items.length+"개 품목 · 기준 실제환율 @"+won(D.baseRate)+(D.rebate>0?" · 리베이트 "+(D.rebate*100).toFixed(0)+"%":"");\n'
-    +'  var br=D.baseRate;\n'
+    +'  document.getElementById("rpt-sub").textContent="진선테크 구매자재 · 작성일 "+D.ymd+" · 대상 "+D.items.length+"개 품목 · 기준 환율 @"+won(br)+(br!==D.baseRate?" (기준값 "+won(D.baseRate)+"에서 조정됨)":"")+(D.rebate>0?" · 리베이트 "+(D.rebate*100).toFixed(0)+"%":"");\n'
+    +'  var rhint=document.getElementById("rate-hint"); if(rhint){ rhint.textContent = br===D.baseRate?("기준 환율 "+won(br)+"원 적용 중 · 표의 -100/-200 열은 "+won(br-100)+"/"+won(br-200)+"원"):("조정: "+won(br)+"원 (기준 "+won(D.baseRate)+"원 대비 "+(br>=D.baseRate?"+":"")+won(br-D.baseRate)+"원)"); }\n'
     +'  var sumSell=0,sumMKnow=0,sumMK200=0,sumBuy=0,sumLabor=0;\n'
     +'  D.items.forEach(function(it){var f=fxM(it,br);sumSell+=f.sell*it.qty;sumMKnow+=f.mK*it.qty;sumMK200+=fxM(it,br-200).mK*it.qty;sumBuy+=it.buyKrw*it.qty;sumLabor+=it.laborKrw*it.qty;});\n'
     +'  var rebV=parseFloat(document.getElementById("x-reb-v").value)||0;\n'
@@ -1007,8 +1015,11 @@ function caBuildSheetHTML(payload){
     +'  c+="⚠ 환율 <b>-200원("+won(br-200)+")</b> 하락 시 (추가비용 제외) — 마진 약 <b style=\\"color:"+pcol(totMP200)+"\\">"+eokeok(sumMK200)+"억원 ("+totMP200.toFixed(1)+"%)</b>, 현재 대비 <b style=\\"color:#d23030\\">"+(totMPnow-totMP200).toFixed(1)+"%p 하락</b></div>";\n'
     +'  document.getElementById("rpt-concl").innerHTML=c;\n'
     +'}\n'
-    +'["x-fin","x-fin-u","x-ind","x-ind-u","x-etc","x-etc-u","x-reb-v","x-reb-u"].forEach(function(id){document.getElementById(id).addEventListener("input",render);document.getElementById(id).addEventListener("change",render);});\n'
+    +'["x-rate","x-fin","x-fin-u","x-ind","x-ind-u","x-etc","x-etc-u","x-reb-v","x-reb-u"].forEach(function(id){document.getElementById(id).addEventListener("input",render);document.getElementById(id).addEventListener("change",render);});\n'
     +'function saveHTML(){var h="<!DOCTYPE html>"+document.documentElement.outerHTML;var b=new Blob([h],{type:"text/html;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=D.title.replace(/[^가-힣a-zA-Z0-9_-]/g,"_")+"_"+D.ymd+".html";a.click();}\n'
     +'render();';
-  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+(payload.title||'갑지')+'_'+payload.ymd+'</title><style>'+css+'</style></head><body>'+body.replace('REBPCT', ((payload.rebate||0)*100).toFixed(1).replace(/\.0$/,''))+'<scr'+'ipt>'+script+'</scr'+'ipt></body></html>';
+  var bodyFilled = body
+    .replace('REBPCT', ((payload.rebate||0)*100).toFixed(1).replace(/\.0$/,''))
+    .split('RATEVAL').join(String(Math.round(payload.baseRate||1500)));
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+(payload.title||'갑지')+'_'+payload.ymd+'</title><style>'+css+'</style></head><body>'+bodyFilled+'<scr'+'ipt>'+script+'</scr'+'ipt></body></html>';
 }
