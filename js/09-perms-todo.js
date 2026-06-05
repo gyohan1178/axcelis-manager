@@ -225,7 +225,7 @@ var TAB_DEFS = [
   {key:'lt',      label:'LT 미입력',        sect:'purchase', default:true,  canEdit:false},
   {key:'bom',     label:'BOM 관리',         sect:'purchase', default:true,  canEdit:true},
   {key:'rdash',   label:'매입 대시보드',     sect:'purchase', default:true,  canEdit:false},
-  {key:'chk',     label:'재고점검',          sect:'purchase', default:true,  canEdit:true},
+  // {key:'chk', label:'재고점검', ...},  // 재고점검 제거 (ax_chk_items 미사용)
   // PO 서브탭
   {key:'po-dash', label:'PO 대시보드',      sect:'po',       default:true,  canEdit:false},
   {key:'po-po',   label:'PO 현황',          sect:'po',       default:true,  canEdit:true},
@@ -324,7 +324,7 @@ function applyTabPerms(perms, role){
     switchApp(firstApp);
     // 해당 섹션의 접근 가능한 첫 서브탭으로 이동
     if(firstApp === 'purchase') {
-      var ptOrder = ['db','recv','out','lt','bom','rdash','chk'];
+      var ptOrder = ['db','recv','out','lt','bom','rdash'];
       var firstPt = ptOrder.find(function(k){ return access.includes(k); });
       if(firstPt) ptTab(firstPt);
     } else if(firstApp === 'po') {

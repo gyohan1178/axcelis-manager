@@ -187,11 +187,36 @@ function caLoadExistingBOM(){
   var pn=(document.getElementById('ca-rean-pn').value||'').trim();
   if(!pn){ qToast('ASSY 품번을 입력하세요','info'); return; }
   if(typeof BOM==='undefined' || !BOM){ qToast('BOM 데이터가 없습니다. BOM 관리에서 먼저 등록하세요','err',4000); return; }
-  // BOM 구조: 보통 { assyPn: [{pn,qty,...}] } 또는 배열. 유연하게 처리
-  var parts=caExtractBOMParts(pn);
-  if(!parts.length){ qToast('해당 ASSY의 BOM을 찾을 수 없습니다: '+pn,'err',4000); return; }
-  CA.rows=parts;
-  document.getElementById('ca-bom-count').textContent='✓ '+pn+' BOM '+parts.length+'개 품목';
+  var children = (BOM && typeof BOM==='object' && !Array.isArray(BOM)) ? (BOM[pn]||[]) : [];
+  if(!children.length){
+    // 배열형 BOM 폴백
+    if(Array.isArray(BOM)){
+      BOM.forEach(function(b){
+        if(String(b.assy||b.parent||b.assyPn||b.pn||'').trim()===pn && b.parts) children=b.parts;
+      });
+    }
+  }
+  if(!children.length){ qToast('해당 ASSY의 BOM을 찾을 수 없습니다: '+pn,'err',4000); return; }
+
+  // caParseBOMRows 와 동일한 구조로 변환 (레벨 트리 + 전개수량)
+  var qtyByLevel={}, uid=0, out=[];
+  children.forEach(function(c){
+    var lv = c.lv!=null?parseInt(c.lv):1; if(isNaN(lv)) lv=1;
+    var rawQty = caToN(c.qty)!=null?caToN(c.qty):1;
+    var parentMul = lv>0 ? (qtyByLevel[lv-1]||1) : 1;
+    var expQty = (lv===0)?rawQty:parentMul*rawQty;
+    qtyByLevel[lv]=expQty;
+    Object.keys(qtyByLevel).forEach(function(k){ if(+k>lv) delete qtyByLevel[k]; });
+    out.push({
+      uid:'r'+(uid++), pn:String(c.pn||c.child_pn||'').trim(), lv:lv,
+      desc:c.desc||'', qty:rawQty, expQty:expQty,
+      unit:c.unit||'', rev:c.rev||'',
+      cat:c.cat||'', mfg:c.mfg||'', mfgPn:c.mfgPn||c.mfgpn||'', loc:c.loc||'',
+      excluded:(lv===0), marginOverride:null
+    });
+  });
+  CA.rows=out;
+  document.getElementById('ca-bom-count').textContent='✓ '+pn+' BOM '+out.length+'개 품목 (L0:'+out.filter(function(x){return x.lv===0;}).length+' L1:'+out.filter(function(x){return x.lv===1;}).length+' L2+:'+out.filter(function(x){return x.lv>=2;}).length+')';
   caRun();
 }
 function caExtractBOMParts(assyPn){
