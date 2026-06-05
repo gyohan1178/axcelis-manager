@@ -113,9 +113,10 @@ function sbMapRow(r, sheet, company){
     return row;
   }
   if(sheet === 'db_items'){
-    // 전체 컬럼 전송. 서버에 없는 컬럼은 insert 시 자동 제거+재시도됨(PGRST204 처리).
-    // 모든 행 동일 키 유지(PGRST102 방지).
-    row['품번']      = String(r.pn||'').trim();
+    // 서버 ax_db_items 의 not-null 키는 'pn'(영문). 한글 '품번'과 함께 전송.
+    var _pn = String(r.pn||'').trim();
+    row.pn           = _pn;       // 서버 not-null 키 (23502 방지)
+    row['품번']      = _pn;
     row['품명']      = r.d||'';
     row['REV']       = r.rv||'';
     row['제조사']    = r.mg||'';
@@ -351,7 +352,7 @@ function apiPost(body) {
         });
         // not-null 키 빈 행 제거 (23502 방지): db_items=품번/pn, bom_data=child_pn
         if(body.sheet === 'db_items'){
-          rows = rows.filter(function(r){ return r['품번'] && String(r['품번']).trim()!==''; });
+          rows = rows.filter(function(r){ return (r.pn||r['품번']) && String(r.pn||r['품번']).trim()!==''; });
         } else if(body.sheet === 'bom_data'){
           rows = rows.filter(function(r){ return (r.child_pn||r.pn) && String(r.child_pn||r.pn).trim()!==''; });
         }
@@ -432,7 +433,7 @@ function apiPost(body) {
     });
     // not-null 키 빈 행 제거 (23502 방지)
     if(body.sheet === 'db_items'){
-      rows = rows.filter(function(r){ return r['품번'] && String(r['품번']).trim()!==''; });
+      rows = rows.filter(function(r){ return (r.pn||r['품번']) && String(r.pn||r['품번']).trim()!==''; });
     } else if(body.sheet === 'bom_data'){
       rows = rows.filter(function(r){ return (r.child_pn||r.pn) && String(r.child_pn||r.pn).trim()!==''; });
     }
