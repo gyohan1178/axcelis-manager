@@ -96,6 +96,46 @@ function rowsToDelivered(rows){
 }
 function sbMapRow(r, sheet, company){
   var row = {};
+  if(sheet === 'chk_items'){
+    row.company   = company;
+    row.pn        = String(r.pn||'').trim();
+    row.grade     = r.grade||'B';
+    row["desc"]   = r.desc||'';
+    row.sf        = r.sf||0;
+    row.note      = r.note||'';
+    row.last_date = r.lastDate||null;
+    row.last_qty  = (r.lastQty==null?0:r.lastQty);
+    row.last_note = r.lastNote||'';
+    row.last_insp = r.lastInsp||'';
+    return row;
+  }
+  if(sheet === 'db_items'){
+    // 모든 행이 동일한 키 집합을 갖도록 고정 (PGRST102 'All object keys must match' 방지)
+    row['품번']      = String(r.pn||'').trim();
+    row['품명']      = r.d||'';
+    row['REV']       = r.rv||'';
+    row['제조사']    = r.mg||'';
+    row['제조사품번'] = r.mp||'';
+    row['Category']  = r.ct||'';
+    row['Classification'] = r.cl||'';
+    row['보관좌표']  = r.lc||'';
+    row['구매처']    = r.by||'';
+    row['납기']      = r.lt||0;
+    row['MOQ']       = r.mq||0;
+    row['25년매입가'] = r.k5||0;
+    row['26년매입가'] = r.k6||0;
+    row['24년매입가'] = r.k4||0;
+    row['매입가($)'] = r.ud||0;
+    row['FCST']      = r.fc||0;
+    row['안전재고']  = r.sf||0;
+    row['기존품품번'] = r.op||'';
+    row['기존품제조사'] = r.om||'';
+    row['관리대상']  = r.managed||'';
+    row['관리부서']  = r.dept||'';
+    row['대체품여부'] = r.ia?'Y':'';
+    row['대체승인일'] = r.ay||'';
+    return row;
+  }
   // po_data 필드 매핑 (앱 내부명 → DB 컬럼명)
   if(sheet === 'po_data'){
     row.uid          = (r.order||'')+'|'+(r.orderLine||'')+'|'+(r.delLine||'')+'|'+(r.item||'')+'|'+(r.promise||'');
@@ -564,7 +604,7 @@ var KEY_TO_SHEET = {
   'jst_recv2':    'recv_items',
   'jst_out2':     'out_items',
   'jst_hist2':    'hist_items',
-  'jst_chk2':     'chk_items',
+  // 'jst_chk2':  'chk_items',   // ax_chk_items 테이블 없음(404) → 서버 동기화 비활성. 테이블 생성 후 복구.
   'jst_chkhist2': 'chkhist_data',
   'jst_bom2':     'bom_data',
   'po_history':   'po_history',
@@ -577,13 +617,24 @@ function bomToRows(obj) {
   var rows = [];
   Object.keys(obj).forEach(function(parent) {
     (obj[parent] || []).forEach(function(child) {
-      var row = Object.assign({ parent_pn: parent }, child);
-      // pn → child_pn 으로 서버 헤더에 맞춤
-      if(row.pn !== undefined && row.child_pn === undefined) {
-        row.child_pn = row.pn;
-        delete row.pn;
-      }
-      rows.push(row);
+      // 모든 행이 동일한 키 집합을 갖도록 고정 (PGRST102 'All object keys must match' 방지)
+      rows.push({
+        parent_pn: parent,
+        child_pn:  String(child.pn||child.child_pn||'').trim(),
+        no:    child.no!=null?child.no:0,
+        lv:    child.lv!=null?child.lv:1,
+        desc:  child.desc||'',
+        qty:   child.qty!=null?child.qty:0,
+        aqty:  child.aqty!=null?child.aqty:(child.qty!=null?child.qty:0),
+        unit:  child.unit||'EA',
+        cat:   child.cat||'',
+        mfg:   child.mfg||'',
+        mfgpn: child.mfgPn||child.mfgpn||'',
+        rev:   child.rev||'',
+        loc:   child.loc||'',
+        note:  child.note||'',
+        is_alt: child.isAlt||child.is_alt||''
+      });
     });
   });
   return rows;
@@ -598,12 +649,14 @@ function rowsToBom(rows) {
     var child = Object.assign({}, r);
     delete child.parent_pn;
     delete child.company;
-    // child_pn → pn 필드명 통일
     if(!child.pn && child.child_pn) {
       child.pn = String(child.child_pn).trim().replace(/\.0$/, '');
-      delete child.child_pn;
     }
+    delete child.child_pn;
     if(child.pn) child.pn = String(child.pn).trim().replace(/\.0$/, '');
+    // 서버 컬럼명 → 앱 필드명
+    if(child.mfgpn!==undefined){ if(child.mfgpn) child.mfgPn=child.mfgpn; delete child.mfgpn; }
+    if(child.is_alt!==undefined){ if(child.is_alt) child.isAlt=child.is_alt; delete child.is_alt; }
     obj[p].push(child);
   });
   return obj;
@@ -844,6 +897,13 @@ function svWithSync(k, v) {
       _val = v.filter(function(r){ return (r.order_date||'') >= _2yr; });
     }
     localStorage.setItem(k, JSON.stringify(_val));
+    // 대용량 DB(수천 건)는 다른 키를 밀어내므로, 큰 경우 로컬 저장 생략(서버가 원본)
+    if(k === K.DB && Array.isArray(v) && v.length > 3000){
+      try {
+        var _sz = JSON.stringify(_val).length;
+        if(_sz > 2500000){ localStorage.removeItem(k); }  // 2.5MB↑면 로컬 캐시 비움(서버에서 로드)
+      } catch(e){}
+    }
   } catch(e) {
     if(e.name === 'QuotaExceededError' || (e.message && e.message.includes('quota'))) {
       console.warn('localStorage 용량 초과 ['+k+'] - 서버만 동기화');
