@@ -346,6 +346,12 @@ function apiPost(body) {
         var rows = data.map(function(r){
           return sbMapRow(r, body.sheet, company);
         });
+        // not-null 키 빈 행 제거 (23502 방지): db_items=품번/pn, bom_data=child_pn
+        if(body.sheet === 'db_items'){
+          rows = rows.filter(function(r){ return r['품번'] && String(r['품번']).trim()!==''; });
+        } else if(body.sheet === 'bom_data'){
+          rows = rows.filter(function(r){ return (r.child_pn||r.pn) && String(r.child_pn||r.pn).trim()!==''; });
+        }
         // uid(기본키) 중복 제거 — 같은 키는 마지막 값만 유지 (duplicate key 에러 방지)
         if(rows.length && rows[0] && rows[0].uid !== undefined){
           var _seen={}, _dedup=[];
@@ -640,7 +646,7 @@ function bomToRows(obj) {
         rev:   child.rev||'',
         loc:   child.loc||'',
         note:  child.note||'',
-        is_alt: child.isAlt||child.is_alt||''
+        is_alt: !!(child.isAlt||child.is_alt) && String(child.isAlt||child.is_alt).trim()!=='' && String(child.isAlt||child.is_alt)!=='정품'
       });
     });
   });
