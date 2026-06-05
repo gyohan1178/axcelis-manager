@@ -434,35 +434,56 @@ function caRenderResults(R){
     var curUsdS = R.currentUsd||0;
     var cmpMode = curUsdS>0 && curUsdS!==R.targetUsd;  // 비교 모드
     var mc=function(mK,mP){ return mK<0?'#ff5a5a':(mP>=15?'#2dd4bf':(mP>=8?'#f59e0b':'#ffa94d')); };
+    var reb=cfg.rebate||0;
     if(cmpMode){
+      var rebHdr = reb>0 ? '<th class="num" style="background:#fde8e8">네고+리베'+(reb*100).toFixed(0)+'%<br>마진율</th>' : '';
       scn+='<table class="ca-table" style="width:100%"><thead>'
          +'<tr><th rowspan="2" style="vertical-align:bottom">환율 변동</th><th rowspan="2" class="num" style="vertical-align:bottom">적용 환율</th>'
-         +'<th colspan="2" style="text-align:center;border-bottom:1px solid var(--border2)">현재가 $'+curUsdS.toLocaleString(undefined,{maximumFractionDigits:0})+'</th>'
-         +'<th colspan="2" style="text-align:center;border-bottom:1px solid var(--border2);background:rgba(255,154,77,.08)">네고가 $'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0})+'</th></tr>'
-         +'<tr><th class="num">마진액</th><th class="num">마진율</th><th class="num" style="background:rgba(255,154,77,.08)">마진액</th><th class="num" style="background:rgba(255,154,77,.08)">마진율</th></tr>'
+         +'<th colspan="2" style="text-align:center;border-bottom:2px solid #4f7cff;color:#4f7cff">현재가 $'+curUsdS.toLocaleString(undefined,{maximumFractionDigits:0})+'</th>'
+         +'<th colspan="2" style="text-align:center;border-bottom:2px solid #f59e0b;color:#f59e0b;background:#fff6ec">네고가 $'+R.targetUsd.toLocaleString(undefined,{maximumFractionDigits:0})+'</th>'
+         + (reb>0?'<th rowspan="2" class="num" style="vertical-align:bottom;background:#fde8e8;color:#d23030">네고+리베<br>'+(reb*100).toFixed(0)+'% 마진율</th>':'')
+         +'</tr>'
+         +'<tr><th class="num" style="color:#4f7cff">마진액</th><th class="num" style="color:#4f7cff">마진율</th>'
+         +'<th class="num" style="background:#fff6ec;color:#f59e0b">마진액</th><th class="num" style="background:#fff6ec;color:#f59e0b">마진율</th></tr>'
          +'</thead><tbody>';
       deltas.forEach(function(s){
         var rate=baseRate+s.d;
         var buyAdj = R.impUsd*rate + R.domKrw + R.laborKrw;
         var curSell=curUsdS*rate, curMK=curSell-buyAdj, curMP=curSell>0?curMK/curSell*100:0;
         var tgtSell=R.targetUsd*rate, tgtMK=tgtSell-buyAdj, tgtMP=tgtSell>0?tgtMK/tgtSell*100:0;
-        var bg = s.d===0?'rgba(45,212,191,.12)':'transparent';
-        var lbl = s.d===0?'현재 ('+Math.round(baseRate).toLocaleString()+')':(s.d>0?'+'+s.d+'원':s.d+'원');
-        var cc=mc(curMK,curMP), tc=mc(tgtMK,tgtMP);
-        scn+='<tr style="background:'+bg+'">'
+        // 네고가 리베이트 반영: 매출에서 리베이트 차감
+        var tgtMKr=tgtMK-(tgtSell*reb), tgtMPr=tgtSell>0?tgtMKr/tgtSell*100:0;
+        var isNow = s.d===0;
+        var rowBg = isNow?'background:#eaf7f4;':'';
+        var lbl = isNow?'<b>현재 ('+Math.round(baseRate).toLocaleString()+')</b>':(s.d>0?'+'+s.d+'원':s.d+'원');
+        // 색: 역마진=빨강굵게, 그 외 검정
+        var fmt=function(mK,mP,showMK){
+          var neg=mK<0;
+          var style='color:'+(neg?'#d23030':'#222')+';'+(neg?'font-weight:700;':'');
+          return showMK
+            ? '<td class="num" style="'+style+'">'+Math.round(mK).toLocaleString()+'</td>'
+            : '<td class="num" style="'+style+'font-weight:700">'+mP.toFixed(1)+'%'+(neg?' <span style="font-size:8px">역마진</span>':'')+'</td>';
+        };
+        scn+='<tr style="'+rowBg+'">'
            +'<td style="font-weight:600">'+lbl+'</td>'
            +'<td class="num" style="font-family:var(--mono)">'+Math.round(rate).toLocaleString()+'</td>'
-           +'<td class="num" style="color:'+cc+'">'+Math.round(curMK).toLocaleString()+'</td>'
-           +'<td class="num" style="color:'+cc+';font-weight:700">'+curMP.toFixed(1)+'%</td>'
-           +'<td class="num" style="color:'+tc+';background:rgba(255,154,77,.06)">'+Math.round(tgtMK).toLocaleString()+(tgtMK<0?' <span style="font-size:9px">역마진</span>':'')+'</td>'
-           +'<td class="num" style="color:'+tc+';font-weight:700;background:rgba(255,154,77,.06)">'+tgtMP.toFixed(1)+'%</td>'
+           +fmt(curMK,curMP,true)+fmt(curMK,curMP,false)
+           +'<td class="num" style="background:'+(isNow?'#e0f0eb':'#fff6ec')+';color:'+(tgtMK<0?'#d23030':'#222')+';'+(tgtMK<0?'font-weight:700':'')+'">'+Math.round(tgtMK).toLocaleString()+'</td>'
+           +'<td class="num" style="background:'+(isNow?'#e0f0eb':'#fff6ec')+';color:'+(tgtMK<0?'#d23030':'#222')+';font-weight:700">'+tgtMP.toFixed(1)+'%'+(tgtMK<0?' <span style="font-size:8px">역마진</span>':'')+'</td>'
+           + (reb>0?'<td class="num" style="background:#fde8e8;color:'+(tgtMKr<0?'#d23030':'#222')+';font-weight:700">'+tgtMPr.toFixed(1)+'%'+(tgtMKr<0?' <span style="font-size:8px">역마진</span>':'')+'</td>':'')
            +'</tr>';
       });
       scn+='</tbody></table>';
-      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">· 청록 행 = 현재 실제환율 · 주황 열 = 네고가(Target)<br>· 이 표는 <b>환율이 통째로 변동</b>하는 가정입니다 — 매출뿐 아니라 <b>수입 매입원가도 적용 환율로 재계산</b>되므로, 매입을 확정원가(매입환율 기준)로 고정한 위 \'요약\' 마진과는 값이 다를 수 있습니다.</div>';
+      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">'
+         +'· <b style="color:#4f7cff">파랑</b> = 현재가 · <b style="color:#f59e0b">주황</b> = 네고가(Target)'+(reb>0?' · <b style="color:#d23030">빨강 열</b> = 네고가에 리베이트 '+(reb*100).toFixed(0)+'% 반영':'')+'<br>'
+         +'· 음영 행 = 현재 실제환율('+Math.round(baseRate).toLocaleString()+') · 역마진은 빨간 글자<br>'
+         +'· 환율이 통째로 변동하는 가정(매출·수입매입 동시 적용)이라, 매입을 확정원가로 고정한 \'요약\' 마진과 값이 다를 수 있습니다.'
+         +'</div>';
     } else {
+      var rebS=cfg.rebate||0;
       scn+='<table class="ca-table" style="width:100%"><thead><tr>'
          +'<th>환율 변동</th><th class="num">적용 환율</th><th class="num">매출(₩)</th><th class="num">매입(₩)</th><th class="num">마진액(₩)</th><th class="num">마진율</th>'
+         + (rebS>0?'<th class="num" style="background:#fde8e8;color:#d23030">리베'+(rebS*100).toFixed(0)+'%<br>마진율</th>':'')
          +'</tr></thead><tbody>';
       deltas.forEach(function(s){
         var rate=baseRate+s.d;
@@ -470,21 +491,27 @@ function caRenderResults(R){
         var sellAdj = R.targetUsd*rate;
         var mK = sellAdj - buyAdj;
         var mP = sellAdj>0?(mK/sellAdj*100):0;
-        var c = mc(mK,mP);
-        var bg = s.d===0?'rgba(45,212,191,.12)':'transparent';
-        var tag = mK<0?' <span style="font-size:10px;color:#ff5a5a">역마진</span>':'';
-        var lbl = s.d===0?'현재 ('+Math.round(baseRate).toLocaleString()+')':(s.d>0?'+'+s.d+'원':s.d+'원');
-        scn+='<tr style="background:'+bg+'">'
+        var mKr=mK-(sellAdj*rebS), mPr=sellAdj>0?mKr/sellAdj*100:0;
+        var isNow=s.d===0;
+        var col=mK<0?'#d23030':'#222';
+        var rowBg=isNow?'background:#eaf7f4;':'';
+        var tag = mK<0?' <span style="font-size:8px">역마진</span>':'';
+        var lbl = isNow?'<b>현재 ('+Math.round(baseRate).toLocaleString()+')</b>':(s.d>0?'+'+s.d+'원':s.d+'원');
+        scn+='<tr style="'+rowBg+'">'
            +'<td style="font-weight:600">'+lbl+'</td>'
            +'<td class="num" style="font-family:var(--mono)">'+Math.round(rate).toLocaleString()+'</td>'
            +'<td class="num">'+Math.round(sellAdj).toLocaleString()+'</td>'
            +'<td class="num">'+Math.round(buyAdj).toLocaleString()+'</td>'
-           +'<td class="num" style="color:'+c+';font-weight:700">'+Math.round(mK).toLocaleString()+tag+'</td>'
-           +'<td class="num" style="color:'+c+';font-weight:700">'+mP.toFixed(1)+'%</td>'
+           +'<td class="num" style="color:'+col+';font-weight:700">'+Math.round(mK).toLocaleString()+'</td>'
+           +'<td class="num" style="color:'+col+';font-weight:700">'+mP.toFixed(1)+'%'+tag+'</td>'
+           + (rebS>0?'<td class="num" style="background:#fde8e8;color:'+(mKr<0?'#d23030':'#222')+';font-weight:700">'+mPr.toFixed(1)+'%'+(mKr<0?' <span style="font-size:8px">역마진</span>':'')+'</td>':'')
            +'</tr>';
       });
       scn+='</tbody></table>';
-      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">· 이 표는 <b>환율이 통째로 변동</b>하는 가정입니다 — 매출뿐 아니라 <b>수입 매입원가도 적용 환율로 재계산</b>되므로, 매입을 확정원가(매입환율 기준)로 고정한 위 \'요약\' 마진과는 값이 다를 수 있습니다.</div>';
+      scn+='<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">'
+         +'· 음영 행 = 현재 실제환율('+Math.round(baseRate).toLocaleString()+') · 역마진은 빨간 글자'+(rebS>0?' · <b style="color:#d23030">빨강 열</b> = 리베이트 '+(rebS*100).toFixed(0)+'% 반영':'')+'<br>'
+         +'· 환율이 통째로 변동하는 가정(매출·수입매입 동시 적용)이라, 매입을 확정원가로 고정한 \'요약\' 마진과 값이 다를 수 있습니다.'
+         +'</div>';
     }
     // 손익분기 환율: 매출(targetUsd×r) = 매입(impUsd×r + domKrw + laborKrw) → r(targetUsd−impUsd)=dom+labor
     var fixed=R.domKrw+R.laborKrw;
@@ -705,6 +732,7 @@ function caPrintReport(){
   var l0=(CA.rows||[]).find(function(r){return (r.lv||0)===0;});
   var subjPn = (reanPn&&reanPn.trim()) || (l0&&l0.pn) || (CA.rows&&CA.rows[0]&&CA.rows[0].pn) || '';
   var subjDesc = (l0&&l0.desc) || '';
+  if(!subjDesc && subjPn){ var _di=(typeof qFindItem==='function')?qFindItem(subjPn):null; if(_di&&_di.d) subjDesc=_di.d; }
   // 결론 산출 (요약 카드의 마진 재계산 대신 R 없으므로 텍스트로 안내)
   var d=new Date();
   var ymd=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
@@ -716,6 +744,7 @@ function caPrintReport(){
     +'.rpt-head{border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:18px}'
     +'h1{font-size:20px;margin:0 0 4px;letter-spacing:-.3px}'
     +'.subj{font-size:13px;color:#333;font-weight:600}'
+    +'.subj2{font-size:12px;color:#555;margin-top:2px}'
     +'.sub{font-size:11.5px;color:#888;margin-top:4px}'
     +'.sec{margin-bottom:18px}.sec-t{font-size:13.5px;font-weight:700;border-left:4px solid #4f7cff;padding-left:8px;margin-bottom:10px}'
     +'#rpt-sum{display:grid;grid-template-columns:1fr 2.6fr;gap:10px;margin-bottom:6px}'
@@ -758,13 +787,13 @@ function caPrintReport(){
   w.document.write('<html><head><meta charset="utf-8"><title>'+fname+'</title><style>'+css+'</style></head><body>'
     +'<div class="rpt-head">'
     +'<h1>원가분석 보고서</h1>'
-    +'<div class="subj">'+(subjPn?('대상 품번: '+subjPn+(subjDesc?'  ('+subjDesc+')':'')):modeLbl)+'</div>'
+    +'<div class="subj">대상 품번: '+(subjPn||'-')+'</div>'
+    +(subjDesc?'<div class="subj2">품명: '+subjDesc+'</div>':'')
     +'<div class="sub">'+modeLbl+' · 진선테크 구매자재 · 작성일 '+ymd+' · 분석품목 '+nItems+'건</div>'
     +'</div>'
     +'<div class="sec"><div class="sec-t">요약</div><div id="rpt-sum">'+cards+'</div></div>'
-    +'<div class="sec"><div class="sec-t">환율 영향 — 환차손익 · 네고 여력</div>'+fx+'</div>'
-    +'<div class="sec"><div class="sec-t">원가 구성</div>'+cost+'</div>'
     +'<div class="sec"><div class="sec-t">환율 시나리오 분석</div>'+scn+'</div>'
+    +'<div class="sec"><div class="sec-t">원가 구성</div>'+cost+'</div>'
     +'<div class="foot">본 보고서는 사내 검토용입니다 · 매입가는 품목 DB 기준이며 실제 견적 시 변동될 수 있습니다</div>'
     +'<button onclick="window.print()" style="margin-top:14px;padding:9px 20px;background:#4f7cff;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer">🖨 인쇄 / PDF 저장</button>'
     +'</body></html>');
