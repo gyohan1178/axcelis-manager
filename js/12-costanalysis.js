@@ -361,11 +361,22 @@ function caRenderResults(R){
     var hasTgt=R.targetInput;
     var tgtMKr=hasTgt?(tgtMK-tgtSell*reb):null;        // 리베이트 반영 타겟 마진
     var tgtMPr=(hasTgt&&tgtSell>0)?tgtMKr/tgtSell*100:null;
+    // 환율 시나리오 마진(네고가 우선, 없으면 현재가) — 현재실제/-100/-200
+    var baseR=(cfg.realRate>0?cfg.realRate:cfg.sellRate);
+    var priceUsd = hasTgt?R.targetUsd:(curUsd>0?curUsd:R.targetUsd);
+    var fxMargin=function(rate){
+      var buy=R.impUsd*rate + R.domKrw + R.laborKrw;
+      var sell=priceUsd*rate;
+      return { mK:sell-buy, mP:sell>0?(sell-buy)/sell*100:0, sell:sell };
+    };
     CA._last={
       pn:pn, desc:dsc, buyKrw:R.totalBuyKrw,
       curUsd:curUsd, curMP:curUsd>0?curMP:null,
       tgtUsd:hasTgt?R.targetUsd:null, tgtMP:hasTgt?tgtMP:null,
-      tgtMPr:tgtMPr, rebate:reb, noPrice:R.noPrice||0, nItems:(R.items||[]).filter(function(x){return !x.excluded;}).length
+      tgtMPr:tgtMPr, rebate:reb, noPrice:R.noPrice||0, nItems:(R.items||[]).filter(function(x){return !x.excluded;}).length,
+      priceUsd:priceUsd, baseRate:baseR,
+      fxNow:fxMargin(baseR), fxM100:fxMargin(baseR-100), fxM200:fxMargin(baseR-200),
+      impUsd:R.impUsd, domKrw:R.domKrw, laborKrw:R.laborKrw, sellRate:cfg.sellRate
     };
   })();
 
@@ -825,9 +836,13 @@ function caPrintReport(){
 var CA_SHEET=[];  // 담긴 품목들
 function caAddToSheet(){
   if(!CA._last || !CA._last.pn){ qToast('먼저 품목을 분석하세요','info'); return; }
-  // 중복 품번이면 갱신
   var i=CA_SHEET.findIndex(function(x){return x.pn===CA._last.pn;});
+  var prevQty = i>=0 ? CA_SHEET[i].annualQty : '';
+  var q=prompt('['+CA._last.pn+'] 연간 수량을 입력하세요 (모르면 1 또는 비워두기)', prevQty||'1');
+  if(q===null) return; // 취소
+  var annualQty=parseFloat(String(q).replace(/,/g,''))||1;
   var entry=JSON.parse(JSON.stringify(CA._last));
+  entry.annualQty=annualQty;
   if(i>=0){ CA_SHEET[i]=entry; qToast('갑지 갱신: '+entry.pn,'ok'); }
   else { CA_SHEET.push(entry); qToast('갑지에 담음: '+entry.pn+' ('+CA_SHEET.length+'건)','ok'); }
   caRenderSheetList();
@@ -840,15 +855,6 @@ function caClearSheet(){
   if(CA_SHEET.length && !confirm('갑지에 담긴 '+CA_SHEET.length+'건을 모두 비울까요?')) return;
   CA_SHEET=[]; caRenderSheetList();
 }
-function caJudge(e){
-  // 판정 기준: 리베이트 반영 마진(있으면) > 타겟마진 > 현재마진
-  var m = (e.tgtMPr!=null)?e.tgtMPr : (e.tgtMP!=null?e.tgtMP : e.curMP);
-  if(m==null) return {t:'원가분석',c:'#888'};
-  if(m<0) return {t:'거절(역마진)',c:'#d23030'};
-  if(m<8) return {t:'재협상',c:'#f59e0b'};
-  if(m<15) return {t:'조건부 수락',c:'#3b82c4'};
-  return {t:'수락',c:'#12b886'};
-}
 function caRenderSheetList(){
   var el=document.getElementById('ca-sheet-list'); if(!el) return;
   if(!CA_SHEET.length){ el.innerHTML='<span style="font-size:12px;color:var(--text3)">담긴 품목이 없습니다. 품목 분석 후 "갑지에 담기"를 누르세요.</span>'; return; }
@@ -857,6 +863,7 @@ function caRenderSheetList(){
     h+='<span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11.5px">'
       +'<b>'+e.pn+'</b>'
       +'<span style="color:var(--text3)">'+(e.tgtMP!=null?e.tgtMP.toFixed(1)+'%':(e.curMP!=null?e.curMP.toFixed(1)+'%':'원가'))+'</span>'
+      +'<span style="color:var(--accent);font-size:10px">×'+(e.annualQty||1).toLocaleString()+'</span>'
       +'<span onclick="caRemoveFromSheet(\''+e.pn+'\')" style="cursor:pointer;color:var(--red);font-weight:700">×</span>'
       +'</span>';
   });
@@ -865,56 +872,82 @@ function caRenderSheetList(){
 }
 function caPrintSheet(){
   if(!CA_SHEET.length){ qToast('갑지에 담긴 품목이 없습니다','info'); return; }
+  var title=prompt('갑지 제목을 입력하세요 (프로젝트명 등)', (window._caSheetTitle||'원가분석 종합'));
+  if(title===null) return;
+  window._caSheetTitle=title;
   var d=new Date();
   var ymd=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
   var reb=(CA_SHEET[0]&&CA_SHEET[0].rebate)||0;
-  var w=window.open('','_ca_sheet','width=1000,height=1200');
+  var baseRate=(CA_SHEET[0]&&CA_SHEET[0].baseRate)||1500;
+  var w=window.open('','_ca_sheet','width=1100,height=1200');
   if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
-  // 집계
-  var cnt={수락:0,'조건부 수락':0,재협상:0,'거절(역마진)':0,원가분석:0};
+  var fmtP=function(v){ return v==null?'—':(v.toFixed(1)+'%'); };
+  var pcol=function(v){ return v==null?'#999':(v<0?'#d23030':(v<8?'#f59e0b':'#222')); };
+  // 연간 합계 누적
+  var sumYearSell=0, sumYearMK_now=0, sumYearMK_100=0, sumYearMK_200=0, sumYearBuy=0;
   var rows='';
   CA_SHEET.forEach(function(e,idx){
-    var j=caJudge(e);
-    cnt[j.t]=(cnt[j.t]||0)+1;
-    var fmtP=function(v){ return v==null?'—':(v.toFixed(1)+'%'); };
-    var pcol=function(v){ return v==null?'#999':(v<0?'#d23030':(v<8?'#f59e0b':'#222')); };
+    var qty=e.annualQty||1;
+    // 단가(개당) 매출/마진 = priceUsd 기준 (네고가 있으면 네고가, 없으면 현재가)
+    var yearSell = (e.fxNow?e.fxNow.sell:0)*qty;
+    var yMKnow = (e.fxNow?e.fxNow.mK:0)*qty;
+    var yMK100 = (e.fxM100?e.fxM100.mK:0)*qty;
+    var yMK200 = (e.fxM200?e.fxM200.mK:0)*qty;
+    sumYearSell+=yearSell; sumYearMK_now+=yMKnow; sumYearMK_100+=yMK100; sumYearMK_200+=yMK200;
+    sumYearBuy+=(e.buyKrw||0)*qty;
+    var eok=function(x){ return Math.round(x/10000).toLocaleString(); }; // 만원 단위
     rows+='<tr>'
       +'<td class="num">'+(idx+1)+'</td>'
       +'<td style="font-family:monospace">'+e.pn+'</td>'
       +'<td>'+(e.desc||'-')+'</td>'
-      +'<td class="num">₩'+Math.round(e.buyKrw).toLocaleString()+'</td>'
-      +'<td class="num">'+(e.curUsd?'$'+e.curUsd.toLocaleString():'—')+'</td>'
-      +'<td class="num" style="color:'+pcol(e.curMP)+'">'+fmtP(e.curMP)+'</td>'
-      +'<td class="num">'+(e.tgtUsd?'$'+e.tgtUsd.toLocaleString():'—')+'</td>'
-      +'<td class="num" style="color:'+pcol(e.tgtMP)+';font-weight:700">'+fmtP(e.tgtMP)+'</td>'
-      +'<td class="num" style="color:'+pcol(e.tgtMPr)+';background:#fde8e8">'+fmtP(e.tgtMPr)+'</td>'
-      +'<td style="text-align:center;color:'+j.c+';font-weight:700">'+j.t+'</td>'
+      +'<td class="num">'+qty.toLocaleString()+'</td>'
+      +'<td class="num">'+(e.priceUsd?'$'+e.priceUsd.toLocaleString(undefined,{maximumFractionDigits:0}):'—')+(e.tgtUsd?' <span style="font-size:8px;color:#f59e0b">네고</span>':'')+'</td>'
+      // 환율 3구간 마진율
+      +'<td class="num" style="color:'+pcol(e.fxNow&&e.fxNow.mP)+';font-weight:700;background:#eaf7f4">'+fmtP(e.fxNow&&e.fxNow.mP)+'</td>'
+      +'<td class="num" style="color:'+pcol(e.fxM100&&e.fxM100.mP)+'">'+fmtP(e.fxM100&&e.fxM100.mP)+'</td>'
+      +'<td class="num" style="color:'+pcol(e.fxM200&&e.fxM200.mP)+'">'+fmtP(e.fxM200&&e.fxM200.mP)+'</td>'
+      // 연간 금액(만원)
+      +'<td class="num">'+eok(yearSell)+'</td>'
+      +'<td class="num" style="color:'+pcol(e.fxNow&&e.fxNow.mP)+';font-weight:700">'+eok(yMKnow)+'</td>'
       +'</tr>';
   });
-  var concl='수락 '+cnt['수락']+'건 · 조건부 '+cnt['조건부 수락']+'건 · 재협상 '+cnt['재협상']+'건 · 거절 '+cnt['거절(역마진)']+'건'+(cnt['원가분석']?' · 원가분석 '+cnt['원가분석']+'건':'');
-  var css='body{font-family:-apple-system,"Malgun Gothic","맑은 고딕",sans-serif;color:#1a1a1a;margin:0;padding:30px 34px;background:#fff}'
-    +'.rpt-head{border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:18px}'
+  var eok=function(x){ return Math.round(x/10000).toLocaleString(); };
+  var totMP_now = sumYearSell>0?sumYearMK_now/sumYearSell*100:0;
+  var totMP_200 = sumYearSell>0?sumYearMK_200/sumYearSell*100:0;
+  var css='body{font-family:-apple-system,"Malgun Gothic","맑은 고딕",sans-serif;color:#1a1a1a;margin:0;padding:28px 32px;background:#fff}'
+    +'.rpt-head{border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:16px}'
     +'h1{font-size:20px;margin:0 0 4px}.sub{font-size:11.5px;color:#888;margin-top:4px}'
-    +'table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:16px}'
-    +'th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f4f5f7;font-weight:600;font-size:10.5px}.num{text-align:right;font-variant-numeric:tabular-nums}'
-    +'.concl{background:#f4f8ff;border:1px solid #cdddff;border-radius:8px;padding:12px 14px;font-size:13px;font-weight:600}'
-    +'.note{font-size:10px;color:#999;margin-top:6px;line-height:1.5}'
-    +'.foot{margin-top:26px;border-top:1px solid #ddd;padding-top:8px;font-size:10px;color:#aaa;text-align:center}'
-    +'@page{size:A4 landscape;margin:10mm}@media print{button{display:none}body{padding:0}}';
-  w.document.write('<html><head><meta charset="utf-8"><title>원가분석_갑지_'+ymd+'</title><style>'+css+'</style></head><body>'
-    +'<div class="rpt-head"><h1>원가분석 종합 (갑지)</h1>'
-    +'<div class="sub">진선테크 구매자재 · 작성일 '+ymd+' · 대상 '+CA_SHEET.length+'개 품목'+(reb>0?' · 연말 리베이트 '+(reb*100).toFixed(0)+'% 반영':'')+'</div></div>'
-    +'<table><thead><tr>'
-    +'<th class="num">No</th><th>품번</th><th>품명</th><th class="num">매입원가(₩)</th>'
-    +'<th class="num">현재가($)</th><th class="num">현재 마진</th>'
-    +'<th class="num">네고가($)</th><th class="num">네고 마진</th>'
-    +'<th class="num">리베'+(reb>0?(reb*100).toFixed(0)+'%':'')+' 후</th><th style="text-align:center">판정</th>'
-    +'</tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div class="concl">📊 종합: '+concl+'</div>'
-    +'<div class="note">· 판정 기준: 리베이트 반영 마진(없으면 네고/현재 마진) — 15%↑ 수락 · 8~15% 조건부 · 0~8% 재협상 · 0%↓ 거절<br>'
-    +'· 마진은 견적 기준환율 기준이며, 환율·매입가 변동 시 달라질 수 있습니다. 상세는 품목별 보고서를 참조하십시오.</div>'
-    +'<div class="foot">본 보고서는 사내 검토용입니다 · 매입가는 품목 DB 기준</div>'
-    +'<button onclick="window.print()" style="margin-top:14px;padding:9px 20px;background:#4f7cff;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer">🖨 인쇄 / PDF 저장</button>'
+    +'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}'
+    +'th,td{border:1px solid #ddd;padding:5px 7px;text-align:left}th{background:#f4f5f7;font-weight:600;font-size:10px}.num{text-align:right;font-variant-numeric:tabular-nums}'
+    +'tfoot td{background:#eef3ff;font-weight:700;border-top:2px solid #4f7cff}'
+    +'.concl{background:#f4f8ff;border:1px solid #cdddff;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7}'
+    +'.note{font-size:9.5px;color:#999;margin-top:6px;line-height:1.5}'
+    +'.foot{margin-top:20px;border-top:1px solid #ddd;padding-top:8px;font-size:9.5px;color:#aaa;text-align:center}'
+    +'@page{size:A4 landscape;margin:9mm}@media print{button{display:none}body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+  var dropPctNow = totMP_now-totMP_200;
+  w.document.write('<html><head><meta charset="utf-8"><title>'+title+'_'+ymd+'</title><style>'+css+'</style></head><body>'
+    +'<div class="rpt-head"><h1>'+title.replace(/</g,'&lt;')+'</h1>'
+    +'<div class="sub">진선테크 구매자재 · 작성일 '+ymd+' · 대상 '+CA_SHEET.length+'개 품목 · 기준 실제환율 @'+Math.round(baseRate).toLocaleString()+(reb>0?' · 리베이트 '+(reb*100).toFixed(0)+'%':'')+'</div></div>'
+    +'<table><thead>'
+    +'<tr><th rowspan="2" class="num">No</th><th rowspan="2">품번</th><th rowspan="2">품명</th><th rowspan="2" class="num">연간<br>수량</th><th rowspan="2" class="num">단가($)</th>'
+    +'<th colspan="3" style="text-align:center;border-bottom:1px solid #ddd">환율별 마진율</th>'
+    +'<th colspan="2" style="text-align:center;border-bottom:1px solid #ddd;background:#eef3ff">연간 금액(만원)</th></tr>'
+    +'<tr><th class="num" style="background:#eaf7f4">현재('+Math.round(baseRate).toLocaleString()+')</th><th class="num">-100원</th><th class="num">-200원</th>'
+    +'<th class="num" style="background:#eef3ff">매출</th><th class="num" style="background:#eef3ff">마진</th></tr>'
+    +'</thead><tbody>'+rows+'</tbody>'
+    +'<tfoot><tr><td colspan="8" style="text-align:right">연간 합계 →</td>'
+    +'<td class="num">'+eok(sumYearSell)+'</td>'
+    +'<td class="num" style="color:'+pcol(totMP_now)+'">'+eok(sumYearMK_now)+'</td></tr></tfoot>'
+    +'</table>'
+    +'<div class="concl">📊 <b>연간 종합</b> — 매출 약 <b>'+Math.round(sumYearSell/100000000*10)/10+'억원</b>, '
+    +'마진 약 <b style="color:'+pcol(totMP_now)+'">'+Math.round(sumYearMK_now/100000000*10)/10+'억원 ('+totMP_now.toFixed(1)+'%)</b> '
+    +'<span style="color:#888">@현재환율 '+Math.round(baseRate).toLocaleString()+'</span><br>'
+    +'⚠ 환율 <b>-200원('+Math.round(baseRate-200).toLocaleString()+')</b> 하락 시 — 마진 약 <b style="color:'+pcol(totMP_200)+'">'+Math.round(sumYearMK_200/100000000*10)/10+'억원 ('+totMP_200.toFixed(1)+'%)</b>, '
+    +'현재 대비 <b style="color:#d23030">'+dropPctNow.toFixed(1)+'%p 하락</b></div>'
+    +'<div class="note">· 마진율은 단가(네고가 있으면 네고가, 없으면 현재가) 기준 · 환율 변동 시 매출·수입매입 동시 적용 · 연간 금액 = 단가 마진 × 연간수량<br>'
+    +'· 상세 분석은 품목별 보고서를 참조하십시오. 매입가는 품목 DB 기준이며 실제 견적 시 변동될 수 있습니다.</div>'
+    +'<div class="foot">본 보고서는 사내 검토용입니다</div>'
+    +'<button onclick="window.print()" style="margin-top:12px;padding:9px 20px;background:#4f7cff;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer">🖨 인쇄 / PDF 저장</button>'
     +'</body></html>');
   w.document.close();
 }
