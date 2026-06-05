@@ -153,6 +153,15 @@ function upImport(){
       dept:toStr(mk('dept')||'지원본부')||'지원본부',
       ia:toStr(mk('op')||'')!=='',
     };
+    // 연도별매입가 시트 병합: DB시트 값이 비어있으면 보충 (구매처/매입가/납기/MOQ)
+    if(typeof UP_PRICE_MAP!=='undefined' && UP_PRICE_MAP[pn]){
+      var pm=UP_PRICE_MAP[pn];
+      if(!obj.by && pm.by) obj.by=pm.by;
+      if(!obj.k5 && pm.k5) obj.k5=pm.k5;
+      if(!obj.k6 && pm.k6) obj.k6=pm.k6;
+      if(!obj.lt && pm.lt) obj.lt=pm.lt;
+      if((!obj.mq||obj.mq===1) && pm.mq) obj.mq=pm.mq;
+    }
     // LT·FCST 모두 있으면 안전재고 자동계산
     if(obj.lt>0&&obj.fc>0&&obj.sf===0)obj.sf=Math.round(obj.fc*(obj.lt/4.3+1));
     const idx=DB.findIndex(x=>x.pn===pn);

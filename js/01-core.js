@@ -1318,6 +1318,7 @@ const UP_FIELDS=[
 ];
 
 let upRows=[],upHeaders=[];
+var UP_PRICE_MAP={};  // 연도별매입가 시트 병합 맵 (품번 → {by,k5,k6,lt,mq})
 
 function openUpload(){
   // 초기화
@@ -1357,6 +1358,39 @@ function upLoad(file){
       if(raw.length<2){alert('데이터가 없습니다 (헤더 + 1행 이상 필요)');return;}
       upHeaders=raw[0].map(String);
       upRows=raw.slice(1).filter(r=>r.some(c=>c!==''));
+
+      // ── 연도별매입가 시트 병합용 맵 (구매처/매입가가 DB시트에 수식이라 비어옴) ──
+      // 연도별매입가: A품번 / I 25년(₩) / K 26년(₩) / L 구매처 / M 납기 / N MOQ
+      UP_PRICE_MAP = {};
+      var priceSheetName = wb.SheetNames.find(n=>n.trim()==='연도별매입가') ||
+                           wb.SheetNames.find(n=>n.replace(/\s/g,'').includes('연도별매입'));
+      if(priceSheetName){
+        var pWs=wb.Sheets[priceSheetName];
+        var pRaw=XLSX.utils.sheet_to_json(pWs,{header:1,defval:''});
+        if(pRaw.length>1){
+          // 헤더로 열 위치 자동 탐색 (고정 위치 폴백)
+          var ph=pRaw[0].map(function(c){return String(c).replace(/\s/g,'');});
+          var findCol=function(cands, fb){ for(var ci=0;ci<ph.length;ci++){ for(var j=0;j<cands.length;j++){ if(ph[ci]===cands[j]) return ci; } } return fb; };
+          var cPn=findCol(['품번'],0);
+          var cK5=findCol(['25년(₩)','25년(\\)','25년매입가'],8);
+          var cK6=findCol(['26년(₩)','26년(\\)','26년매입가'],10);
+          var cBy=findCol(['구매처'],11);
+          var cLt=findCol(['납기','LT㈜','LT(주)'],12);
+          var cMq=findCol(['MOQ'],13);
+          for(var pr=1; pr<pRaw.length; pr++){
+            var prow=pRaw[pr]; if(!prow) continue;
+            var pkey=String(prow[cPn]||'').trim(); if(!pkey) continue;
+            UP_PRICE_MAP[pkey]={
+              by: String(prow[cBy]||'').trim(),
+              k5: parseFloat(String(prow[cK5]||'').replace(/,/g,''))||0,
+              k6: parseFloat(String(prow[cK6]||'').replace(/,/g,''))||0,
+              lt: parseFloat(String(prow[cLt]||'').replace(/,/g,''))||0,
+              mq: parseFloat(String(prow[cMq]||'').replace(/,/g,''))||0
+            };
+          }
+          console.log('연도별매입가 병합 맵:', Object.keys(UP_PRICE_MAP).length, '개 품번');
+        }
+      }
 
       // BOM 시트 자동 파싱 (시트명에 'BOM' 포함 또는 2번째 시트)
       const bomSheetName=wb.SheetNames.find(n=>n.toUpperCase().includes('BOM'))||
