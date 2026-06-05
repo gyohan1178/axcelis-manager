@@ -359,9 +359,13 @@ function apiPost(body) {
         }
         var chunks = [];
         for(var i=0;i<rows.length;i+=500) chunks.push(rows.slice(i,i+500));
-        var _fail=null, _ins=0;
-        // PGRST204(컬럼 없음) 발생 시 해당 컬럼 제거 후 재시도
+        var _fail=null, _ins=0, _dropped={};
+        // PGRST204(컬럼 없음) 발생 시 해당 컬럼 제거 후 재시도. 제거한 컬럼은 기억해 다음 청크에도 적용.
         function _postChunk(chunk, retries){
+          // 이미 없다고 확인된 컬럼은 미리 제거
+          if(Object.keys(_dropped).length){
+            chunk.forEach(function(o){ for(var dk in _dropped) delete o[dk]; });
+          }
           return fetch(SB_URL+'/rest/v1/'+tbl, {
             method:'POST',
             headers:sbHeaders({'Prefer':'return=minimal'}),
@@ -369,11 +373,10 @@ function apiPost(body) {
           }).then(function(r){
             if(r.ok){ _ins += chunk.length; return; }
             return r.text().then(function(t){
-              // "Could not find the 'XXX' column" → 그 컬럼 제거 후 재시도
               var mm = t && t.match(/Could not find the '([^']+)' column/);
               if(mm && retries>0){
-                var badCol = mm[1];
-                chunk.forEach(function(o){ delete o[badCol]; });
+                _dropped[mm[1]] = 1;
+                chunk.forEach(function(o){ delete o[mm[1]]; });
                 return _postChunk(chunk, retries-1);
               }
               if(!_fail) _fail=t; console.error('SB insert error:',t);
@@ -381,7 +384,7 @@ function apiPost(body) {
           });
         }
         return chunks.reduce(function(p,chunk){
-          return p.then(function(){ return _postChunk(chunk, 8); });
+          return p.then(function(){ return _postChunk(chunk, 20); });
         }, Promise.resolve()).then(function(){ return {fail:_fail, ins:_ins}; });
       })
       .then(function(res){
