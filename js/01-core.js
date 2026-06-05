@@ -110,7 +110,8 @@ function sbMapRow(r, sheet, company){
     return row;
   }
   if(sheet === 'db_items'){
-    // 모든 행이 동일한 키 집합을 갖도록 고정 (PGRST102 'All object keys must match' 방지)
+    // 전체 컬럼 전송. 서버에 없는 컬럼은 insert 시 자동 제거+재시도됨(PGRST204 처리).
+    // 모든 행 동일 키 유지(PGRST102 방지).
     row['품번']      = String(r.pn||'').trim();
     row['품명']      = r.d||'';
     row['REV']       = r.rv||'';
@@ -124,16 +125,8 @@ function sbMapRow(r, sheet, company){
     row['MOQ']       = r.mq||0;
     row['25년매입가'] = r.k5||0;
     row['26년매입가'] = r.k6||0;
-    row['24년매입가'] = r.k4||0;
-    row['매입가($)'] = r.ud||0;
-    row['FCST']      = r.fc||0;
-    row['안전재고']  = r.sf||0;
-    row['기존품품번'] = r.op||'';
-    row['기존품제조사'] = r.om||'';
     row['관리대상']  = r.managed||'';
     row['관리부서']  = r.dept||'';
-    row['대체품여부'] = r.ia?'Y':'';
-    row['대체승인일'] = r.ay||'';
     return row;
   }
   // po_data 필드 매핑 (앱 내부명 → DB 컬럼명)
@@ -367,17 +360,28 @@ function apiPost(body) {
         var chunks = [];
         for(var i=0;i<rows.length;i+=500) chunks.push(rows.slice(i,i+500));
         var _fail=null, _ins=0;
-        return chunks.reduce(function(p,chunk){
-          return p.then(function(){
-            return fetch(SB_URL+'/rest/v1/'+tbl, {
-              method:'POST',
-              headers:sbHeaders({'Prefer':'return=minimal'}),
-              body:JSON.stringify(chunk)
-            }).then(function(r){
-              if(!r.ok) return r.text().then(function(t){ if(!_fail) _fail=t; console.error('SB insert error:',t); });
-              _ins += chunk.length;
+        // PGRST204(컬럼 없음) 발생 시 해당 컬럼 제거 후 재시도
+        function _postChunk(chunk, retries){
+          return fetch(SB_URL+'/rest/v1/'+tbl, {
+            method:'POST',
+            headers:sbHeaders({'Prefer':'return=minimal'}),
+            body:JSON.stringify(chunk)
+          }).then(function(r){
+            if(r.ok){ _ins += chunk.length; return; }
+            return r.text().then(function(t){
+              // "Could not find the 'XXX' column" → 그 컬럼 제거 후 재시도
+              var mm = t && t.match(/Could not find the '([^']+)' column/);
+              if(mm && retries>0){
+                var badCol = mm[1];
+                chunk.forEach(function(o){ delete o[badCol]; });
+                return _postChunk(chunk, retries-1);
+              }
+              if(!_fail) _fail=t; console.error('SB insert error:',t);
             });
           });
+        }
+        return chunks.reduce(function(p,chunk){
+          return p.then(function(){ return _postChunk(chunk, 8); });
         }, Promise.resolve()).then(function(){ return {fail:_fail, ins:_ins}; });
       })
       .then(function(res){
