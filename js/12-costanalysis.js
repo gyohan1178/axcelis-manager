@@ -10,6 +10,7 @@ function caInit(){
   caLoadVendorMap();
   caLoadCfg();
   caRenderConfigDefaults();
+  caRenderSheetList();
   if(CA.mode==='vendor') caRenderVendors();
 }
 function caLoadVendorMap(){
@@ -348,6 +349,25 @@ function caRenderResults(R){
   var tgtSell=R.targetUsd*sr, tgtMK=tgtSell-R.totalBuyKrw, tgtMP=tgtSell>0?tgtMK/tgtSell*100:0;
   var diffUsd=curUsd>0?(R.targetUsd-curUsd):0;       // 타겟−현재 (음수=네고로 하락)
   var diffMK=curUsd>0?(tgtMK-curMK):0;
+
+  // 갑지용 마지막 분석결과 캡처
+  (function(){
+    var reanPn=(document.getElementById('ca-rean-pn')||{}).value;
+    var l0=(CA.rows||[]).find(function(r){return (r.lv||0)===0;});
+    var pn=(reanPn&&reanPn.trim())||(l0&&l0.pn)||(CA.rows&&CA.rows[0]&&CA.rows[0].pn)||'';
+    var dsc=(l0&&l0.desc)||'';
+    if(!dsc&&pn&&typeof qFindItem==='function'){ var di=qFindItem(pn); if(di&&di.d) dsc=di.d; }
+    var reb=cfg.rebate||0;
+    var hasTgt=R.targetInput;
+    var tgtMKr=hasTgt?(tgtMK-tgtSell*reb):null;        // 리베이트 반영 타겟 마진
+    var tgtMPr=(hasTgt&&tgtSell>0)?tgtMKr/tgtSell*100:null;
+    CA._last={
+      pn:pn, desc:dsc, buyKrw:R.totalBuyKrw,
+      curUsd:curUsd, curMP:curUsd>0?curMP:null,
+      tgtUsd:hasTgt?R.targetUsd:null, tgtMP:hasTgt?tgtMP:null,
+      tgtMPr:tgtMPr, rebate:reb, noPrice:R.noPrice||0, nItems:(R.items||[]).filter(function(x){return !x.excluded;}).length
+    };
+  })();
 
   var rightRows='';
   // 현재 판매단가 행 (입력 시에만)
@@ -799,4 +819,102 @@ function caPrintReport(){
     +'</body></html>');
   w.document.close();
   w.document.title=fname;
+}
+
+/* ── 갑지(다품목 표지) ── */
+var CA_SHEET=[];  // 담긴 품목들
+function caAddToSheet(){
+  if(!CA._last || !CA._last.pn){ qToast('먼저 품목을 분석하세요','info'); return; }
+  // 중복 품번이면 갱신
+  var i=CA_SHEET.findIndex(function(x){return x.pn===CA._last.pn;});
+  var entry=JSON.parse(JSON.stringify(CA._last));
+  if(i>=0){ CA_SHEET[i]=entry; qToast('갑지 갱신: '+entry.pn,'ok'); }
+  else { CA_SHEET.push(entry); qToast('갑지에 담음: '+entry.pn+' ('+CA_SHEET.length+'건)','ok'); }
+  caRenderSheetList();
+}
+function caRemoveFromSheet(pn){
+  CA_SHEET=CA_SHEET.filter(function(x){return x.pn!==pn;});
+  caRenderSheetList();
+}
+function caClearSheet(){
+  if(CA_SHEET.length && !confirm('갑지에 담긴 '+CA_SHEET.length+'건을 모두 비울까요?')) return;
+  CA_SHEET=[]; caRenderSheetList();
+}
+function caJudge(e){
+  // 판정 기준: 리베이트 반영 마진(있으면) > 타겟마진 > 현재마진
+  var m = (e.tgtMPr!=null)?e.tgtMPr : (e.tgtMP!=null?e.tgtMP : e.curMP);
+  if(m==null) return {t:'원가분석',c:'#888'};
+  if(m<0) return {t:'거절(역마진)',c:'#d23030'};
+  if(m<8) return {t:'재협상',c:'#f59e0b'};
+  if(m<15) return {t:'조건부 수락',c:'#3b82c4'};
+  return {t:'수락',c:'#12b886'};
+}
+function caRenderSheetList(){
+  var el=document.getElementById('ca-sheet-list'); if(!el) return;
+  if(!CA_SHEET.length){ el.innerHTML='<span style="font-size:12px;color:var(--text3)">담긴 품목이 없습니다. 품목 분석 후 "갑지에 담기"를 누르세요.</span>'; return; }
+  var h='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">';
+  CA_SHEET.forEach(function(e){
+    h+='<span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11.5px">'
+      +'<b>'+e.pn+'</b>'
+      +'<span style="color:var(--text3)">'+(e.tgtMP!=null?e.tgtMP.toFixed(1)+'%':(e.curMP!=null?e.curMP.toFixed(1)+'%':'원가'))+'</span>'
+      +'<span onclick="caRemoveFromSheet(\''+e.pn+'\')" style="cursor:pointer;color:var(--red);font-weight:700">×</span>'
+      +'</span>';
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+function caPrintSheet(){
+  if(!CA_SHEET.length){ qToast('갑지에 담긴 품목이 없습니다','info'); return; }
+  var d=new Date();
+  var ymd=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  var reb=(CA_SHEET[0]&&CA_SHEET[0].rebate)||0;
+  var w=window.open('','_ca_sheet','width=1000,height=1200');
+  if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  // 집계
+  var cnt={수락:0,'조건부 수락':0,재협상:0,'거절(역마진)':0,원가분석:0};
+  var rows='';
+  CA_SHEET.forEach(function(e,idx){
+    var j=caJudge(e);
+    cnt[j.t]=(cnt[j.t]||0)+1;
+    var fmtP=function(v){ return v==null?'—':(v.toFixed(1)+'%'); };
+    var pcol=function(v){ return v==null?'#999':(v<0?'#d23030':(v<8?'#f59e0b':'#222')); };
+    rows+='<tr>'
+      +'<td class="num">'+(idx+1)+'</td>'
+      +'<td style="font-family:monospace">'+e.pn+'</td>'
+      +'<td>'+(e.desc||'-')+'</td>'
+      +'<td class="num">₩'+Math.round(e.buyKrw).toLocaleString()+'</td>'
+      +'<td class="num">'+(e.curUsd?'$'+e.curUsd.toLocaleString():'—')+'</td>'
+      +'<td class="num" style="color:'+pcol(e.curMP)+'">'+fmtP(e.curMP)+'</td>'
+      +'<td class="num">'+(e.tgtUsd?'$'+e.tgtUsd.toLocaleString():'—')+'</td>'
+      +'<td class="num" style="color:'+pcol(e.tgtMP)+';font-weight:700">'+fmtP(e.tgtMP)+'</td>'
+      +'<td class="num" style="color:'+pcol(e.tgtMPr)+';background:#fde8e8">'+fmtP(e.tgtMPr)+'</td>'
+      +'<td style="text-align:center;color:'+j.c+';font-weight:700">'+j.t+'</td>'
+      +'</tr>';
+  });
+  var concl='수락 '+cnt['수락']+'건 · 조건부 '+cnt['조건부 수락']+'건 · 재협상 '+cnt['재협상']+'건 · 거절 '+cnt['거절(역마진)']+'건'+(cnt['원가분석']?' · 원가분석 '+cnt['원가분석']+'건':'');
+  var css='body{font-family:-apple-system,"Malgun Gothic","맑은 고딕",sans-serif;color:#1a1a1a;margin:0;padding:30px 34px;background:#fff}'
+    +'.rpt-head{border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:18px}'
+    +'h1{font-size:20px;margin:0 0 4px}.sub{font-size:11.5px;color:#888;margin-top:4px}'
+    +'table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:16px}'
+    +'th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f4f5f7;font-weight:600;font-size:10.5px}.num{text-align:right;font-variant-numeric:tabular-nums}'
+    +'.concl{background:#f4f8ff;border:1px solid #cdddff;border-radius:8px;padding:12px 14px;font-size:13px;font-weight:600}'
+    +'.note{font-size:10px;color:#999;margin-top:6px;line-height:1.5}'
+    +'.foot{margin-top:26px;border-top:1px solid #ddd;padding-top:8px;font-size:10px;color:#aaa;text-align:center}'
+    +'@page{size:A4 landscape;margin:10mm}@media print{button{display:none}body{padding:0}}';
+  w.document.write('<html><head><meta charset="utf-8"><title>원가분석_갑지_'+ymd+'</title><style>'+css+'</style></head><body>'
+    +'<div class="rpt-head"><h1>원가분석 종합 (갑지)</h1>'
+    +'<div class="sub">진선테크 구매자재 · 작성일 '+ymd+' · 대상 '+CA_SHEET.length+'개 품목'+(reb>0?' · 연말 리베이트 '+(reb*100).toFixed(0)+'% 반영':'')+'</div></div>'
+    +'<table><thead><tr>'
+    +'<th class="num">No</th><th>품번</th><th>품명</th><th class="num">매입원가(₩)</th>'
+    +'<th class="num">현재가($)</th><th class="num">현재 마진</th>'
+    +'<th class="num">네고가($)</th><th class="num">네고 마진</th>'
+    +'<th class="num">리베'+(reb>0?(reb*100).toFixed(0)+'%':'')+' 후</th><th style="text-align:center">판정</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="concl">📊 종합: '+concl+'</div>'
+    +'<div class="note">· 판정 기준: 리베이트 반영 마진(없으면 네고/현재 마진) — 15%↑ 수락 · 8~15% 조건부 · 0~8% 재협상 · 0%↓ 거절<br>'
+    +'· 마진은 견적 기준환율 기준이며, 환율·매입가 변동 시 달라질 수 있습니다. 상세는 품목별 보고서를 참조하십시오.</div>'
+    +'<div class="foot">본 보고서는 사내 검토용입니다 · 매입가는 품목 DB 기준</div>'
+    +'<button onclick="window.print()" style="margin-top:14px;padding:9px 20px;background:#4f7cff;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer">🖨 인쇄 / PDF 저장</button>'
+    +'</body></html>');
+  w.document.close();
 }
