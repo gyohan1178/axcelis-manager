@@ -298,14 +298,25 @@ function caRun(){
   var targetUsd = perItemTarget>0 ? perItemTarget : (totalTargetInput||0);
   var targetKrw = targetUsd * cfg.sellRate;
 
-  // 권장가 기능 제거: Target 미입력 시 targetUsd는 0으로 유지 (현재가 기준만 분석)
-  var suggestUsd=0;
-
   // 현재 판매금액($) — 네고 전 기준
   var currentUsd = caToN((document.getElementById('ca-current-usd')||{}).value)||0;
 
+  // 권장단가: 현재가·Target 둘 다 미입력 시, 매입가 구간별 자동마진으로 역산 (리베이트 미반영)
+  // 권장단가($) = Σ [ 품목매입가 / (1-마진율) ] / 기준환율  + 작업비/(1-작업마진)/환율
+  var suggestUsd=0;
+  var noPriceInput = (currentUsd<=0) && (targetUsd<=0);
+  if(noPriceInput){
+    items.forEach(function(it){
+      if(it.excluded || it.buyKrw==null) return;
+      var m=(it.marginOverride!=null)?(it.marginOverride/100):caMarg(it.buyKrw,cfg);
+      if(m>=1) m=0.99;
+      suggestUsd += (it.buyKrw/(1-m)/cfg.sellRate)*it.qty;
+    });
+    if(laborKrw>0){ var lm=cfg.laborMarg>=1?0.99:cfg.laborMarg; suggestUsd += laborKrw/(1-lm)/cfg.sellRate; }
+  }
+
   caRenderResults({cfg:cfg,items:items,impKrw:impKrw,domKrw:domKrw,impUsd:impUsd,laborKrw:laborKrw,totalBuyKrw:totalBuyKrw,
-    targetUsd:targetUsd,targetKrw:targetKrw,currentUsd:currentUsd,suggestUsd:suggestUsd,noPrice:noPrice,targetInput:(perItemTarget>0||totalTargetInput>0)});
+    targetUsd:targetUsd,targetKrw:targetKrw,currentUsd:currentUsd,suggestUsd:suggestUsd,noPriceInput:noPriceInput,noPrice:noPrice,targetInput:(perItemTarget>0||totalTargetInput>0)});
 }
 
 function caClearResults(){
@@ -339,6 +350,10 @@ function caRenderResults(R){
   var tgtSell=R.targetUsd*sr, tgtMK=tgtSell-R.totalBuyKrw, tgtMP=tgtSell>0?tgtMK/tgtSell*100:0;
   var diffUsd=curUsd>0?(R.targetUsd-curUsd):0;       // 타겟−현재 (음수=네고로 하락)
   var diffMK=curUsd>0?(tgtMK-curMK):0;
+  // 권장단가 (현재가·Target 둘 다 미입력 시) — 매입가 구간마진 역산
+  var sugUsd=R.suggestUsd||0;
+  var sugSell=sugUsd*sr, sugMK=sugSell-R.totalBuyKrw, sugMP=sugSell>0?sugMK/sugSell*100:0;
+  var useSuggest = !!R.noPriceInput && sugUsd>0;
 
   // 갑지용 마지막 분석결과 캡처
   (function(){
@@ -353,7 +368,7 @@ function caRenderResults(R){
     var tgtMPr=(hasTgt&&tgtSell>0)?tgtMKr/tgtSell*100:null;
     // 환율 시나리오 마진(네고가 우선, 없으면 현재가) — 현재실제/-100/-200
     var baseR=(cfg.realRate>0?cfg.realRate:cfg.sellRate);
-    var priceUsd = hasTgt?R.targetUsd:(curUsd>0?curUsd:R.targetUsd);
+    var priceUsd = hasTgt?R.targetUsd:(curUsd>0?curUsd:(useSuggest?sugUsd:R.targetUsd));
     var fxMargin=function(rate){
       var buy=R.impUsd*rate + R.domKrw + R.laborKrw;
       var sell=priceUsd*rate;
@@ -376,6 +391,17 @@ function caRenderResults(R){
     rightRows+='<div class="ca-rate-row"><div class="ca-rate-tag base">현재 판매가</div>'
       +miniCard('매출단가','$'+curUsd.toLocaleString(undefined,{maximumFractionDigits:0}),'₩'+Math.round(curSell).toLocaleString()+' @'+sr,'')
       +miniCard('마진액','₩'+Math.round(curMK).toLocaleString(),'마진율 '+curMP.toFixed(1)+'% · 기준환율',clsTxt(curMP))
+      +'</div>';
+  }
+  // 권장단가 행 (현재가·Target 둘 다 미입력 시) — 견적용
+  if(useSuggest){
+    rightRows+='<div class="ca-rate-row" style="background:#eef9f4;border:1px solid #a8e0cc;border-radius:8px">'
+      +'<div class="ca-rate-tag" style="background:#12b886;color:#fff">💡 권장단가</div>'
+      +miniCard('견적 제시단가','$'+sugUsd.toLocaleString(undefined,{maximumFractionDigits:2}),'₩'+Math.round(sugSell).toLocaleString()+' @'+sr,'')
+      +miniCard('마진액','₩'+Math.round(sugMK).toLocaleString(),'마진율 '+sugMP.toFixed(1)+'% · 구간마진 적용',clsTxt(sugMP))
+      +'</div>'
+      +'<div class="ca-diff-row" style="border-style:dashed;color:var(--text3)">'
+      +'📋 매입원가에 구간별 마진(매입가대별 20~45%)을 적용한 <b>신규 견적 제시가</b>입니다 · 리베이트 미반영 · 현재가/Target을 입력하면 비교 분석으로 전환됩니다'
       +'</div>';
   }
   // 타겟 판매단가 행 (Target 입력 시에만 표시)

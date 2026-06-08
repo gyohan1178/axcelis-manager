@@ -384,6 +384,10 @@ function pbBulkEdit(){
   document.getElementById('pb-bulk-status').value=g('status');
   document.getElementById('pb-bulk-po').checked=sel.every(function(r){return !r.poReceived;});
   document.getElementById('pb-bulk-note').value=g('note');
+  // 날짜 일괄칸: 공통값 있으면 채우고, 체크박스는 모두 해제 상태로 시작
+  document.getElementById('pb-bulk-arrival').value=g('arrivalDate');
+  document.getElementById('pb-bulk-harness').value=g('harnessDone');
+  ['pb-bulk-chg-status','pb-bulk-chg-po','pb-bulk-chg-note','pb-bulk-chg-arrival','pb-bulk-chg-harness'].forEach(function(id){ var c=document.getElementById(id); if(c) c.checked=false; });
   document.getElementById('pb-bulk-cnt').textContent=_pbSelected.size+'건 일괄 수정';
   document.getElementById('m-pb-bulk').classList.add('on');
 }
@@ -393,16 +397,34 @@ function pbBulkSaveEdit(){
   var status=document.getElementById('pb-bulk-status').value;
   var noPo=document.getElementById('pb-bulk-po').checked;
   var note=document.getElementById('pb-bulk-note').value;
+  var arrival=document.getElementById('pb-bulk-arrival').value;
+  var harness=document.getElementById('pb-bulk-harness').value;
   var chgStatus=document.getElementById('pb-bulk-chg-status').checked;
   var chgPo=document.getElementById('pb-bulk-chg-po').checked;
   var chgNote=document.getElementById('pb-bulk-chg-note').checked;
+  var chgArrival=document.getElementById('pb-bulk-chg-arrival').checked;
+  var chgHarness=document.getElementById('pb-bulk-chg-harness').checked;
+  var now=new Date().toISOString();
+  var who=(CURRENT_USER&&CURRENT_USER.name)||'';
   var cnt=0;
   _pbData.forEach(function(r){
     if(!_pbSelected.has(r.id)) return;
+    var hist=(r.history&&typeof r.history!=='string')?r.history.slice():[];
     if(chgStatus&&status) r.status=status;
     if(chgPo) r.poReceived=!noPo;
     if(chgNote) r.note=note;
-    r.updatedAt=new Date().toISOString();
+    if(chgArrival){
+      var oldA=pbNormDate(r.arrivalDate)||'—', newA=pbNormDate(arrival)||'—';
+      if(oldA!==newA) hist.push({type:'날짜', msg:'가공물 입고예정 '+oldA+'→'+newA+' (일괄·'+who+')', at:now});
+      r.arrivalDate=arrival;
+    }
+    if(chgHarness){
+      var oldH=pbNormDate(r.harnessDone)||'—', newH=pbNormDate(harness)||'—';
+      if(oldH!==newH) hist.push({type:'날짜', msg:'하네스 완료예정 '+oldH+'→'+newH+' (일괄·'+who+')', at:now});
+      r.harnessDone=harness;
+    }
+    r.history=hist.slice(-50);
+    r.updatedAt=now;
     cnt++;
   });
   pbSaveAll();

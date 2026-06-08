@@ -678,7 +678,11 @@ function renderWhereUsed(childPN){
   var el=document.getElementById('where-results');
   if(!el) return;
   if(!BOM||!Object.keys(BOM).length){
-    el.innerHTML='<div style="color:var(--amber);padding:20px;text-align:center">BOM 데이터가 없습니다. 로그인 후 데이터를 로드하세요.</div>';
+    el.innerHTML='<div style="color:var(--amber);padding:24px;text-align:center;line-height:1.7">'
+      +'⏳ <b>BOM 데이터를 불러오는 중일 수 있습니다.</b><br>'
+      +'<span style="color:var(--text3);font-size:12.5px">로그인 직후에는 BOM 로딩에 몇 초 걸립니다. 잠시 후 다시 조회해 주세요.</span><br>'
+      +'<button onclick="renderWhereUsed(\''+String(childPN).replace(/'/g,"")+'\')" style="margin-top:12px;padding:7px 16px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-weight:600;cursor:pointer">↻ 다시 조회</button>'
+      +'</div>';
     return;
   }
 
