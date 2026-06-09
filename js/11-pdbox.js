@@ -730,6 +730,46 @@ function pbOpenEdit(id){
   if(modal){ modal.style.display=''; modal.classList.add('on'); }
 }
 
+// 신규 등록 시 품번 입력하면 품명 자동 + 다음 호기 자동
+function pbPnAutofill(pn){
+  pn=String(pn||'').trim();
+  // 편집 모드(기존 id 있음)에서는 자동완성 안 함 — 신규 등록만
+  var editId=(document.getElementById('pb-edit-id')||{}).value;
+  if(editId) return;
+  if(!pn) return;
+
+  // 1) 품명 자동: 품목DB 우선, 없으면 같은 품번의 기존 PD BOX 기록
+  var nm='';
+  if(typeof DB!=='undefined' && DB){
+    var dbi=DB.find(function(d){return String(d.pn).trim()===pn;});
+    if(dbi) nm=dbi.d||'';
+  }
+  if(!nm){
+    pbLoad();
+    var prev=_pbData.find(function(r){return String(r.pn||'').trim()===pn && r.name;});
+    if(prev) nm=prev.name;
+  }
+  var nmEl=document.getElementById('pb-name');
+  if(nm && nmEl && !nmEl.value.trim()) nmEl.value=nm;  // 이미 입력돼 있으면 덮어쓰지 않음
+
+  // 2) 다음 호기 자동: 같은 품번의 기존 호기 중 #N 최대값 + 1
+  pbLoad();
+  var maxN=0, found=false;
+  _pbData.forEach(function(r){
+    if(String(r.pn||'').trim()!==pn) return;
+    var m=String(r.hogi||'').match(/^#(\d+)$/);  // #14 형태만 (FA류 제외)
+    if(m){ found=true; var n=+m[1]; if(n>maxN) maxN=n; }
+  });
+  if(found){
+    var nextHogi='#'+(maxN+1);
+    var sel=document.getElementById('pb-hogi');
+    // 옵션에 있으면 선택, 없으면 기타+직접입력
+    var opt=[...sel.options].find(function(o){return o.value===nextHogi;});
+    if(opt){ sel.value=nextHogi; document.getElementById('pb-hogi-custom').style.display='none'; }
+    else { sel.value='기타'; var c=document.getElementById('pb-hogi-custom'); c.style.display='inline-block'; c.value=nextHogi; }
+  }
+}
+
 function pbSave(){
   var name=document.getElementById('pb-name').value.trim();
   if(!name){ alert('PD 명을 입력하세요'); return; }
