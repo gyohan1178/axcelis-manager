@@ -1104,8 +1104,15 @@ function reqSort(key){
 function printReq(){
   // 인쇄 헤더 표시
   document.getElementById('req-print-header').style.display='block';
+  document.body.classList.add('printing-req');
+  var cleanup=function(){
+    document.body.classList.remove('printing-req');
+    var h=document.getElementById('req-print-header'); if(h) h.style.display='none';
+    window.removeEventListener('afterprint',cleanup);
+  };
+  window.addEventListener('afterprint',cleanup);
   window.print();
-  setTimeout(()=>{document.getElementById('req-print-header').style.display='none';},500);
+  setTimeout(cleanup,1000);
 }
 
 function exportReqCSV(){
