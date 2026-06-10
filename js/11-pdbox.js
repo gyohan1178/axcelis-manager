@@ -434,6 +434,84 @@ function pbBulkSaveEdit(){
   qToast('✓ '+cnt+'건 수정 완료','ok');
 }
 
+// ══════════════════ 하네스 작업 우선순위 ══════════════════
+// 대상: 하네스 불출됨(harnessIssue) + 하네스 미완료(!harnessRecv)
+// 정렬: 가공물 입고예정일(arrivalDate) 빠른 순 — 그날 자재 불출되면 현장 작업 시작
+function pbRenderHarness(){
+  pbLoad();
+  var wrap=document.getElementById('pb-hns-wrap');
+  if(!wrap) return;
+
+  var today=new Date(); today.setHours(0,0,0,0);
+  var dayMs=86400000;
+
+  var list=_pbData.filter(function(r){
+    if(r.status==='완료') return false;
+    if(!r.harnessIssue) return false;
+    if(r.harnessRecv) return false;
+    return true;
+  }).map(function(r){
+    var arr=pbNormDate(r.arrivalDate);
+    var days = arr ? Math.round((new Date(arr).setHours(0,0,0,0)-today)/dayMs) : 9999;
+    return {r:r, arr:arr, days:days};
+  });
+
+  list.sort(function(a,b){
+    if(a.arr&&!b.arr) return -1;
+    if(!a.arr&&b.arr) return 1;
+    return a.days-b.days;
+  });
+
+  function urg(d){
+    if(d===9999) return {lbl:'입고일 미정', col:'var(--text3)', bg:'transparent', rank:''};
+    if(d<0)  return {lbl:'지남 '+Math.abs(d)+'일', col:'#fff', bg:'#d23030', rank:'🔴'};
+    if(d===0) return {lbl:'오늘 입고', col:'#fff', bg:'#d23030', rank:'🔴'};
+    if(d<=7) return {lbl:'D-'+d, col:'#fff', bg:'#f59e0b', rank:'🟠'};
+    if(d<=14) return {lbl:'D-'+d, col:'#1a1a1a', bg:'#fde68a', rank:'🟡'};
+    return {lbl:'D-'+d, col:'var(--text2)', bg:'transparent', rank:'🟢'};
+  }
+
+  var cntUrgent=list.filter(function(x){return x.days<=7;}).length;
+
+  var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
+    +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 작업 우선순위</div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.6">불출된 하네스 중 미완료 항목을 <b>가공물 입고예정일 순</b>으로 정렬했습니다. 위에서부터 작업하세요.<br>'
+    +'가공물이 입고되면 자재가 불출되어 현장 조립이 시작되므로, 그 전에 하네스가 완료돼야 합니다.</div>'
+    +'<div style="margin-top:8px;font-size:13px"><b style="color:#d23030">긴급(7일 이내) '+cntUrgent+'건</b> · 전체 작업대상 '+list.length+'건</div>'
+    +'</div>';
+
+  if(!list.length){
+    html+='<div style="text-align:center;padding:40px;color:var(--text3)">작업할 하네스가 없습니다. (불출되고 미완료인 항목 없음)</div>';
+    wrap.innerHTML=html; return;
+  }
+
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+    +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
+    +'<th style="padding:8px 10px;text-align:center;width:50px;font-size:10.5px;color:var(--text2)">순위</th>'
+    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번</th>'
+    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">PD 명</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:60px;font-size:10.5px;color:var(--text2)">호기</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:110px;font-size:10.5px;color:var(--text2)">가공물 입고예정</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:110px;font-size:10.5px;color:var(--text2)">긴급도</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">완료처리</th>'
+    +'</tr></thead><tbody>';
+
+  list.forEach(function(x,i){
+    var r=x.r, u=urg(x.days);
+    html+='<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:8px 10px;text-align:center;font-weight:700;font-size:15px;color:'+(x.days<=7?'#d23030':'var(--text2)')+'">'+(i+1)+'</td>'
+      +'<td style="padding:8px 10px;font-family:var(--mono)">'+(r.pn||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(r.name||'—')+'</td>'
+      +'<td style="padding:8px 10px;text-align:center"><span class="pb-hogi'+(String(r.hogi).indexOf('FA')>=0?' fa':'')+'">'+(r.hogi||'')+'</span></td>'
+      +'<td style="padding:8px 10px;text-align:center">'+(x.arr?x.arr.slice(0,10):'<span style="color:var(--text3)">미정</span>')+'</td>'
+      +'<td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700;color:'+u.col+';background:'+u.bg+'">'+u.rank+' '+u.lbl+'</span></td>'
+      +'<td style="padding:8px 10px;text-align:center"><button onclick="pbToggleComplete(\''+r.id+'\',\'harnessRecv\');pbRenderHarness();" style="padding:4px 12px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer">✓ 완료</button></td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
 // 전장완료요청일 계산 (reqDate 기준 영업일 -4)
 function pbCalcElec(r){
   if(r.elecDone) return r.elecDone;
@@ -1009,7 +1087,7 @@ var _pbView = 'list'; // list | cal | bypn | fa
 function pbSetView(v){
   _pbView = v;
   // 탭 active
-  ['list','cal','bypn','fa'].forEach(function(k){
+  ['list','cal','bypn','fa','hns'].forEach(function(k){
     var btn = document.getElementById('pbt-'+k);
     if(btn) btn.classList.toggle('on', k===v);
   });
@@ -1017,13 +1095,16 @@ function pbSetView(v){
   var calWrap = document.getElementById('pb-cal-wrap');
   var tblWrap = document.querySelector('#sect-pdbox .pb-table-wrap');
   var bypnWrap = document.getElementById('pb-bypn-wrap');
+  var hnsWrap = document.getElementById('pb-hns-wrap');
 
   if(calWrap)  calWrap.style.display  = (v==='cal')  ? 'block' : 'none';
   if(tblWrap)  tblWrap.style.display  = (v==='list'||v==='fa') ? '' : 'none';
   if(bypnWrap) { bypnWrap.style.display = (v==='bypn') ? 'block' : 'none'; if(v==='bypn'&&calWrap) calWrap.parentNode.insertBefore(bypnWrap, calWrap); }
+  if(hnsWrap)  hnsWrap.style.display  = (v==='hns') ? 'block' : 'none';
 
   if(v==='cal')  pbRenderCal();
   else if(v==='bypn') pbRenderByPN();
+  else if(v==='hns') pbRenderHarness();
   else pbRender();
 }
 
