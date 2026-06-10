@@ -579,9 +579,9 @@ function pbRenderHarness(){
   var cntNeedIssue=bundles.filter(function(b){return b.needIssueAlert;}).length;
 
   // 저장된 컬럼 너비 (드래그 조정값) — localStorage
-  var defW=[44,110,220,90,52,100,92,104,56];
+  var defW=[44,100,200,84,48,92,92,84,100,52];
   var savedW; try{ savedW=JSON.parse(localStorage.getItem('ax_hns_colw')||'null'); }catch(e){ savedW=null; }
-  var colW = (Array.isArray(savedW)&&savedW.length===9) ? savedW : defW;
+  var colW = (Array.isArray(savedW)&&savedW.length===10) ? savedW : defW;
 
   var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
     +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 작업 우선순위</div>'
@@ -595,8 +595,8 @@ function pbRenderHarness(){
     wrap.innerHTML=html; return;
   }
 
-  var headers=['순위','품번','PD명','호기','수량','불출상태','납품일','가공물입고','완료'];
-  var aligns=['center','left','left','center','center','center','center','center','center'];
+  var headers=['순위','품번','PD명','호기','수량','하네스불출','전장불출','납품일','가공물입고','완료'];
+  var aligns=['center','left','left','center','center','center','center','center','center','center'];
 
   html+='<table id="pb-hns-table" style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">';
   html+='<colgroup>';
@@ -619,6 +619,12 @@ function pbRenderHarness(){
     if(b.issued) issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:#0f6e56;background:rgba(45,212,191,.18)">불출됨</span>';
     else if(b.needIssueAlert) issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff;background:#f59e0b">⚠ 불출필요</span>';
     else issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2)">🔲 미불출</span>';
+    // 전장 불출: 묶음 내 호기들의 partIssue 집계
+    var elecN=b.items.filter(function(r){return r.partIssue;}).length;
+    var elecCell;
+    if(elecN===0) elecCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:var(--text3);background:var(--bg2)">미불출</span>';
+    else if(elecN===b.qty) elecCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:#6d4ba8;background:rgba(167,139,250,.18)">전체 불출</span>';
+    else elecCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:#6d4ba8;background:rgba(167,139,250,.12)">'+elecN+'/'+b.qty+' 불출</span>';
 
     html+='<tr style="border-bottom:1px solid var(--border)'+rowBg+'">'
       +'<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:15px;color:'+(ready?'#12b886':(b.needIssueAlert?'#f59e0b':'var(--text2)'))+'">'+(i+1)+'</td>'
@@ -627,6 +633,7 @@ function pbRenderHarness(){
       +'<td style="padding:9px 6px;text-align:center;font-weight:600">'+b.hogiRange+'</td>'
       +'<td style="padding:9px 6px;text-align:center;color:var(--teal);font-weight:600">'+b.qty+'개</td>'
       +'<td style="padding:9px 6px;text-align:center">'+issueCell+'</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+elecCell+'</td>'
       +'<td style="padding:9px 6px;text-align:center">'+urgCell(b.minReq)+'</td>'
       +'<td style="padding:9px 6px;text-align:center">'+arrCell(b)+'</td>'
       +'<td style="padding:9px 6px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="하네스 완료 처리">✓</button></td>'
@@ -1294,19 +1301,16 @@ function pbOpenPrintWindow(title, headers, widths, rows, opts){
     +'</style></head><body>'
     +'<div class="tbar">'
     +'<h3>🖨 인쇄 미리보기 — 컬럼 너비를 조절한 뒤 인쇄하세요</h3>'
-    +'<label>전체 너비 <input type="range" id="zoom" min="60" max="160" value="100"></label>'
-    +'<label>글자 <input type="range" id="fs" min="7" max="12" value="9" step="0.5"></label>'
+    +'<label>글자 크기 <input type="range" id="fs" min="7" max="12" value="9" step="0.5"></label>'
     +'<button onclick="window.print()">인쇄 / PDF 저장</button>'
     +'</div>'
     +'<div class="doc-title">'+title+'</div>'
     +'<div class="doc-sub">진선테크 구매자재 · 출력일 '+ymd+' · 총 '+rows.filter(function(r){return !r._cls||r._cls!=='grp';}).length+'건</div>'
     +'<table id="ptbl"><colgroup>'+colgroup+'</colgroup><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>'
     +'<script>'
-    +'var z=document.getElementById("zoom"),fs=document.getElementById("fs"),tb=document.getElementById("ptbl");'
-    +'var baseW='+JSON.stringify(widths)+';'
-    +'function apply(){var r=z.value/100;var cols=tb.querySelectorAll("colgroup col");cols.forEach(function(c,i){c.style.width=(baseW[i]*r)+"px";});tb.style.width=(r*100)+"%";'
-    +'tb.querySelectorAll("th,td").forEach(function(e){e.style.fontSize=fs.value+"pt";});}'
-    +'z.addEventListener("input",apply);fs.addEventListener("input",apply);apply();'
+    +'var fs=document.getElementById("fs"),tb=document.getElementById("ptbl");'
+    +'function apply(){tb.querySelectorAll("th,td").forEach(function(e){e.style.fontSize=fs.value+"pt";});}'
+    +'fs.addEventListener("input",apply);apply();'
     +'<\/script>'
     +'</body></html>';
 
@@ -1321,7 +1325,7 @@ function pbPrintList(){
   pbLoad();
   var fFA=(_pbView==='fa');
   var rows0=_pbData.filter(function(r){
-    if(_pbView==='list'){ return true; }
+    if(r.status==='완료') return false;   // 완료 건 제외
     if(fFA){ return String(r.hogi||'').indexOf('FA')>=0; }
     return true;
   });
@@ -1379,7 +1383,8 @@ function pbPrintHarness(){
       var hogis=chunk.map(function(r){return r.hogi;}).sort(function(a,b){return hogiNum(a)-hogiNum(b);});
       var range=hogis.length===1?hogis[0]:(hogis[0]+'~'+hogis[hogis.length-1]);
       var needIssueAlert=!g.issued&&arrDays!==99999&&arrDays<=30;
-      bundles.push({pn:g.pn,name:g.name,qty:chunk.length,minReq:minReq,arrDays:arrDays,arrKey:g.arrKey,issued:g.issued,needIssueAlert:needIssueAlert,range:range});
+      var elecN=chunk.filter(function(r){return r.partIssue;}).length;
+      bundles.push({pn:g.pn,name:g.name,qty:chunk.length,minReq:minReq,arrDays:arrDays,arrKey:g.arrKey,issued:g.issued,needIssueAlert:needIssueAlert,range:range,elecN:elecN});
     }
   });
   bundles.sort(function(a,b){return a.minReq!==b.minReq?a.minReq-b.minReq:a.arrDays-b.arrDays;});
@@ -1387,6 +1392,7 @@ function pbPrintHarness(){
   function dtxt(d){ if(d===99999||d==null)return '미정'; if(d<0)return '지남'+Math.abs(d)+'일'; if(d===0)return '오늘'; return 'D-'+d; }
   function arrtxt(b){ if(b.arrKey==='DONE')return '입고완료'; if(b.arrKey==='NONE')return '미정'; return dtxt(b.arrDays)+' ('+b.arrKey.slice(5,10)+')'; }
   function isstxt(b){ if(b.issued)return '불출됨'; if(b.needIssueAlert)return '⚠불출필요'; return '미불출'; }
+  function electxt(b){ if(b.elecN===0)return '미불출'; if(b.elecN===b.qty)return '전체불출'; return b.elecN+'/'+b.qty+'불출'; }
 
   var rows=bundles.map(function(b,i){
     return {_cls:b.needIssueAlert?'alert':((b.arrDays<=0&&b.issued)?'ready':''), cells:[
@@ -1396,13 +1402,14 @@ function pbPrintHarness(){
       {v:b.range,align:'center'},
       {v:b.qty+'개',align:'center'},
       {v:'<span class="badge">'+isstxt(b)+'</span>',align:'center'},
+      {v:'<span class="badge">'+electxt(b)+'</span>',align:'center'},
       {v:dtxt(b.minReq),align:'center'},
       {v:arrtxt(b),align:'center'}
     ]};
   });
   pbOpenPrintWindow('하네스 작업 우선순위',
-    ['순위','품번','PD명','호기','수량','불출상태','납품일','가공물입고'],
-    [44,96,190,90,52,90,84,110],
+    ['순위','품번','PD명','호기','수량','하네스불출','전장불출','납품일','가공물입고'],
+    [40,90,180,84,46,80,80,80,104],
     rows, {fname:'하네스우선순위', landscape:true});
 }
 
@@ -1434,7 +1441,11 @@ function pbPrintCal(){
       if(dayNum<1||dayNum>days){ cells+='<td class="empty"></td>'; }
       else{
         var items=byDay[dayNum]||[];
-        var inner=items.map(function(r){return '<div class="ev">'+(r.pn||'')+' '+(r.hogi||'')+'</div>';}).join('');
+        var inner=items.map(function(r){
+          var st=r.status||'';
+          var scls = st==='완료'?'st-done':(st==='납품 대기'?'st-wait':(st==='제작 중'?'st-prog':'st-po'));
+          return '<div class="ev '+scls+'">'+(r.pn||'')+' '+(r.hogi||'')+(st?' <b>'+st+'</b>':'')+'</div>';
+        }).join('');
         cells+='<td><div class="dn'+(dw===0?' sun':dw===6?' sat':'')+'">'+dayNum+'</div>'+inner+'</td>';
       }
       dayNum++;
@@ -1452,6 +1463,7 @@ function pbPrintCal(){
     +'td{border:1px solid #ddd;vertical-align:top;padding:3px;height:90px;overflow:hidden}'
     +'td.empty{background:#fafafa}.dn{font-size:9pt;font-weight:700;margin-bottom:2px}.dn.sun{color:#c00}.dn.sat{color:#06c}'
     +'.ev{font-size:7.5pt;background:#eef2fb;border-radius:3px;padding:1px 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    +'.ev.st-done{background:#e8f5e9;color:#256029}.ev.st-wait{background:#fde8ec;color:#a01b38}.ev.st-prog{background:#e3effa;color:#1c4f8a}.ev.st-po{background:#eef0f3;color:#444}'
     +'@media print{.tbar{display:none}body{padding:0}@page{margin:8mm;size:landscape}}'
     +'</style></head><body>'
     +'<div class="tbar"><h3>🖨 캘린더 인쇄 — 한 장에 맞춰 출력됩니다</h3><button onclick="window.print()">인쇄 / PDF 저장</button></div>'
