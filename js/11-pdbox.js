@@ -518,28 +518,26 @@ function pbRenderHarness(){
     return d;
   }
 
-  // 작업 대상: 하네스 불출됨 + 미완료 + 미납품
+  // 작업 대상: 미완료 + 미납품 (불출 여부 무관 — 미불출도 '불출 필요'로 표시)
   var targets=_pbData.filter(function(r){
-    return r.status!=='완료' && r.harnessIssue && !r.harnessRecv;
+    return r.status!=='완료' && !r.harnessRecv;
   });
 
-  // 묶음 키 = 품번 + 가공물입고일 (같은 품번이라도 입고일 다르면 별도 묶음)
-  // 이미 입고된(machineRecv) 건 '입고완료' 묶음으로
+  // 묶음 키 = 품번 + 가공물입고일 + 불출여부 (불출/미불출 섞이면 분리)
   var bundleMap={};
   targets.forEach(function(r){
     var pn=String(r.pn||'').trim(); if(!pn) return;
     var arrKey;
-    if(r.machineRecv) arrKey='DONE';                       // 이미 입고완료
-    else { var a=pbNormDate(r.arrivalDate); arrKey=a?a.slice(0,10):'NONE'; }  // 입고일별
-    var key=pn+'|'+arrKey;
+    if(r.machineRecv) arrKey='DONE';
+    else { var a=pbNormDate(r.arrivalDate); arrKey=a?a.slice(0,10):'NONE'; }
+    var issued = !!r.harnessIssue;
+    var key=pn+'|'+arrKey+'|'+(issued?'Y':'N');
     if(!bundleMap[key]){
-      bundleMap[key]={pn:pn, name:r.name||'', arrKey:arrKey, items:[], hnsMD:+r.hnsMD||0, elecMD:+r.elecMD||0};
+      bundleMap[key]={pn:pn, name:r.name||'', arrKey:arrKey, issued:issued, items:[]};
     }
     var bm=bundleMap[key];
     bm.items.push(r);
     if(r.name&&!bm.name) bm.name=r.name;
-    if(+r.hnsMD) bm.hnsMD=+r.hnsMD;
-    if(+r.elecMD) bm.elecMD=+r.elecMD;
   });
 
   // 최대 8개 분할 + 묶음 메타 계산
@@ -552,12 +550,13 @@ function pbRenderHarness(){
       var arrDays = bm.arrKey==='DONE' ? -1 : (bm.arrKey==='NONE' ? 99999 : dDays(chunk[0].arrivalDate));
       var hogis=chunk.map(function(r){return r.hogi;}).sort(function(a,b){return hogiNum(a)-hogiNum(b);});
       var hogiRange = hogis.length===1 ? hogis[0] : (hogis[0]+'~'+hogis[hogis.length-1]);
-      bundles.push({bm:bm, items:chunk, qty:chunk.length, minReq:minReq, arrDays:arrDays, arrKey:bm.arrKey, hogiRange:hogiRange});
+      // 미불출 + 가공물 입고 1개월(30일) 이내 → 미불출 알림
+      var needIssueAlert = !bm.issued && arrDays!==99999 && arrDays<=30;
+      bundles.push({bm:bm, items:chunk, qty:chunk.length, minReq:minReq, arrDays:arrDays, arrKey:bm.arrKey, issued:bm.issued, needIssueAlert:needIssueAlert, hogiRange:hogiRange});
     }
   });
 
   // 정렬: 가공물 입고일(자재 나오는 순) 1순위, 납품일 2순위
-  // 입고완료(DONE,-1)가 가장 위(이미 자재 있음→즉시 작업 가능), 그다음 입고일 빠른 순
   bundles.sort(function(a,b){ return a.arrDays!==b.arrDays ? a.arrDays-b.arrDays : a.minReq-b.minReq; });
 
   function urgCell(d){
@@ -577,16 +576,17 @@ function pbRenderHarness(){
   function fmtMD(d){ if(d==null) return '—'; return d.toISOString().slice(5,10); }
 
   var cntReady=bundles.filter(function(b){return b.arrDays<=0;}).length;
+  var cntNeedIssue=bundles.filter(function(b){return b.needIssueAlert;}).length;
 
   var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
-    +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 → 전장 생산 스케줄</div>'
+    +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 작업 우선순위</div>'
     +'<div style="font-size:12px;color:var(--text3);line-height:1.6"><b>같은 품번 + 같은 입고일</b>끼리 묶었습니다(최대 8개). <b>가공물 입고일 순</b> 정렬 — 자재 나오는 순서대로 작업.<br>'
-    +'입고완료(자재 보유)가 최상단 → 즉시 작업 가능. 전장 시작 가능일은 MD 입력 후 계산됩니다.</div>'
-    +'<div style="margin-top:8px;font-size:13px"><b style="color:#12b886">즉시작업 가능 '+cntReady+'묶음</b> · 전체 '+bundles.length+'묶음 / '+targets.length+'호기</div>'
+    +'미불출 항목은 <b style="color:#f59e0b">🔲 불출필요</b>로 표시되며, 가공물 입고 1개월 이내인데 미불출이면 알림이 뜹니다.</div>'
+    +'<div style="margin-top:8px;font-size:13px"><b style="color:#12b886">즉시작업 가능 '+cntReady+'</b> · <b style="color:#f59e0b">미불출 알림 '+cntNeedIssue+'</b> · 전체 '+bundles.length+'묶음 / '+targets.length+'호기</div>'
     +'</div>';
 
   if(!bundles.length){
-    html+='<div style="text-align:center;padding:40px;color:var(--text3)">작업할 하네스가 없습니다. (불출되고 미완료인 항목 없음)</div>';
+    html+='<div style="text-align:center;padding:40px;color:var(--text3)">작업할 하네스가 없습니다.</div>';
     wrap.innerHTML=html; return;
   }
 
@@ -594,38 +594,34 @@ function pbRenderHarness(){
     +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
     +'<th style="padding:8px 6px;text-align:center;width:40px;font-size:10.5px;color:var(--text2)">순위</th>'
     +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번 · PD명</th>'
-    +'<th style="padding:8px 6px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">호기</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:100px;font-size:10.5px;color:var(--text2)">호기</th>'
     +'<th style="padding:8px 6px;text-align:center;width:50px;font-size:10.5px;color:var(--text2)">수량</th>'
-    +'<th style="padding:8px 6px;text-align:center;width:88px;font-size:10.5px;color:var(--text2)">납품일</th>'
-    +'<th style="padding:8px 6px;text-align:center;width:100px;font-size:10.5px;color:var(--text2)">가공물입고</th>'
-    +'<th style="padding:8px 6px;text-align:center;width:70px;font-size:10.5px;color:var(--text2)">하네스<br>작업일</th>'
-    +'<th style="padding:8px 6px;text-align:center;width:82px;font-size:10.5px;color:var(--text2)">전장 시작<br>가능일</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:100px;font-size:10.5px;color:var(--text2)">불출상태</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">납품일</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:105px;font-size:10.5px;color:var(--text2)">가공물입고</th>'
     +'<th style="padding:8px 6px;text-align:center;width:64px;font-size:10.5px;color:var(--text2)">완료</th>'
     +'</tr></thead><tbody>';
 
   bundles.forEach(function(b,i){
     var bm=b.bm;
-    var hnsDays = bm.hnsMD>0 ? (bm.hnsMD*b.qty) : null;
-    var hnsTxt = hnsDays!=null ? (Math.round(hnsDays*10)/10+'일') : '<span style="color:var(--text3)">MD?</span>';
-    var hnsDoneEst = hnsDays!=null ? addBizDays(today, hnsDays) : null;
-    var arrDate = (b.arrKey!=='NONE') ? (b.arrKey==='DONE'? today : new Date(today.getTime()+b.arrDays*dayMs)) : null;
-    var elecStart=null;
-    if(arrDate&&hnsDoneEst) elecStart = arrDate>hnsDoneEst?arrDate:hnsDoneEst;
-    else elecStart = arrDate||hnsDoneEst;
-    var late = (arrDate&&hnsDoneEst&&hnsDoneEst>arrDate);
     var idList=b.items.map(function(r){return r.id;}).join(',');
-    var ready=(b.arrDays<=0);
+    var ready=(b.arrDays<=0 && b.issued);
+    var rowBg = b.needIssueAlert ? ';background:rgba(245,158,11,.08)' : (ready?';background:rgba(18,184,134,.05)':'');
+    // 불출상태 셀
+    var issueCell;
+    if(b.issued) issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:#0f6e56;background:rgba(45,212,191,.18)">불출됨</span>';
+    else if(b.needIssueAlert) issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff;background:#f59e0b">⚠ 불출필요</span>';
+    else issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2)">🔲 미불출</span>';
 
-    html+='<tr style="border-bottom:1px solid var(--border)'+(late?';background:rgba(210,48,48,.06)':(ready?';background:rgba(18,184,134,.05)':''))+'">'
-      +'<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:15px;color:'+(ready?'#12b886':'var(--text2)')+'">'+(i+1)+'</td>'
+    html+='<tr style="border-bottom:1px solid var(--border)'+rowBg+'">'
+      +'<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:15px;color:'+(ready?'#12b886':(b.needIssueAlert?'#f59e0b':'var(--text2)'))+'">'+(i+1)+'</td>'
       +'<td style="padding:9px 10px"><span style="font-family:var(--mono);font-size:12.5px">'+bm.pn+'</span> <span style="font-size:12.5px;color:var(--text2)">· '+(bm.name||'—')+'</span></td>'
       +'<td style="padding:9px 6px;text-align:center;font-weight:600">'+b.hogiRange+'</td>'
       +'<td style="padding:9px 6px;text-align:center;color:var(--teal);font-weight:600">'+b.qty+'개</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+issueCell+'</td>'
       +'<td style="padding:9px 6px;text-align:center">'+urgCell(b.minReq)+'</td>'
       +'<td style="padding:9px 6px;text-align:center">'+arrCell(b)+'</td>'
-      +'<td style="padding:9px 6px;text-align:center">'+hnsTxt+'</td>'
-      +'<td style="padding:9px 6px;text-align:center">'+(elecStart?('<b style="color:'+(late?'#d23030':'var(--text)')+'">'+fmtMD(elecStart)+'</b>'+(late?'<br><span style="font-size:9.5px;color:#d23030">하네스 지연</span>':'')):'<span style="color:var(--text3)">MD?</span>')+'</td>'
-      +'<td style="padding:9px 6px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✓</button></td>'
+      +'<td style="padding:9px 6px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="하네스 완료 처리">✓</button></td>'
       +'</tr>';
   });
   html+='</tbody></table>';
