@@ -616,8 +616,15 @@ function showApp() {
 
   // ── 권한별 UI 제한 ──
   if(role === 'viewer' || role === 'guest') {
-    // viewer: PD BOX + 자재조회 열람 (편집/삭제/등록 불가)
+    // viewer: PD BOX + 자재조회만 열람 (편집/삭제/등록 불가)
     _pbViewerMode = true;
+    // 사이드바: data-app 이 pdbox/srch 인 항목만 표시, 나머지 숨김
+    document.querySelectorAll('#sidebar .sb-item').forEach(function(el){
+      var app = el.getAttribute('data-app');
+      var show = (app === 'pdbox' || app === 'srch');
+      el.style.display = show ? '' : 'none';
+    });
+    // 구버전 탑바도 혹시 있으면 동일 처리
     var appBar = document.querySelector('.app-bar');
     if(appBar) {
       appBar.querySelectorAll('.app-btn, .app-divider').forEach(function(el){
