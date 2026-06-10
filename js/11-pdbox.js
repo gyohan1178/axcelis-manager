@@ -578,24 +578,15 @@ function pbRenderHarness(){
   var cntReady=bundles.filter(function(b){return b.arrDays<=0;}).length;
   var cntNeedIssue=bundles.filter(function(b){return b.needIssueAlert;}).length;
 
-  // 열간격(행 높이) 설정 — localStorage 저장
-  var dens=localStorage.getItem('ax_hns_density')||'normal';
-  var padY = dens==='compact'?'4px':(dens==='wide'?'13px':'9px');
+  // 저장된 컬럼 너비 (드래그 조정값) — localStorage
+  var defW=[44,110,220,90,52,100,92,104,56];
+  var savedW; try{ savedW=JSON.parse(localStorage.getItem('ax_hns_colw')||'null'); }catch(e){ savedW=null; }
+  var colW = (Array.isArray(savedW)&&savedW.length===9) ? savedW : defW;
 
   var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
-    +'<div style="flex:1;min-width:260px">'
     +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 작업 우선순위</div>'
     +'<div style="font-size:12px;color:var(--text3);line-height:1.6"><b>납품일 순</b> 정렬(진짜 데드라인) · 같은 품번+입고일끼리 묶음(최대 8개).<br>'
-    +'미불출인데 가공물 입고 1개월 이내면 <b style="color:#f59e0b">⚠ 불출필요</b> 알림.</div>'
-    +'</div>'
-    +'<div style="display:flex;gap:4px;align-items:center">'
-    +'<span style="font-size:11px;color:var(--text3);margin-right:2px">열간격</span>'
-    +'<button onclick="pbSetHnsDensity(\'compact\')" style="padding:3px 9px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:'+(dens==='compact'?'var(--teal)':'var(--bg2)')+';color:'+(dens==='compact'?'#051515':'var(--text2)')+'">좁게</button>'
-    +'<button onclick="pbSetHnsDensity(\'normal\')" style="padding:3px 9px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:'+(dens==='normal'?'var(--teal)':'var(--bg2)')+';color:'+(dens==='normal'?'#051515':'var(--text2)')+'">보통</button>'
-    +'<button onclick="pbSetHnsDensity(\'wide\')" style="padding:3px 9px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:'+(dens==='wide'?'var(--teal)':'var(--bg2)')+';color:'+(dens==='wide'?'#051515':'var(--text2)')+'">넓게</button>'
-    +'</div>'
-    +'</div>'
+    +'미불출인데 가공물 입고 1개월 이내면 <b style="color:#f59e0b">⚠ 불출필요</b> 알림. 헤더 경계를 드래그하면 컬럼 너비를 조정할 수 있습니다.</div>'
     +'<div style="margin-top:8px;font-size:13px"><b style="color:#12b886">즉시작업 가능 '+cntReady+'</b> · <b style="color:#f59e0b">미불출 알림 '+cntNeedIssue+'</b> · 전체 '+bundles.length+'묶음 / '+targets.length+'호기</div>'
     +'</div>';
 
@@ -604,19 +595,20 @@ function pbRenderHarness(){
     wrap.innerHTML=html; return;
   }
 
-  html+='<table style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">'
-    +'<colgroup><col style="width:44px"><col style="width:110px"><col><col style="width:90px"><col style="width:52px"><col style="width:100px"><col style="width:92px"><col style="width:104px"><col style="width:56px"></colgroup>'
-    +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">순위</th>'
-    +'<th style="padding:8px 8px;text-align:left;font-size:10.5px;color:var(--text2)">품번</th>'
-    +'<th style="padding:8px 8px;text-align:left;font-size:10.5px;color:var(--text2)">PD명</th>'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">호기</th>'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">수량</th>'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">불출상태</th>'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">납품일</th>'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">가공물입고</th>'
-    +'<th style="padding:8px 6px;text-align:center;font-size:10.5px;color:var(--text2)">완료</th>'
-    +'</tr></thead><tbody>';
+  var headers=['순위','품번','PD명','호기','수량','불출상태','납품일','가공물입고','완료'];
+  var aligns=['center','left','left','center','center','center','center','center','center'];
+
+  html+='<table id="pb-hns-table" style="width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed">';
+  html+='<colgroup>';
+  colW.forEach(function(w){ html+='<col style="width:'+w+'px">'; });
+  html+='</colgroup>';
+  html+='<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">';
+  headers.forEach(function(h,ci){
+    html+='<th data-ci="'+ci+'" style="position:relative;padding:8px 6px;text-align:'+aligns[ci]+';font-size:10.5px;color:var(--text2);white-space:nowrap;overflow:hidden">'+h
+      +(ci<headers.length-1?'<span class="pb-hns-rsz" data-ci="'+ci+'" style="position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2"></span>':'')
+      +'</th>';
+  });
+  html+='</tr></thead><tbody>';
 
   bundles.forEach(function(b,i){
     var bm=b.bm;
@@ -629,25 +621,48 @@ function pbRenderHarness(){
     else issueCell='<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2)">🔲 미불출</span>';
 
     html+='<tr style="border-bottom:1px solid var(--border)'+rowBg+'">'
-      +'<td style="padding:'+padY+' 6px;text-align:center;font-weight:700;font-size:15px;color:'+(ready?'#12b886':(b.needIssueAlert?'#f59e0b':'var(--text2)'))+'">'+(i+1)+'</td>'
-      +'<td style="padding:'+padY+' 8px;font-family:var(--mono);font-size:12.5px">'+bm.pn+'</td>'
-      +'<td style="padding:'+padY+' 8px;font-size:12.5px;color:var(--text)">'+(bm.name||'—')+'</td>'
-      +'<td style="padding:'+padY+' 6px;text-align:center;font-weight:600">'+b.hogiRange+'</td>'
-      +'<td style="padding:'+padY+' 6px;text-align:center;color:var(--teal);font-weight:600">'+b.qty+'개</td>'
-      +'<td style="padding:'+padY+' 6px;text-align:center">'+issueCell+'</td>'
-      +'<td style="padding:'+padY+' 6px;text-align:center">'+urgCell(b.minReq)+'</td>'
-      +'<td style="padding:'+padY+' 6px;text-align:center">'+arrCell(b)+'</td>'
-      +'<td style="padding:'+padY+' 6px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="하네스 완료 처리">✓</button></td>'
+      +'<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:15px;color:'+(ready?'#12b886':(b.needIssueAlert?'#f59e0b':'var(--text2)'))+'">'+(i+1)+'</td>'
+      +'<td style="padding:9px 8px;font-family:var(--mono);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+bm.pn+'</td>'
+      +'<td style="padding:9px 8px;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(bm.name||'')+'">'+(bm.name||'—')+'</td>'
+      +'<td style="padding:9px 6px;text-align:center;font-weight:600">'+b.hogiRange+'</td>'
+      +'<td style="padding:9px 6px;text-align:center;color:var(--teal);font-weight:600">'+b.qty+'개</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+issueCell+'</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+urgCell(b.minReq)+'</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+arrCell(b)+'</td>'
+      +'<td style="padding:9px 6px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="하네스 완료 처리">✓</button></td>'
       +'</tr>';
   });
   html+='</tbody></table>';
   wrap.innerHTML=html;
+  pbHnsBindResize();
 }
 
-// 하네스 우선순위 열간격 설정 (localStorage 저장)
-function pbSetHnsDensity(d){
-  localStorage.setItem('ax_hns_density', d);
-  pbRenderHarness();
+// 하네스 표 컬럼 너비 드래그 리사이즈 (localStorage 저장)
+function pbHnsBindResize(){
+  var table=document.getElementById('pb-hns-table');
+  if(!table) return;
+  var cols=table.querySelectorAll('colgroup col');
+  var handles=table.querySelectorAll('.pb-hns-rsz');
+  handles.forEach(function(h){
+    h.addEventListener('mousedown', function(e){
+      e.preventDefault(); e.stopPropagation();
+      var ci=+h.getAttribute('data-ci');
+      var startX=e.clientX;
+      var startW=cols[ci].offsetWidth;
+      function move(ev){
+        var w=Math.max(36, startW+(ev.clientX-startX));
+        cols[ci].style.width=w+'px';
+      }
+      function up(){
+        document.removeEventListener('mousemove',move);
+        document.removeEventListener('mouseup',up);
+        var ws=[]; cols.forEach(function(c){ ws.push(c.offsetWidth); });
+        try{ localStorage.setItem('ax_hns_colw', JSON.stringify(ws)); }catch(e){}
+      }
+      document.addEventListener('mousemove',move);
+      document.addEventListener('mouseup',up);
+    });
+  });
 }
 
 // 묶음 전체 하네스 완료 처리
