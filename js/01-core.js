@@ -209,6 +209,8 @@ function sbMapRow(r, sheet, company){
     row.elec_recv     = !!r.elecRecv;
     row.qc_done       = !!r.qcDone;
     row.note          = r.note||'';
+    row.hns_md        = r.hnsMD||0;
+    row.elec_md       = r.elecMD||0;
     row.missing_parts = JSON.stringify(r.missingParts||[]);
     row.changes       = JSON.stringify(r.changes||[]);
     row.created_at    = r.createdAt||new Date().toISOString();

@@ -72,6 +72,7 @@ function pbSyncFromServer(callback){
         part_issue:'partIssue', elec_done:'elecDone',
         machine_recv:'machineRecv', harness_recv:'harnessRecv', elec_recv:'elecRecv', qc_done:'qcDone',
         po_received:'poReceived', missing_parts:'missingParts',
+        hns_md:'hnsMD', elec_md:'elecMD',
         created_at:'createdAt', updated_at:'updatedAt'
       };
       var serverData=res.data.map(function(r){
@@ -432,6 +433,69 @@ function pbBulkSaveEdit(){
   pbClearSel();
   pbRender();
   qToast('✓ '+cnt+'건 수정 완료','ok');
+}
+
+// ══════════════════ MD 관리 (품번별 하네스/전장 작업일수) ══════════════════
+// MD는 품번 기준. 같은 품번의 모든 PD BOX 레코드에 동일 적용 (hnsMD, elecMD 필드)
+function pbRenderMD(){
+  pbLoad();
+  var wrap=document.getElementById('pb-md-wrap');
+  if(!wrap) return;
+
+  var byPn={};
+  _pbData.forEach(function(r){
+    var pn=String(r.pn||'').trim(); if(!pn) return;
+    if(!byPn[pn]) byPn[pn]={pn:pn, name:r.name||'', cnt:0, hnsMD:r.hnsMD||0, elecMD:r.elecMD||0};
+    byPn[pn].cnt++;
+    if(r.name && !byPn[pn].name) byPn[pn].name=r.name;
+    if(r.hnsMD) byPn[pn].hnsMD=r.hnsMD;
+    if(r.elecMD) byPn[pn].elecMD=r.elecMD;
+  });
+  var rows=Object.values(byPn).sort(function(a,b){ return a.pn<b.pn?-1:1; });
+
+  var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
+    +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">⏱ 품번별 작업 MD (Man-Day) 관리</div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.6">품번별로 <b>하네스 1개당</b>, <b>전장 1대당</b> 작업일수를 입력하세요. 스케줄 계산에 사용됩니다.<br>'
+    +'같은 품번의 모든 호기에 동일 적용됩니다. (효율 감안해 1.0 → 0.8 등으로 조정 가능)</div>'
+    +'</div>';
+
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+    +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
+    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번</th>'
+    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">PD 명</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:70px;font-size:10.5px;color:var(--text2)">호기수</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:130px;font-size:10.5px;color:var(--text2)">하네스 MD/개</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:130px;font-size:10.5px;color:var(--text2)">전장 MD/대</th>'
+    +'<th style="padding:8px 10px;text-align:center;width:80px;font-size:10.5px;color:var(--text2)">저장</th>'
+    +'</tr></thead><tbody>';
+
+  rows.forEach(function(g){
+    var pid='md-'+g.pn.replace(/[^a-zA-Z0-9]/g,'_');
+    html+='<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:8px 10px;font-family:var(--mono)">'+g.pn+'</td>'
+      +'<td style="padding:8px 10px">'+(g.name||'—')+'</td>'
+      +'<td style="padding:8px 10px;text-align:center;color:var(--text3)">'+g.cnt+'</td>'
+      +'<td style="padding:8px 10px;text-align:center"><input type="number" id="'+pid+'-hns" value="'+(g.hnsMD||'')+'" step="0.1" min="0" placeholder="0" style="width:80px;padding:4px 8px;text-align:center;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text)"></td>'
+      +'<td style="padding:8px 10px;text-align:center"><input type="number" id="'+pid+'-elec" value="'+(g.elecMD||'')+'" step="0.1" min="0" placeholder="0" style="width:80px;padding:4px 8px;text-align:center;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text)"></td>'
+      +'<td style="padding:8px 10px;text-align:center"><button onclick="pbSaveMD(\''+g.pn.replace(/'/g,"")+'\',\''+pid+'\')" style="padding:4px 12px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer">저장</button></td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+// 품번 MD 저장 — 같은 품번 모든 레코드에 적용 후 서버 동기화
+function pbSaveMD(pn, pid){
+  pbLoad();
+  var hns=parseFloat(document.getElementById(pid+'-hns').value)||0;
+  var elec=parseFloat(document.getElementById(pid+'-elec').value)||0;
+  var cnt=0;
+  _pbData.forEach(function(r){
+    if(String(r.pn||'').trim()!==String(pn).trim()) return;
+    r.hnsMD=hns; r.elecMD=elec; r.updatedAt=new Date().toISOString(); cnt++;
+  });
+  pbSaveAll();
+  qToast('✓ '+pn+' MD 저장 (하네스 '+hns+'일/개, 전장 '+elec+'일/대 · '+cnt+'호기 적용)','ok');
 }
 
 // ══════════════════ 하네스 작업 우선순위 ══════════════════
@@ -1087,24 +1151,24 @@ var _pbView = 'list'; // list | cal | bypn | fa
 function pbSetView(v){
   _pbView = v;
   // 탭 active
-  ['list','cal','bypn','fa','hns'].forEach(function(k){
+  ['list','cal','fa','hns','md'].forEach(function(k){
     var btn = document.getElementById('pbt-'+k);
     if(btn) btn.classList.toggle('on', k===v);
   });
   // 캘린더 wrap 토글
   var calWrap = document.getElementById('pb-cal-wrap');
   var tblWrap = document.querySelector('#sect-pdbox .pb-table-wrap');
-  var bypnWrap = document.getElementById('pb-bypn-wrap');
   var hnsWrap = document.getElementById('pb-hns-wrap');
+  var mdWrap = document.getElementById('pb-md-wrap');
 
   if(calWrap)  calWrap.style.display  = (v==='cal')  ? 'block' : 'none';
   if(tblWrap)  tblWrap.style.display  = (v==='list'||v==='fa') ? '' : 'none';
-  if(bypnWrap) { bypnWrap.style.display = (v==='bypn') ? 'block' : 'none'; if(v==='bypn'&&calWrap) calWrap.parentNode.insertBefore(bypnWrap, calWrap); }
   if(hnsWrap)  hnsWrap.style.display  = (v==='hns') ? 'block' : 'none';
+  if(mdWrap)   mdWrap.style.display   = (v==='md') ? 'block' : 'none';
 
   if(v==='cal')  pbRenderCal();
-  else if(v==='bypn') pbRenderByPN();
   else if(v==='hns') pbRenderHarness();
+  else if(v==='md') pbRenderMD();
   else pbRender();
 }
 
