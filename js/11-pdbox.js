@@ -523,43 +523,42 @@ function pbRenderHarness(){
     return r.status!=='완료' && r.harnessIssue && !r.harnessRecv;
   });
 
-  // 품번별 그룹화
-  var groups={};
+  // 묶음 키 = 품번 + 가공물입고일 (같은 품번이라도 입고일 다르면 별도 묶음)
+  // 이미 입고된(machineRecv) 건 '입고완료' 묶음으로
+  var bundleMap={};
   targets.forEach(function(r){
     var pn=String(r.pn||'').trim(); if(!pn) return;
-    if(!groups[pn]) groups[pn]={pn:pn, name:r.name||'', items:[], hnsMD:+r.hnsMD||0, elecMD:+r.elecMD||0};
-    groups[pn].items.push(r);
-    if(r.name&&!groups[pn].name) groups[pn].name=r.name;
-    if(+r.hnsMD) groups[pn].hnsMD=+r.hnsMD;
-    if(+r.elecMD) groups[pn].elecMD=+r.elecMD;
+    var arrKey;
+    if(r.machineRecv) arrKey='DONE';                       // 이미 입고완료
+    else { var a=pbNormDate(r.arrivalDate); arrKey=a?a.slice(0,10):'NONE'; }  // 입고일별
+    var key=pn+'|'+arrKey;
+    if(!bundleMap[key]){
+      bundleMap[key]={pn:pn, name:r.name||'', arrKey:arrKey, items:[], hnsMD:+r.hnsMD||0, elecMD:+r.elecMD||0};
+    }
+    var bm=bundleMap[key];
+    bm.items.push(r);
+    if(r.name&&!bm.name) bm.name=r.name;
+    if(+r.hnsMD) bm.hnsMD=+r.hnsMD;
+    if(+r.elecMD) bm.elecMD=+r.elecMD;
   });
 
-  // 각 그룹: 납품일 1순위, 가공물 입고일 2순위 → 묶음 분할(최대 8)
+  // 최대 8개 분할 + 묶음 메타 계산
   var bundles=[];
-  Object.values(groups).forEach(function(g){
-    g.items.sort(function(a,b){
-      var ra=dDays(a.reqDate), rb=dDays(b.reqDate);
-      if(ra==null) ra=99999; if(rb==null) rb=99999;
-      if(ra!==rb) return ra-rb;
-      var aa=dDays(a.arrivalDate), ab=dDays(b.arrivalDate);
-      if(aa==null) aa=99999; if(ab==null) ab=99999;
-      return aa-ab;
-    });
-    // 8개씩 묶음 분할
-    for(var i=0;i<g.items.length;i+=MAXBUNDLE){
-      var chunk=g.items.slice(i,i+MAXBUNDLE);
-      // 묶음 기준일: 가장 빠른 납품일, 가장 빠른 가공물 입고일
+  Object.values(bundleMap).forEach(function(bm){
+    bm.items.sort(function(a,b){ return hogiNum(a.hogi)-hogiNum(b.hogi); });
+    for(var i=0;i<bm.items.length;i+=MAXBUNDLE){
+      var chunk=bm.items.slice(i,i+MAXBUNDLE);
       var minReq=Math.min.apply(null, chunk.map(function(r){var d=dDays(r.reqDate); return d==null?99999:d;}));
-      var minArr=Math.min.apply(null, chunk.map(function(r){var d=dDays(r.arrivalDate); return d==null?99999:d;}));
-      // 호기 범위
+      var arrDays = bm.arrKey==='DONE' ? -1 : (bm.arrKey==='NONE' ? 99999 : dDays(chunk[0].arrivalDate));
       var hogis=chunk.map(function(r){return r.hogi;}).sort(function(a,b){return hogiNum(a)-hogiNum(b);});
       var hogiRange = hogis.length===1 ? hogis[0] : (hogis[0]+'~'+hogis[hogis.length-1]);
-      bundles.push({g:g, items:chunk, qty:chunk.length, minReq:minReq, minArr:minArr, hogiRange:hogiRange, hogis:hogis});
+      bundles.push({bm:bm, items:chunk, qty:chunk.length, minReq:minReq, arrDays:arrDays, arrKey:bm.arrKey, hogiRange:hogiRange});
     }
   });
 
-  // 묶음 정렬: 납품일(minReq) 1순위, 가공물 입고일(minArr) 2순위
-  bundles.sort(function(a,b){ return a.minReq!==b.minReq ? a.minReq-b.minReq : a.minArr-b.minArr; });
+  // 정렬: 가공물 입고일(자재 나오는 순) 1순위, 납품일 2순위
+  // 입고완료(DONE,-1)가 가장 위(이미 자재 있음→즉시 작업 가능), 그다음 입고일 빠른 순
+  bundles.sort(function(a,b){ return a.arrDays!==b.arrDays ? a.arrDays-b.arrDays : a.minReq-b.minReq; });
 
   function urgCell(d){
     if(d===99999||d==null) return '<span style="color:var(--text3)">미정</span>';
@@ -569,15 +568,21 @@ function pbRenderHarness(){
     if(d<=14) return '<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#1a1a1a;background:#fde68a">🟡 D-'+d+'</span>';
     return '<span style="color:var(--text2)">🟢 D-'+d+'</span>';
   }
+  // 가공물 입고 셀: 입고완료 / 입고일 / 미정
+  function arrCell(b){
+    if(b.arrKey==='DONE') return '<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff;background:#12b886">✔ 입고완료</span>';
+    if(b.arrKey==='NONE') return '<span style="color:var(--text3)">미정</span>';
+    return urgCell(b.arrDays)+'<br><span style="font-size:10px;color:var(--text3)">'+b.arrKey.slice(5,10)+'</span>';
+  }
   function fmtMD(d){ if(d==null) return '—'; return d.toISOString().slice(5,10); }
 
-  var cntUrgent=bundles.filter(function(b){return b.minReq<=7;}).length;
+  var cntReady=bundles.filter(function(b){return b.arrDays<=0;}).length;
 
   var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
     +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 → 전장 생산 스케줄</div>'
-    +'<div style="font-size:12px;color:var(--text3);line-height:1.6">같은 품번 하네스를 <b>최대 8개 묶음</b>으로, <b>납품일 → 가공물 입고일 순</b> 정렬. 위에서부터 작업하세요.<br>'
-    +'하네스 작업일수 = 하네스MD × 개수 · 전장 시작 가능일 = max(가공물 입고일, 하네스 완료일). MD는 [MD 관리] 탭에서 입력합니다.</div>'
-    +'<div style="margin-top:8px;font-size:13px"><b style="color:#d23030">긴급(납품 7일내) '+cntUrgent+'묶음</b> · 전체 '+bundles.length+'묶음 / '+targets.length+'호기</div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.6"><b>같은 품번 + 같은 입고일</b>끼리 묶었습니다(최대 8개). <b>가공물 입고일 순</b> 정렬 — 자재 나오는 순서대로 작업.<br>'
+    +'입고완료(자재 보유)가 최상단 → 즉시 작업 가능. 전장 시작 가능일은 MD 입력 후 계산됩니다.</div>'
+    +'<div style="margin-top:8px;font-size:13px"><b style="color:#12b886">즉시작업 가능 '+cntReady+'묶음</b> · 전체 '+bundles.length+'묶음 / '+targets.length+'호기</div>'
     +'</div>';
 
   if(!bundles.length){
@@ -587,41 +592,40 @@ function pbRenderHarness(){
 
   html+='<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
     +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
-    +'<th style="padding:8px 8px;text-align:center;width:44px;font-size:10.5px;color:var(--text2)">순위</th>'
-    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번 / PD명</th>'
-    +'<th style="padding:8px 8px;text-align:center;width:120px;font-size:10.5px;color:var(--text2)">호기(수량)</th>'
-    +'<th style="padding:8px 8px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">납품일</th>'
-    +'<th style="padding:8px 8px;text-align:center;width:95px;font-size:10.5px;color:var(--text2)">가공물입고</th>'
-    +'<th style="padding:8px 8px;text-align:center;width:78px;font-size:10.5px;color:var(--text2)">하네스<br>작업일</th>'
-    +'<th style="padding:8px 8px;text-align:center;width:88px;font-size:10.5px;color:var(--text2)">전장 시작<br>가능일</th>'
-    +'<th style="padding:8px 8px;text-align:center;width:70px;font-size:10.5px;color:var(--text2)">완료</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:40px;font-size:10.5px;color:var(--text2)">순위</th>'
+    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번 · PD명</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">호기</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:50px;font-size:10.5px;color:var(--text2)">수량</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:88px;font-size:10.5px;color:var(--text2)">납품일</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:100px;font-size:10.5px;color:var(--text2)">가공물입고</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:70px;font-size:10.5px;color:var(--text2)">하네스<br>작업일</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:82px;font-size:10.5px;color:var(--text2)">전장 시작<br>가능일</th>'
+    +'<th style="padding:8px 6px;text-align:center;width:64px;font-size:10.5px;color:var(--text2)">완료</th>'
     +'</tr></thead><tbody>';
 
   bundles.forEach(function(b,i){
-    var g=b.g;
-    // 하네스 작업일수 = 개당 MD × 개수
-    var hnsDays = g.hnsMD>0 ? (g.hnsMD*b.qty) : null;
+    var bm=b.bm;
+    var hnsDays = bm.hnsMD>0 ? (bm.hnsMD*b.qty) : null;
     var hnsTxt = hnsDays!=null ? (Math.round(hnsDays*10)/10+'일') : '<span style="color:var(--text3)">MD?</span>';
-    // 전장 시작 가능일 = max(가공물 입고일, 하네스 완료 예상일)
-    // 하네스 완료 예상 = 오늘부터 hnsDays 영업일 후 (지금 시작 가정)
     var hnsDoneEst = hnsDays!=null ? addBizDays(today, hnsDays) : null;
-    var arrDate = (b.minArr!==99999) ? new Date(today.getTime()+b.minArr*dayMs) : null;
+    var arrDate = (b.arrKey!=='NONE') ? (b.arrKey==='DONE'? today : new Date(today.getTime()+b.arrDays*dayMs)) : null;
     var elecStart=null;
     if(arrDate&&hnsDoneEst) elecStart = arrDate>hnsDoneEst?arrDate:hnsDoneEst;
     else elecStart = arrDate||hnsDoneEst;
-    // 하네스가 가공물 입고보다 늦으면 경고 (전장 지연)
     var late = (arrDate&&hnsDoneEst&&hnsDoneEst>arrDate);
     var idList=b.items.map(function(r){return r.id;}).join(',');
+    var ready=(b.arrDays<=0);
 
-    html+='<tr style="border-bottom:1px solid var(--border)'+(late?';background:rgba(210,48,48,.06)':'')+'">'
-      +'<td style="padding:9px 8px;text-align:center;font-weight:700;font-size:15px;color:'+(b.minReq<=7?'#d23030':'var(--text2)')+'">'+(i+1)+'</td>'
-      +'<td style="padding:9px 10px"><span style="font-family:var(--mono)">'+g.pn+'</span><br><span style="font-size:11px;color:var(--text3)">'+(g.name||'—')+'</span></td>'
-      +'<td style="padding:9px 8px;text-align:center"><b>'+b.hogiRange+'</b><br><span style="font-size:11px;color:var(--teal)">'+b.qty+'개</span></td>'
-      +'<td style="padding:9px 8px;text-align:center">'+urgCell(b.minReq)+'</td>'
-      +'<td style="padding:9px 8px;text-align:center">'+urgCell(b.minArr)+'</td>'
-      +'<td style="padding:9px 8px;text-align:center">'+hnsTxt+'</td>'
-      +'<td style="padding:9px 8px;text-align:center">'+(elecStart?('<b style="color:'+(late?'#d23030':'var(--text)')+'">'+fmtMD(elecStart)+'</b>'+(late?'<br><span style="font-size:9.5px;color:#d23030">하네스 지연</span>':'')):'<span style="color:var(--text3)">—</span>')+'</td>'
-      +'<td style="padding:9px 8px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✓ 완료</button></td>'
+    html+='<tr style="border-bottom:1px solid var(--border)'+(late?';background:rgba(210,48,48,.06)':(ready?';background:rgba(18,184,134,.05)':''))+'">'
+      +'<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:15px;color:'+(ready?'#12b886':'var(--text2)')+'">'+(i+1)+'</td>'
+      +'<td style="padding:9px 10px"><span style="font-family:var(--mono);font-size:12.5px">'+bm.pn+'</span> <span style="font-size:12.5px;color:var(--text2)">· '+(bm.name||'—')+'</span></td>'
+      +'<td style="padding:9px 6px;text-align:center;font-weight:600">'+b.hogiRange+'</td>'
+      +'<td style="padding:9px 6px;text-align:center;color:var(--teal);font-weight:600">'+b.qty+'개</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+urgCell(b.minReq)+'</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+arrCell(b)+'</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+hnsTxt+'</td>'
+      +'<td style="padding:9px 6px;text-align:center">'+(elecStart?('<b style="color:'+(late?'#d23030':'var(--text)')+'">'+fmtMD(elecStart)+'</b>'+(late?'<br><span style="font-size:9.5px;color:#d23030">하네스 지연</span>':'')):'<span style="color:var(--text3)">MD?</span>')+'</td>'
+      +'<td style="padding:9px 6px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✓</button></td>'
       +'</tr>';
   });
   html+='</tbody></table>';
