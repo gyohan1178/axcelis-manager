@@ -1250,27 +1250,218 @@ var _pbView = 'list'; // list | cal | bypn | fa
 
 // 현재 PD BOX 탭 인쇄 (인쇄 시에만 라이트 테마)
 function pbPrintView(){
-  var titles={list:'기본현황', cal:'캘린더', fa:'FA초도품', hns:'하네스우선순위', md:'MD관리'};
-  var t=titles[_pbView]||'PDBOX';
-  var fullTitles={list:'PD BOX — 기본 현황', cal:'PD BOX — 캘린더', fa:'PD BOX — #FA 초도품', hns:'하네스 작업 우선순위', md:'MD 관리'};
+  if(_pbView==='hns') return pbPrintHarness();
+  if(_pbView==='cal') return pbPrintCal();
+  return pbPrintList();  // list / fa / md → 목록형
+}
+
+// 공통: 인쇄 창 열기 (컬럼 너비 슬라이더 + 인쇄 버튼 포함)
+function pbOpenPrintWindow(title, headers, widths, rows, opts){
+  opts=opts||{};
   var now=new Date();
   var ymd=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  var hdr=document.getElementById('pb-print-header');
-  if(hdr){
-    hdr.querySelector('.ph-title').textContent=fullTitles[_pbView]||'PD BOX';
-    hdr.querySelector('.ph-sub').textContent='진선테크 구매자재 · 출력일 '+ymd;
+  var fname=ymd+'_'+(opts.fname||'PDBOX');
+  var orient=opts.landscape!==false?'landscape':'portrait';
+
+  var colgroup=widths.map(function(w){return '<col style="width:'+w+'px">';}).join('');
+  var thead='<tr>'+headers.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>';
+  var tbody=rows.map(function(r){
+    return '<tr'+(r._cls?' class="'+r._cls+'"':'')+'>'+r.cells.map(function(c,ci){
+      return '<td'+(c.align?' style="text-align:'+c.align+'"':'')+'>'+(c.v==null?'':c.v)+'</td>';
+    }).join('')+'</tr>';
+  }).join('');
+
+  var html=''
+    +'<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+fname+'</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;color:#000;background:#fff;padding:14px}'
+    +'.tbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 12px;background:#f3f4f6;border:1px solid #ddd;border-radius:8px;margin-bottom:14px}'
+    +'.tbar h3{font-size:13px;font-weight:700;color:#333;margin-right:auto}'
+    +'.tbar label{font-size:12px;color:#555;display:flex;align-items:center;gap:6px}'
+    +'.tbar input[type=range]{width:130px}'
+    +'.tbar button{padding:7px 18px;background:#2c5cc5;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}'
+    +'.doc-title{font-size:16pt;font-weight:700;margin-bottom:3px}'
+    +'.doc-sub{font-size:9pt;color:#666;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #333}'
+    +'table{width:100%;border-collapse:collapse;table-layout:fixed}'
+    +'th{background:#eee;color:#000;border:1px solid #bbb;font-size:9pt;font-weight:700;padding:6px 4px;text-align:center;word-break:keep-all}'
+    +'td{border:1px solid #ddd;font-size:9pt;padding:5px 5px;color:#000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'tr.alert td{background:#fff7ed}'
+    +'tr.ready td{background:#f0fdf9}'
+    +'tr.grp td{background:#e8edf5;font-weight:700;font-size:9.5pt}'
+    +'.badge{display:inline-block;padding:1px 7px;border:1px solid #888;border-radius:9px;font-size:8pt;font-weight:600}'
+    +'@media print{.tbar{display:none}body{padding:0} @page{margin:'+(opts.landscape!==false?'10mm 8mm':'12mm 10mm')+';size:'+orient+'}}'
+    +'</style></head><body>'
+    +'<div class="tbar">'
+    +'<h3>🖨 인쇄 미리보기 — 컬럼 너비를 조절한 뒤 인쇄하세요</h3>'
+    +'<label>전체 너비 <input type="range" id="zoom" min="60" max="160" value="100"></label>'
+    +'<label>글자 <input type="range" id="fs" min="7" max="12" value="9" step="0.5"></label>'
+    +'<button onclick="window.print()">인쇄 / PDF 저장</button>'
+    +'</div>'
+    +'<div class="doc-title">'+title+'</div>'
+    +'<div class="doc-sub">진선테크 구매자재 · 출력일 '+ymd+' · 총 '+rows.filter(function(r){return !r._cls||r._cls!=='grp';}).length+'건</div>'
+    +'<table id="ptbl"><colgroup>'+colgroup+'</colgroup><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>'
+    +'<script>'
+    +'var z=document.getElementById("zoom"),fs=document.getElementById("fs"),tb=document.getElementById("ptbl");'
+    +'var baseW='+JSON.stringify(widths)+';'
+    +'function apply(){var r=z.value/100;var cols=tb.querySelectorAll("colgroup col");cols.forEach(function(c,i){c.style.width=(baseW[i]*r)+"px";});tb.style.width=(r*100)+"%";'
+    +'tb.querySelectorAll("th,td").forEach(function(e){e.style.fontSize=fs.value+"pt";});}'
+    +'z.addEventListener("input",apply);fs.addEventListener("input",apply);apply();'
+    +'<\/script>'
+    +'</body></html>';
+
+  var w=window.open('','_blank');
+  if(!w){ qToast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.','err',4000); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+// 기본현황 / FA 인쇄 (목록형)
+function pbPrintList(){
+  pbLoad();
+  var fFA=(_pbView==='fa');
+  var rows0=_pbData.filter(function(r){
+    if(_pbView==='list'){ return true; }
+    if(fFA){ return String(r.hogi||'').indexOf('FA')>=0; }
+    return true;
+  });
+  // 납품일 순 정렬
+  rows0.sort(function(a,b){ var x=pbNormDate(a.reqDate)||'9999', y=pbNormDate(b.reqDate)||'9999'; return x<y?-1:1; });
+
+  function chk(v){ return v?'✔':'—'; }
+  var rows=rows0.map(function(r){
+    return {cells:[
+      {v:r.pn||'',align:'left'},
+      {v:r.name||'',align:'left'},
+      {v:r.hogi||'',align:'center'},
+      {v:r.status||'',align:'center'},
+      {v:(pbNormDate(r.reqDate)||'').slice(5,10),align:'center'},
+      {v:(pbNormDate(r.arrivalDate)||'').slice(5,10)||'—',align:'center'},
+      {v:chk(r.machineRecv),align:'center'},
+      {v:chk(r.harnessIssue),align:'center'},
+      {v:chk(r.harnessRecv),align:'center'},
+      {v:(r.note||'').slice(0,40),align:'left'}
+    ]};
+  });
+  pbOpenPrintWindow(
+    fFA?'PD BOX — #FA 초도품':'PD BOX — 기본 현황',
+    ['품번','PD명','호기','상태','납품일','가공물입고','가공입고','하네스불출','하네스완료','비고'],
+    [90,180,60,70,64,72,56,64,64,160],
+    rows,
+    {fname:fFA?'FA초도품':'기본현황', landscape:true}
+  );
+}
+
+// 하네스 우선순위 인쇄 (묶음 + 우선순위)
+function pbPrintHarness(){
+  pbLoad();
+  var today=new Date(); today.setHours(0,0,0,0); var dayMs=86400000; var MAXBUNDLE=8;
+  function dDays(s){var d=pbNormDate(s);return d?Math.round((new Date(d).setHours(0,0,0,0)-today)/dayMs):null;}
+  function hogiNum(h){var m=String(h||'').match(/(\d+)/);return m?+m[1]:9999;}
+
+  var targets=_pbData.filter(function(r){return r.status!=='완료'&&!r.harnessRecv;});
+  var bm={};
+  targets.forEach(function(r){
+    var pn=String(r.pn||'').trim(); if(!pn) return;
+    var arrKey; if(r.machineRecv) arrKey='DONE'; else {var a=pbNormDate(r.arrivalDate); arrKey=a?a.slice(0,10):'NONE';}
+    var issued=!!r.harnessIssue;
+    var key=pn+'|'+arrKey+'|'+(issued?'Y':'N');
+    if(!bm[key]) bm[key]={pn:pn,name:r.name||'',arrKey:arrKey,issued:issued,items:[]};
+    bm[key].items.push(r); if(r.name&&!bm[key].name) bm[key].name=r.name;
+  });
+  var bundles=[];
+  Object.values(bm).forEach(function(g){
+    g.items.sort(function(a,b){return hogiNum(a.hogi)-hogiNum(b.hogi);});
+    for(var i=0;i<g.items.length;i+=MAXBUNDLE){
+      var chunk=g.items.slice(i,i+MAXBUNDLE);
+      var minReq=Math.min.apply(null,chunk.map(function(r){var d=dDays(r.reqDate);return d==null?99999:d;}));
+      var arrDays=g.arrKey==='DONE'?-1:(g.arrKey==='NONE'?99999:dDays(chunk[0].arrivalDate));
+      var hogis=chunk.map(function(r){return r.hogi;}).sort(function(a,b){return hogiNum(a)-hogiNum(b);});
+      var range=hogis.length===1?hogis[0]:(hogis[0]+'~'+hogis[hogis.length-1]);
+      var needIssueAlert=!g.issued&&arrDays!==99999&&arrDays<=30;
+      bundles.push({pn:g.pn,name:g.name,qty:chunk.length,minReq:minReq,arrDays:arrDays,arrKey:g.arrKey,issued:g.issued,needIssueAlert:needIssueAlert,range:range});
+    }
+  });
+  bundles.sort(function(a,b){return a.minReq!==b.minReq?a.minReq-b.minReq:a.arrDays-b.arrDays;});
+
+  function dtxt(d){ if(d===99999||d==null)return '미정'; if(d<0)return '지남'+Math.abs(d)+'일'; if(d===0)return '오늘'; return 'D-'+d; }
+  function arrtxt(b){ if(b.arrKey==='DONE')return '입고완료'; if(b.arrKey==='NONE')return '미정'; return dtxt(b.arrDays)+' ('+b.arrKey.slice(5,10)+')'; }
+  function isstxt(b){ if(b.issued)return '불출됨'; if(b.needIssueAlert)return '⚠불출필요'; return '미불출'; }
+
+  var rows=bundles.map(function(b,i){
+    return {_cls:b.needIssueAlert?'alert':((b.arrDays<=0&&b.issued)?'ready':''), cells:[
+      {v:(i+1),align:'center'},
+      {v:b.pn,align:'left'},
+      {v:b.name||'',align:'left'},
+      {v:b.range,align:'center'},
+      {v:b.qty+'개',align:'center'},
+      {v:'<span class="badge">'+isstxt(b)+'</span>',align:'center'},
+      {v:dtxt(b.minReq),align:'center'},
+      {v:arrtxt(b),align:'center'}
+    ]};
+  });
+  pbOpenPrintWindow('하네스 작업 우선순위',
+    ['순위','품번','PD명','호기','수량','불출상태','납품일','가공물입고'],
+    [44,96,190,90,52,90,84,110],
+    rows, {fname:'하네스우선순위', landscape:true});
+}
+
+// 캘린더 인쇄 (현재 보는 달 한 장에)
+function pbPrintCal(){
+  pbLoad();
+  var y=(typeof _pbCalYear!=='undefined')?_pbCalYear:new Date().getFullYear();
+  var m=(typeof _pbCalMonth!=='undefined')?_pbCalMonth:new Date().getMonth();
+  var first=new Date(y,m,1), last=new Date(y,m+1,0);
+  var startDow=first.getDay(), days=last.getDate();
+  // 날짜별 항목 (reqDate 기준)
+  var byDay={};
+  _pbData.forEach(function(r){
+    var d=pbNormDate(r.reqDate); if(!d) return;
+    var dt=new Date(d); if(dt.getFullYear()!==y||dt.getMonth()!==m) return;
+    var day=dt.getDate(); (byDay[day]=byDay[day]||[]).push(r);
+  });
+  var now=new Date(); var ymd=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var fname=ymd+'_캘린더_'+y+'-'+String(m+1).padStart(2,'0');
+
+  var cells='';
+  var dow=['일','월','화','수','목','금','토'];
+  var head='<tr>'+dow.map(function(d,i){return '<th style="color:'+(i===0?'#c00':i===6?'#06c':'#000')+'">'+d+'</th>';}).join('')+'</tr>';
+  var dayNum=1-startDow;
+  for(var w=0;w<6;w++){
+    if(dayNum>days) break;
+    cells+='<tr>';
+    for(var dw=0;dw<7;dw++){
+      if(dayNum<1||dayNum>days){ cells+='<td class="empty"></td>'; }
+      else{
+        var items=byDay[dayNum]||[];
+        var inner=items.map(function(r){return '<div class="ev">'+(r.pn||'')+' '+(r.hogi||'')+'</div>';}).join('');
+        cells+='<td><div class="dn'+(dw===0?' sun':dw===6?' sat':'')+'">'+dayNum+'</div>'+inner+'</td>';
+      }
+      dayNum++;
+    }
+    cells+='</tr>';
   }
-  // PDF 저장 시 기본 파일명 = document.title → "출력일_탭명"으로 임시 변경
-  var prevTitle=document.title;
-  document.title=ymd+'_'+t;
-  document.body.classList.add('printing-pdbox');
-  var cleanup=function(){
-    document.body.classList.remove('printing-pdbox');
-    document.title=prevTitle;
-    window.removeEventListener('afterprint',cleanup);
-  };
-  window.addEventListener('afterprint',cleanup);
-  setTimeout(function(){ window.print(); }, 80);
+
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+fname+'</title><style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;color:#000;background:#fff;padding:14px}'
+    +'.tbar{display:flex;gap:14px;align-items:center;padding:10px 12px;background:#f3f4f6;border:1px solid #ddd;border-radius:8px;margin-bottom:12px}'
+    +'.tbar h3{font-size:13px;font-weight:700;margin-right:auto}.tbar button{padding:7px 18px;background:#2c5cc5;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}'
+    +'.doc-title{font-size:16pt;font-weight:700;margin-bottom:3px}.doc-sub{font-size:9pt;color:#666;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #333}'
+    +'table{width:100%;height:calc(100% - 60px);border-collapse:collapse;table-layout:fixed}'
+    +'th{border:1px solid #bbb;background:#eee;font-size:10pt;padding:5px}'
+    +'td{border:1px solid #ddd;vertical-align:top;padding:3px;height:90px;overflow:hidden}'
+    +'td.empty{background:#fafafa}.dn{font-size:9pt;font-weight:700;margin-bottom:2px}.dn.sun{color:#c00}.dn.sat{color:#06c}'
+    +'.ev{font-size:7.5pt;background:#eef2fb;border-radius:3px;padding:1px 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    +'@media print{.tbar{display:none}body{padding:0}@page{margin:8mm;size:landscape}}'
+    +'</style></head><body>'
+    +'<div class="tbar"><h3>🖨 캘린더 인쇄 — 한 장에 맞춰 출력됩니다</h3><button onclick="window.print()">인쇄 / PDF 저장</button></div>'
+    +'<div class="doc-title">PD BOX 캘린더 — '+y+'년 '+(m+1)+'월</div>'
+    +'<div class="doc-sub">진선테크 구매자재 · 출력일 '+ymd+' · 납품일 기준</div>'
+    +'<table><thead>'+head+'</thead><tbody>'+cells+'</tbody></table>'
+    +'</body></html>';
+  var w=window.open('','_blank');
+  if(!w){ qToast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.','err',4000); return; }
+  w.document.write(html); w.document.close();
 }
 
 function pbSetView(v){
