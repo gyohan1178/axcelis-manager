@@ -508,72 +508,135 @@ function pbRenderHarness(){
 
   var today=new Date(); today.setHours(0,0,0,0);
   var dayMs=86400000;
+  var MAXBUNDLE=8;
 
-  var list=_pbData.filter(function(r){
-    if(r.status==='완료') return false;
-    if(!r.harnessIssue) return false;
-    if(r.harnessRecv) return false;
-    return true;
-  }).map(function(r){
-    var arr=pbNormDate(r.arrivalDate);
-    var days = arr ? Math.round((new Date(arr).setHours(0,0,0,0)-today)/dayMs) : 9999;
-    return {r:r, arr:arr, days:days};
-  });
-
-  list.sort(function(a,b){
-    if(a.arr&&!b.arr) return -1;
-    if(!a.arr&&b.arr) return 1;
-    return a.days-b.days;
-  });
-
-  function urg(d){
-    if(d===9999) return {lbl:'입고일 미정', col:'var(--text3)', bg:'transparent', rank:''};
-    if(d<0)  return {lbl:'지남 '+Math.abs(d)+'일', col:'#fff', bg:'#d23030', rank:'🔴'};
-    if(d===0) return {lbl:'오늘 입고', col:'#fff', bg:'#d23030', rank:'🔴'};
-    if(d<=7) return {lbl:'D-'+d, col:'#fff', bg:'#f59e0b', rank:'🟠'};
-    if(d<=14) return {lbl:'D-'+d, col:'#1a1a1a', bg:'#fde68a', rank:'🟡'};
-    return {lbl:'D-'+d, col:'var(--text2)', bg:'transparent', rank:'🟢'};
+  function dDays(dstr){ var d=pbNormDate(dstr); return d? Math.round((new Date(d).setHours(0,0,0,0)-today)/dayMs) : null; }
+  function hogiNum(h){ var m=String(h||'').match(/(\d+)/); return m?+m[1]:9999; }
+  function addBizDays(start, n){ // start(Date)에서 영업일 n일 후
+    var d=new Date(start); var added=0;
+    while(added<Math.ceil(n)){ d.setDate(d.getDate()+1); var w=d.getDay(); if(w!==0&&w!==6) added++; }
+    return d;
   }
 
-  var cntUrgent=list.filter(function(x){return x.days<=7;}).length;
+  // 작업 대상: 하네스 불출됨 + 미완료 + 미납품
+  var targets=_pbData.filter(function(r){
+    return r.status!=='완료' && r.harnessIssue && !r.harnessRecv;
+  });
+
+  // 품번별 그룹화
+  var groups={};
+  targets.forEach(function(r){
+    var pn=String(r.pn||'').trim(); if(!pn) return;
+    if(!groups[pn]) groups[pn]={pn:pn, name:r.name||'', items:[], hnsMD:+r.hnsMD||0, elecMD:+r.elecMD||0};
+    groups[pn].items.push(r);
+    if(r.name&&!groups[pn].name) groups[pn].name=r.name;
+    if(+r.hnsMD) groups[pn].hnsMD=+r.hnsMD;
+    if(+r.elecMD) groups[pn].elecMD=+r.elecMD;
+  });
+
+  // 각 그룹: 납품일 1순위, 가공물 입고일 2순위 → 묶음 분할(최대 8)
+  var bundles=[];
+  Object.values(groups).forEach(function(g){
+    g.items.sort(function(a,b){
+      var ra=dDays(a.reqDate), rb=dDays(b.reqDate);
+      if(ra==null) ra=99999; if(rb==null) rb=99999;
+      if(ra!==rb) return ra-rb;
+      var aa=dDays(a.arrivalDate), ab=dDays(b.arrivalDate);
+      if(aa==null) aa=99999; if(ab==null) ab=99999;
+      return aa-ab;
+    });
+    // 8개씩 묶음 분할
+    for(var i=0;i<g.items.length;i+=MAXBUNDLE){
+      var chunk=g.items.slice(i,i+MAXBUNDLE);
+      // 묶음 기준일: 가장 빠른 납품일, 가장 빠른 가공물 입고일
+      var minReq=Math.min.apply(null, chunk.map(function(r){var d=dDays(r.reqDate); return d==null?99999:d;}));
+      var minArr=Math.min.apply(null, chunk.map(function(r){var d=dDays(r.arrivalDate); return d==null?99999:d;}));
+      // 호기 범위
+      var hogis=chunk.map(function(r){return r.hogi;}).sort(function(a,b){return hogiNum(a)-hogiNum(b);});
+      var hogiRange = hogis.length===1 ? hogis[0] : (hogis[0]+'~'+hogis[hogis.length-1]);
+      bundles.push({g:g, items:chunk, qty:chunk.length, minReq:minReq, minArr:minArr, hogiRange:hogiRange, hogis:hogis});
+    }
+  });
+
+  // 묶음 정렬: 납품일(minReq) 1순위, 가공물 입고일(minArr) 2순위
+  bundles.sort(function(a,b){ return a.minReq!==b.minReq ? a.minReq-b.minReq : a.minArr-b.minArr; });
+
+  function urgCell(d){
+    if(d===99999||d==null) return '<span style="color:var(--text3)">미정</span>';
+    if(d<0)  return '<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff;background:#d23030">🔴 지남 '+Math.abs(d)+'일</span>';
+    if(d===0) return '<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff;background:#d23030">🔴 오늘</span>';
+    if(d<=7) return '<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff;background:#f59e0b">🟠 D-'+d+'</span>';
+    if(d<=14) return '<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#1a1a1a;background:#fde68a">🟡 D-'+d+'</span>';
+    return '<span style="color:var(--text2)">🟢 D-'+d+'</span>';
+  }
+  function fmtMD(d){ if(d==null) return '—'; return d.toISOString().slice(5,10); }
+
+  var cntUrgent=bundles.filter(function(b){return b.minReq<=7;}).length;
 
   var html='<div style="margin-bottom:12px;padding:12px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border2)">'
-    +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 작업 우선순위</div>'
-    +'<div style="font-size:12px;color:var(--text3);line-height:1.6">불출된 하네스 중 미완료 항목을 <b>가공물 입고예정일 순</b>으로 정렬했습니다. 위에서부터 작업하세요.<br>'
-    +'가공물이 입고되면 자재가 불출되어 현장 조립이 시작되므로, 그 전에 하네스가 완료돼야 합니다.</div>'
-    +'<div style="margin-top:8px;font-size:13px"><b style="color:#d23030">긴급(7일 이내) '+cntUrgent+'건</b> · 전체 작업대상 '+list.length+'건</div>'
+    +'<div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">🧵 하네스 → 전장 생산 스케줄</div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.6">같은 품번 하네스를 <b>최대 8개 묶음</b>으로, <b>납품일 → 가공물 입고일 순</b> 정렬. 위에서부터 작업하세요.<br>'
+    +'하네스 작업일수 = 하네스MD × 개수 · 전장 시작 가능일 = max(가공물 입고일, 하네스 완료일). MD는 [MD 관리] 탭에서 입력합니다.</div>'
+    +'<div style="margin-top:8px;font-size:13px"><b style="color:#d23030">긴급(납품 7일내) '+cntUrgent+'묶음</b> · 전체 '+bundles.length+'묶음 / '+targets.length+'호기</div>'
     +'</div>';
 
-  if(!list.length){
+  if(!bundles.length){
     html+='<div style="text-align:center;padding:40px;color:var(--text3)">작업할 하네스가 없습니다. (불출되고 미완료인 항목 없음)</div>';
     wrap.innerHTML=html; return;
   }
 
   html+='<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
     +'<thead><tr style="background:var(--bg3);border-bottom:1px solid var(--border2)">'
-    +'<th style="padding:8px 10px;text-align:center;width:50px;font-size:10.5px;color:var(--text2)">순위</th>'
-    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번</th>'
-    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">PD 명</th>'
-    +'<th style="padding:8px 10px;text-align:center;width:60px;font-size:10.5px;color:var(--text2)">호기</th>'
-    +'<th style="padding:8px 10px;text-align:center;width:110px;font-size:10.5px;color:var(--text2)">가공물 입고예정</th>'
-    +'<th style="padding:8px 10px;text-align:center;width:110px;font-size:10.5px;color:var(--text2)">긴급도</th>'
-    +'<th style="padding:8px 10px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">완료처리</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:44px;font-size:10.5px;color:var(--text2)">순위</th>'
+    +'<th style="padding:8px 10px;text-align:left;font-size:10.5px;color:var(--text2)">품번 / PD명</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:120px;font-size:10.5px;color:var(--text2)">호기(수량)</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:90px;font-size:10.5px;color:var(--text2)">납품일</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:95px;font-size:10.5px;color:var(--text2)">가공물입고</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:78px;font-size:10.5px;color:var(--text2)">하네스<br>작업일</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:88px;font-size:10.5px;color:var(--text2)">전장 시작<br>가능일</th>'
+    +'<th style="padding:8px 8px;text-align:center;width:70px;font-size:10.5px;color:var(--text2)">완료</th>'
     +'</tr></thead><tbody>';
 
-  list.forEach(function(x,i){
-    var r=x.r, u=urg(x.days);
-    html+='<tr style="border-bottom:1px solid var(--border)">'
-      +'<td style="padding:8px 10px;text-align:center;font-weight:700;font-size:15px;color:'+(x.days<=7?'#d23030':'var(--text2)')+'">'+(i+1)+'</td>'
-      +'<td style="padding:8px 10px;font-family:var(--mono)">'+(r.pn||'—')+'</td>'
-      +'<td style="padding:8px 10px">'+(r.name||'—')+'</td>'
-      +'<td style="padding:8px 10px;text-align:center"><span class="pb-hogi'+(String(r.hogi).indexOf('FA')>=0?' fa':'')+'">'+(r.hogi||'')+'</span></td>'
-      +'<td style="padding:8px 10px;text-align:center">'+(x.arr?x.arr.slice(0,10):'<span style="color:var(--text3)">미정</span>')+'</td>'
-      +'<td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700;color:'+u.col+';background:'+u.bg+'">'+u.rank+' '+u.lbl+'</span></td>'
-      +'<td style="padding:8px 10px;text-align:center"><button onclick="pbToggleComplete(\''+r.id+'\',\'harnessRecv\');pbRenderHarness();" style="padding:4px 12px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer">✓ 완료</button></td>'
+  bundles.forEach(function(b,i){
+    var g=b.g;
+    // 하네스 작업일수 = 개당 MD × 개수
+    var hnsDays = g.hnsMD>0 ? (g.hnsMD*b.qty) : null;
+    var hnsTxt = hnsDays!=null ? (Math.round(hnsDays*10)/10+'일') : '<span style="color:var(--text3)">MD?</span>';
+    // 전장 시작 가능일 = max(가공물 입고일, 하네스 완료 예상일)
+    // 하네스 완료 예상 = 오늘부터 hnsDays 영업일 후 (지금 시작 가정)
+    var hnsDoneEst = hnsDays!=null ? addBizDays(today, hnsDays) : null;
+    var arrDate = (b.minArr!==99999) ? new Date(today.getTime()+b.minArr*dayMs) : null;
+    var elecStart=null;
+    if(arrDate&&hnsDoneEst) elecStart = arrDate>hnsDoneEst?arrDate:hnsDoneEst;
+    else elecStart = arrDate||hnsDoneEst;
+    // 하네스가 가공물 입고보다 늦으면 경고 (전장 지연)
+    var late = (arrDate&&hnsDoneEst&&hnsDoneEst>arrDate);
+    var idList=b.items.map(function(r){return r.id;}).join(',');
+
+    html+='<tr style="border-bottom:1px solid var(--border)'+(late?';background:rgba(210,48,48,.06)':'')+'">'
+      +'<td style="padding:9px 8px;text-align:center;font-weight:700;font-size:15px;color:'+(b.minReq<=7?'#d23030':'var(--text2)')+'">'+(i+1)+'</td>'
+      +'<td style="padding:9px 10px"><span style="font-family:var(--mono)">'+g.pn+'</span><br><span style="font-size:11px;color:var(--text3)">'+(g.name||'—')+'</span></td>'
+      +'<td style="padding:9px 8px;text-align:center"><b>'+b.hogiRange+'</b><br><span style="font-size:11px;color:var(--teal)">'+b.qty+'개</span></td>'
+      +'<td style="padding:9px 8px;text-align:center">'+urgCell(b.minReq)+'</td>'
+      +'<td style="padding:9px 8px;text-align:center">'+urgCell(b.minArr)+'</td>'
+      +'<td style="padding:9px 8px;text-align:center">'+hnsTxt+'</td>'
+      +'<td style="padding:9px 8px;text-align:center">'+(elecStart?('<b style="color:'+(late?'#d23030':'var(--text)')+'">'+fmtMD(elecStart)+'</b>'+(late?'<br><span style="font-size:9.5px;color:#d23030">하네스 지연</span>':'')):'<span style="color:var(--text3)">—</span>')+'</td>'
+      +'<td style="padding:9px 8px;text-align:center"><button onclick="pbBundleDone(\''+idList+'\')" style="padding:4px 10px;background:var(--teal);color:#051515;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✓ 완료</button></td>'
       +'</tr>';
   });
   html+='</tbody></table>';
   wrap.innerHTML=html;
+}
+
+// 묶음 전체 하네스 완료 처리
+function pbBundleDone(idList){
+  var ids=String(idList).split(',');
+  pbLoad();
+  var now=new Date().toISOString();
+  _pbData.forEach(function(r){ if(ids.indexOf(String(r.id))>=0){ r.harnessRecv=true; r.updatedAt=now; } });
+  pbSaveAll();
+  pbRenderHarness();
+  qToast('✓ '+ids.length+'개 하네스 완료 처리','ok');
 }
 
 // 전장완료요청일 계산 (reqDate 기준 영업일 -4)
@@ -1157,7 +1220,7 @@ function pbSetView(v){
   });
   // 캘린더 wrap 토글
   var calWrap = document.getElementById('pb-cal-wrap');
-  var tblWrap = document.querySelector('#sect-pdbox .pb-table-wrap');
+  var tblWrap = document.querySelector('#sect-pdbox .pb-tw');
   var hnsWrap = document.getElementById('pb-hns-wrap');
   var mdWrap = document.getElementById('pb-md-wrap');
 
