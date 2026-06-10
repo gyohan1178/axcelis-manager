@@ -1250,18 +1250,27 @@ var _pbView = 'list'; // list | cal | bypn | fa
 
 // 현재 PD BOX 탭 인쇄 (인쇄 시에만 라이트 테마)
 function pbPrintView(){
-  var titles={list:'PD BOX — 기본 현황', cal:'PD BOX — 캘린더', fa:'PD BOX — #FA 초도품', hns:'하네스 작업 우선순위', md:'MD 관리'};
-  var t=titles[_pbView]||'PD BOX';
+  var titles={list:'기본현황', cal:'캘린더', fa:'FA초도품', hns:'하네스우선순위', md:'MD관리'};
+  var t=titles[_pbView]||'PDBOX';
+  var fullTitles={list:'PD BOX — 기본 현황', cal:'PD BOX — 캘린더', fa:'PD BOX — #FA 초도품', hns:'하네스 작업 우선순위', md:'MD 관리'};
+  var now=new Date();
+  var ymd=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   var hdr=document.getElementById('pb-print-header');
   if(hdr){
-    hdr.querySelector('.ph-title').textContent=t;
-    var now=new Date();
-    hdr.querySelector('.ph-sub').textContent='진선테크 구매자재 · 출력일 '+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    hdr.querySelector('.ph-title').textContent=fullTitles[_pbView]||'PD BOX';
+    hdr.querySelector('.ph-sub').textContent='진선테크 구매자재 · 출력일 '+ymd;
   }
+  // PDF 저장 시 기본 파일명 = document.title → "출력일_탭명"으로 임시 변경
+  var prevTitle=document.title;
+  document.title=ymd+'_'+t;
   document.body.classList.add('printing-pdbox');
-  var cleanup=function(){ document.body.classList.remove('printing-pdbox'); window.removeEventListener('afterprint',cleanup); };
+  var cleanup=function(){
+    document.body.classList.remove('printing-pdbox');
+    document.title=prevTitle;
+    window.removeEventListener('afterprint',cleanup);
+  };
   window.addEventListener('afterprint',cleanup);
-  setTimeout(function(){ window.print(); }, 60);
+  setTimeout(function(){ window.print(); }, 80);
 }
 
 function pbSetView(v){
