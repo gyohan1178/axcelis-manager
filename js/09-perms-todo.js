@@ -346,12 +346,12 @@ function svDBItem(item, isDelete) {
       .then(function(r){ setSyncStatus(r.ok?'ok':'error'); })
       .catch(function(e){ setSyncStatus('error', e.message); });
   } else {
-    // updateRow 먼저 시도, 없으면 appendRows
-    apiPost({ action:'updateRow', sheet:'db_items', keyField:'pn', keyValue:item.pn, updates:item })
+    // upsert 한 번으로: 있으면 덮어쓰기, 없으면 삽입 (중복키 23505 방지)
+    apiPost({ action:'appendRows', sheet:'db_items', rows:[item], upsert:true })
       .then(function(r){
-        if(r.ok) { setSyncStatus('ok'); return; }
-        // 행이 없으면 추가
-        apiPost({ action:'appendRows', sheet:'db_items', rows:[item] })
+        if(r.ok){ setSyncStatus('ok'); return; }
+        // 폴백: 혹시 upsert가 안 되면 updateRow 시도
+        apiPost({ action:'updateRow', sheet:'db_items', keyField:'pn', keyValue:item.pn, updates:item })
           .then(function(r2){ setSyncStatus(r2.ok?'ok':'error'); })
           .catch(function(e){ setSyncStatus('error', e.message); });
       })

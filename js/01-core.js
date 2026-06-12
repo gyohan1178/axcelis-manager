@@ -441,11 +441,13 @@ function apiPost(body) {
     }
     if(!rows.length) return Promise.resolve({ok:true, count:0});
     var _adropped=SB_DROPPED_COLS[tbl]||(SB_DROPPED_COLS[tbl]={});
+    // upsert 모드: 기본키 충돌 시 덮어쓰기 (23505 중복키 방지)
+    var _appendPrefer = body.upsert ? 'return=minimal,resolution=merge-duplicates' : 'return=minimal';
     function _appendTry(arr, retries){
       if(Object.keys(_adropped).length){ arr.forEach(function(o){ for(var dk in _adropped) delete o[dk]; }); }
       return fetch(SB_URL+'/rest/v1/'+tbl, {
         method:'POST',
-        headers:sbHeaders({'Prefer':'return=minimal'}),
+        headers:sbHeaders({'Prefer':_appendPrefer}),
         body:JSON.stringify(arr)
       }).then(function(r){
         if(r.ok) return {ok:true, count:arr.length};
@@ -470,11 +472,33 @@ function apiPost(body) {
   if(action === 'updateRow'){
     var tbl = sbTable(body.sheet);
     var url = SB_URL+'/rest/v1/'+tbl+'?'+body.keyField+'=eq.'+encodeURIComponent(body.keyValue);
-    return fetch(url, {
-      method:'PATCH',
-      headers:sbHeaders({'Prefer':'return=minimal'}),
-      body:JSON.stringify(body.updates)
-    }).then(function(r){ return r.ok?{ok:true}:{ok:false}; });
+    // 앱 객체 → 서버 컬럼명으로 변환 (setSheet/appendRows와 동일 처리). 키 필드는 변경 안 함.
+    var upd = sbMapRow(body.updates, body.sheet, company);
+    // 서버에 없다고 기억된 컬럼 제거 (재시도 폭주 방지)
+    var _udrop = SB_DROPPED_COLS[tbl]||(SB_DROPPED_COLS[tbl]={});
+    for(var udk in _udrop) delete upd[udk];
+    function _updTry(payload, retries){
+      return fetch(url, {
+        method:'PATCH',
+        headers:sbHeaders({'Prefer':'return=minimal'}),
+        body:JSON.stringify(payload)
+      }).then(function(r){
+        if(r.ok) return {ok:true};
+        return r.text().then(function(t){
+          // 컬럼 없음 → 제거 후 재시도
+          var mm = t && t.match(/Could not find the '([^']+)' column/);
+          if(mm && retries>0){ _udrop[mm[1]]=1; delete payload[mm[1]]; return _updTry(payload, retries-1); }
+          // boolean 타입 오류 → 변환 후 재시도
+          if(t && t.indexOf('invalid input syntax for type boolean')>=0 && retries>0){
+            ['is_alt','isAlt'].forEach(function(k){ if(payload[k]!==undefined){ var v=payload[k]; payload[k]=(v===true)||(v==='true')||(v==='Y')||(v==='1')||(v==='승인')||(v==='대체')?true:false; } });
+            return _updTry(payload, retries-1);
+          }
+          console.error('🔴 SB updateRow 실패 ['+tbl+']:', t);
+          return {ok:false, error:t};
+        });
+      }).catch(function(e){ return {ok:false, error:e.message}; });
+    }
+    return _updTry(upd, 25);
   }
 
   // ── 행 삭제 ──
