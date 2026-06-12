@@ -1096,7 +1096,18 @@ function pbSave(){
   rec.history = history.slice(-50);  // 최대 50건
 
   if(id){ var idx=_pbData.findIndex(function(x){return x.id===id;});
-    if(idx>=0){rec.createdAt=_pbData[idx].createdAt||now;_pbData[idx]=rec;}
+    if(idx>=0){
+      var prev=_pbData[idx];
+      // 모달에 없는 필드는 기존값 보존: 완료상태(셀 클릭으로 관리), MD(품번기준), 기타
+      rec.machineRecv = prev.machineRecv;
+      rec.harnessRecv = prev.harnessRecv;
+      rec.elecRecv    = prev.elecRecv;
+      rec.qcDone      = prev.qcDone;
+      rec.hnsMD       = prev.hnsMD;
+      rec.elecMD      = prev.elecMD;
+      rec.createdAt   = prev.createdAt||now;
+      _pbData[idx]=rec;
+    }
     else{rec.createdAt=now;_pbData.push(rec);}
   } else {rec.createdAt=now;_pbData.push(rec);}
   pbSaveAll();
