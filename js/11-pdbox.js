@@ -1188,24 +1188,55 @@ function pbImportCSV(inp){
       var iHiDone=fi(['하네스완료','harnessdone','harness_done','하네스제작완료','하네스완료요청']);
       var iPartIssue=fi(['파트불출','partissue','part_issue','파트불출일','전장자재불출']);
       var iElec=fi(['전장완료','elecdone','elec_done','전장완료요청일','전장완료요청']);
+      var iUpdated=fi(['updatedat','updated_at','수정일','수정일시']);
+      var iMachineRecv=fi(['machinerecv','machine_recv','가공물입고확인','가공물완료']);
+      var iHarnessRecv=fi(['harnessrecv','harness_recv','하네스완료확인','하네스완료']);
+      var iElecRecv=fi(['elecrecv','elec_recv','전장완료확인','전장입고확인']);
+      var iMpPn=fi(['미불출품번','mppn','missing_pn']);
+      var iMpQty=fi(['미불출수량','mpqty','missing_qty']);
+      var iMpDate=fi(['입고예정일','mpdate','expecteddate','expected_date']);
+      var iMpNote=fi(['비고','mpnote']);
+      function truthy(v){ v=String(v||'').trim().toUpperCase(); return v==='Y'||v==='TRUE'||v==='1'||v==='✔'||v==='O'||v==='CLOSE'||v==='완료'; }
       var now=new Date().toISOString();
       var added=0, skipped=0;
+      var _lastRec=null;
       pbLoad();
+      var _byKey={};   // 품번|호기 → 이미 만든 레코드 (미불출 합치기용)
       rows.slice(1).forEach(function(r){
         var name=iName>=0?String(r[iName]||'').trim():'';
-        if(!name){skipped++;return;}
+        var pn=iPn>=0?String(r[iPn]||'').trim():'';
+        var hogi=iHogi>=0?String(r[iHogi]||'').trim():'#1';
+        // 미불출 정보 (이 행에 있으면)
+        var mpPn=iMpPn>=0?String(r[iMpPn]||'').trim():'';
+        var mpQty=iMpQty>=0?String(r[iMpQty]||'').trim():'';
+        var mpDate=iMpDate>=0?String(r[iMpDate]||'').trim():'';
+        var mpNote=iMpNote>=0?String(r[iMpNote]||'').trim():'';
+        var mpObj=(mpPn||mpQty)?{pn:mpPn,qty:mpQty,expectedDate:mpDate,note:mpNote}:null;
+
+        var key=pn+'|'+hogi;
+        // 직전에 같은 품번+호기 레코드가 있으면 → 미불출만 추가하고 새 레코드 안 만듦 (행 합치기)
+        if(name && _byKey[key]){
+          if(mpObj) _byKey[key].missingParts.push(mpObj);
+          return;
+        }
+        if(!name){
+          // name 없는데 미불출만 있는 행 → 직전 레코드에 붙임
+          if(mpObj && _lastRec){ _lastRec.missingParts.push(mpObj); }
+          else skipped++;
+          return;
+        }
+
+        var statusRaw=iStatus>=0?String(r[iStatus]||'').trim():'PO접수';
+        var statusMap={'발주접수':'PO접수','시작 전':'PO접수','진행 중 - 제조':'제작중','진행 중 - 품질':'품질검수','출하':'납품대기','완료':'완료','PO접수':'PO접수','자재발주':'자재발주','제작중':'제작중','품질검수':'품질검수','납품대기':'납품대기'};
+        var status=statusMap[statusRaw]||statusRaw||'PO접수';
+        var isDone=(status==='완료');
+
         var rec={
           id:pbUID(),
-          name:name,
-          pn:iPn>=0?String(r[iPn]||'').trim():'',
-          hogi:iHogi>=0?String(r[iHogi]||'').trim():'#1',
+          name:name, pn:pn, hogi:hogi,
           ccn:iCcn>=0?String(r[iCcn]||'').trim():'',
           rev:iRev>=0?String(r[iRev]||'').trim():'',
-          status:(function(){
-            var raw=iStatus>=0?String(r[iStatus]||'').trim():'PO접수';
-            var map={'발주접수':'PO접수','시작 전':'PO접수','진행 중 - 제조':'제작중','진행 중 - 품질':'품질검수','출하':'납품대기','완료':'완료','PO접수':'PO접수','자재발주':'자재발주','제작중':'제작중','품질검수':'품질검수','납품대기':'납품대기'};
-            return map[raw]||raw||'PO접수';
-          })(),
+          status:status,
           poReceived:iNoPo>=0?String(r[iNoPo]||'').trim()!=='Y'&&String(r[iNoPo]||'').trim()!=='TRUE'&&String(r[iNoPo]||'').trim()!=='1':true,
           note:iNote>=0?String(r[iNote]||'').trim():'',
           reqDate:iReq>=0?String(r[iReq]||'').trim():'',
@@ -1215,11 +1246,17 @@ function pbImportCSV(inp){
           harnessDone:iHiDone>=0?String(r[iHiDone]||'').trim():'',
           partIssue:iPartIssue>=0?String(r[iPartIssue]||'').trim():'',
           elecDone:iElec>=0?String(r[iElec]||'').trim():'',
-          missingParts:[],
+          // 완료 상태: CSV에 컬럼 있으면 읽고, status=완료면 보조로 완료 처리
+          machineRecv: iMachineRecv>=0 ? truthy(r[iMachineRecv]) : isDone,
+          harnessRecv: iHarnessRecv>=0 ? truthy(r[iHarnessRecv]) : isDone,
+          elecRecv:    iElecRecv>=0 ? truthy(r[iElecRecv]) : isDone,
+          missingParts:mpObj?[mpObj]:[],
           changes:[{type:'신규', msg:'CSV 등록', at:now}],
-          createdAt:now, updatedAt:now,
+          createdAt:now,
+          updatedAt:(iUpdated>=0&&String(r[iUpdated]||'').trim())?String(r[iUpdated]).trim():now,
         };
         _pbData.push(rec); added++;
+        _byKey[key]=rec; _lastRec=rec;
       });
       // 중복 제거: 동일 품번+호기 조합이면 신규만 추가 (기존 유지)
       var existKeys={};
@@ -1657,11 +1694,17 @@ function pbDownloadSampleCSV(){
 
 function pbExportCSV(){
   pbLoad();
-  var keys=['name','pn','hogi','ccn','rev','status','poReceived','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','updatedAt'];
+  var keys=['name','pn','hogi','ccn','rev','status','poReceived','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','updatedAt','machineRecv','harnessRecv','elecRecv'];
   var header=keys.concat(['미불출품번','미불출수량','입고예정일','비고']);
   var rows=[header];
   _pbData.forEach(function(r){
-    var base=keys.map(function(k){return r[k]!=null?r[k]:'';});
+    var base=keys.map(function(k){
+      var v=r[k];
+      if(v==null) return '';
+      if(typeof v==='boolean') return v?'Y':'';   // 완료 상태는 Y로
+      if(k==='updatedAt'||k==='createdAt'){ var s=String(v); return s.length>=10?s.slice(0,10):s; }  // 년월일만
+      return v;
+    });
     var mp=r.missingParts||[];
     if(!mp.length) rows.push(base.concat(['','','','']));
     else mp.forEach(function(p){ rows.push(base.concat([p.pn||'',p.qty||'',p.expectedDate||'',p.note||''])); });
