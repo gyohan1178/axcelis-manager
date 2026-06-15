@@ -1194,11 +1194,11 @@ function pbImportCSV(inp){
       var iMpDate=fi(['입고예정일','mpdate','expecteddate','expected_date']);
       var iMpNote=fi(['비고','mpnote']);
       function truthy(v){ v=String(v||'').trim().toUpperCase(); return v==='Y'||v==='TRUE'||v==='1'||v==='✔'||v==='O'||v==='CLOSE'||v==='완료'; }
-      // 날짜 컬럼 값이 Y/완료면 '완료'로 간주 (날짜가 아니므로 날짜필드엔 빈값)
+      // 이 세 칸은 예정일일 수도 있으므로 날짜 그대로 저장. 완료 판단은 하지 않음.
       function dateOrDone(rawVal){
         var raw=String(rawVal!=null?rawVal:'').trim();
-        if(truthy(raw)) return {date:'', done:true};
-        return {date:raw, done:false};
+        if(truthy(raw)) return {date:'', done:true};   // 명시적 Y/완료 표기만 완료로
+        return {date:raw, done:false};                 // 날짜면 날짜만(완료 아님)
       }
       var now=new Date().toISOString();
       var added=0, skipped=0;
@@ -1704,13 +1704,9 @@ function pbExportCSV(){
   pbLoad();
   var keys=['name','pn','hogi','ccn','rev','status','poReceived','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','updatedAt'];
   var header=keys.concat(['미불출품번','미불출수량','입고예정일','비고']);
-  // 완료 상태 → 날짜 컬럼에 Y로 표기할 매핑
-  var recvMap={ arrivalDate:'machineRecv', harnessDone:'harnessRecv', elecDone:'elecRecv' };
   var rows=[header];
   _pbData.forEach(function(r){
     var base=keys.map(function(k){
-      // 완료 공정은 해당 날짜 컬럼에 Y
-      if(recvMap[k] && r[recvMap[k]]) return 'Y';
       var v=r[k];
       if(v==null) return '';
       if(typeof v==='boolean') return v?'Y':'';
