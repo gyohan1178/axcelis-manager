@@ -1189,14 +1189,17 @@ function pbImportCSV(inp){
       var iPartIssue=fi(['파트불출','partissue','part_issue','파트불출일','전장자재불출']);
       var iElec=fi(['전장완료','elecdone','elec_done','전장완료요청일','전장완료요청']);
       var iUpdated=fi(['updatedat','updated_at','수정일','수정일시']);
-      var iMachineRecv=fi(['machinerecv','machine_recv','가공물입고확인','가공물완료']);
-      var iHarnessRecv=fi(['harnessrecv','harness_recv','하네스완료확인','하네스완료']);
-      var iElecRecv=fi(['elecrecv','elec_recv','전장완료확인','전장입고확인']);
       var iMpPn=fi(['미불출품번','mppn','missing_pn']);
       var iMpQty=fi(['미불출수량','mpqty','missing_qty']);
       var iMpDate=fi(['입고예정일','mpdate','expecteddate','expected_date']);
       var iMpNote=fi(['비고','mpnote']);
       function truthy(v){ v=String(v||'').trim().toUpperCase(); return v==='Y'||v==='TRUE'||v==='1'||v==='✔'||v==='O'||v==='CLOSE'||v==='완료'; }
+      // 날짜 컬럼 값이 Y/완료면 '완료'로 간주 (날짜가 아니므로 날짜필드엔 빈값)
+      function dateOrDone(rawVal){
+        var raw=String(rawVal!=null?rawVal:'').trim();
+        if(truthy(raw)) return {date:'', done:true};
+        return {date:raw, done:false};
+      }
       var now=new Date().toISOString();
       var added=0, skipped=0;
       var _lastRec=null;
@@ -1231,6 +1234,11 @@ function pbImportCSV(inp){
         var status=statusMap[statusRaw]||statusRaw||'PO접수';
         var isDone=(status==='완료');
 
+        // 가공물입고/하네스완료/전장완료: 날짜 컬럼에 Y면 완료, 아니면 날짜
+        var arr =dateOrDone(iArrival>=0?r[iArrival]:'');
+        var hDone=dateOrDone(iHiDone>=0?r[iHiDone]:'');
+        var eDone=dateOrDone(iElec>=0?r[iElec]:'');
+
         var rec={
           id:pbUID(),
           name:name, pn:pn, hogi:hogi,
@@ -1241,15 +1249,15 @@ function pbImportCSV(inp){
           note:iNote>=0?String(r[iNote]||'').trim():'',
           reqDate:iReq>=0?String(r[iReq]||'').trim():'',
           machineDate:iMachine>=0?String(r[iMachine]||'').trim():'',
-          arrivalDate:iArrival>=0?String(r[iArrival]||'').trim():'',
+          arrivalDate:arr.date,
           harnessIssue:iHiIssue>=0?String(r[iHiIssue]||'').trim():'',
-          harnessDone:iHiDone>=0?String(r[iHiDone]||'').trim():'',
+          harnessDone:hDone.date,
           partIssue:iPartIssue>=0?String(r[iPartIssue]||'').trim():'',
-          elecDone:iElec>=0?String(r[iElec]||'').trim():'',
-          // 완료 상태: CSV에 컬럼 있으면 읽고, status=완료면 보조로 완료 처리
-          machineRecv: iMachineRecv>=0 ? truthy(r[iMachineRecv]) : isDone,
-          harnessRecv: iHarnessRecv>=0 ? truthy(r[iHarnessRecv]) : isDone,
-          elecRecv:    iElecRecv>=0 ? truthy(r[iElecRecv]) : isDone,
+          elecDone:eDone.date,
+          // 완료 상태: 날짜 컬럼의 Y → 완료, 없으면 status=완료 보조
+          machineRecv: arr.done   || isDone,
+          harnessRecv: hDone.done || isDone,
+          elecRecv:    eDone.done || isDone,
           missingParts:mpObj?[mpObj]:[],
           changes:[{type:'신규', msg:'CSV 등록', at:now}],
           createdAt:now,
@@ -1694,14 +1702,18 @@ function pbDownloadSampleCSV(){
 
 function pbExportCSV(){
   pbLoad();
-  var keys=['name','pn','hogi','ccn','rev','status','poReceived','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','updatedAt','machineRecv','harnessRecv','elecRecv'];
+  var keys=['name','pn','hogi','ccn','rev','status','poReceived','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','updatedAt'];
   var header=keys.concat(['미불출품번','미불출수량','입고예정일','비고']);
+  // 완료 상태 → 날짜 컬럼에 Y로 표기할 매핑
+  var recvMap={ arrivalDate:'machineRecv', harnessDone:'harnessRecv', elecDone:'elecRecv' };
   var rows=[header];
   _pbData.forEach(function(r){
     var base=keys.map(function(k){
+      // 완료 공정은 해당 날짜 컬럼에 Y
+      if(recvMap[k] && r[recvMap[k]]) return 'Y';
       var v=r[k];
       if(v==null) return '';
-      if(typeof v==='boolean') return v?'Y':'';   // 완료 상태는 Y로
+      if(typeof v==='boolean') return v?'Y':'';
       if(k==='updatedAt'||k==='createdAt'){ var s=String(v); return s.length>=10?s.slice(0,10):s; }  // 년월일만
       return v;
     });
