@@ -1203,6 +1203,7 @@ function pbImportCSV(inp){
       var now=new Date().toISOString();
       var added=0, skipped=0;
       var _lastRec=null;
+      var newRecs=[];   // CSV에서 만든 레코드 모음 (기존과 대조 전)
       pbLoad();
       var _byKey={};   // 품번|호기 → 이미 만든 레코드 (미불출 합치기용)
       rows.slice(1).forEach(function(r){
@@ -1263,38 +1264,36 @@ function pbImportCSV(inp){
           createdAt:now,
           updatedAt:(iUpdated>=0&&String(r[iUpdated]||'').trim())?String(r[iUpdated]).trim():now,
         };
-        _pbData.push(rec); added++;
+        // 신규 후보로 모음 (실제 반영은 아래에서 기존과 대조)
+        newRecs.push(rec);
         _byKey[key]=rec; _lastRec=rec;
       });
-      // 중복 제거: 동일 품번+호기 조합이면 신규만 추가 (기존 유지)
-      var existKeys={};
-      _pbData.forEach(function(r,i){
-        var k=(r.pn||'')+'|'+(r.hogi||'');
-        if(existKeys[k]===undefined) existKeys[k]=i;
-        else if(existKeys[k]!==i){
-          // 나중에 추가된 것(추가된 것)이 같은 키면 제거
+
+      // 기존 데이터와 대조: 같은 품번+호기면 일정만 갱신, 없으면 신규 추가
+      var existIdx={};
+      _pbData.forEach(function(r,i){ existIdx[(r.pn||'')+'|'+(r.hogi||'')]=i; });
+      var updated=0, addedNew=0;
+      // 일정 관련 필드만 갱신 (완료상태·id·createdAt·history는 보존)
+      var SCHED_FIELDS=['status','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','poReceived','ccn','rev','missingParts'];
+      newRecs.forEach(function(nr){
+        var k=(nr.pn||'')+'|'+(nr.hogi||'');
+        if(existIdx[k]!==undefined){
+          // 기존 레코드 → 일정 필드만 덮어쓰기
+          var ex=_pbData[existIdx[k]];
+          SCHED_FIELDS.forEach(function(f){ ex[f]=nr[f]; });
+          ex.updatedAt=now;
+          ex.changes=(ex.changes||[]).concat([{type:'수정', msg:'CSV 일정 갱신', at:now}]).slice(-50);
+          updated++;
+        } else {
+          // 신규
+          _pbData.push(nr);
+          existIdx[k]=_pbData.length-1;
+          addedNew++;
         }
       });
-      // 신규 추가분 중 기존과 중복된 것 제거
-      var before=_pbData.length-added;
-      var deduped=[]; var seen={};
-      _pbData.forEach(function(r){
-        var k=(r.pn||'')+'|'+(r.hogi||'');
-        if(!seen[k]){ seen[k]=true; deduped.push(r); }
-        else if(_pbData.indexOf(r)<before){ deduped.push(r); seen[k]=true; } // 기존 유지
-      });
-      // 실제 중복 처리
-      var dupCnt=0;
-      var existingKeys={}; var fresh=[];
-      _pbData.slice(0,before).forEach(function(r){ existingKeys[(r.pn||'')+'|'+(r.hogi||'')]=true; });
-      _pbData.slice(before).forEach(function(r){
-        var k=(r.pn||'')+'|'+(r.hogi||'');
-        if(existingKeys[k]){ dupCnt++; } else { fresh.push(r); existingKeys[k]=true; }
-      });
-      _pbData=_pbData.slice(0,before).concat(fresh);
-      added=fresh.length;
+      added=addedNew;
       pbSaveAll(); pbRender();
-      qToast('✓ '+added+'건 추가'+(dupCnt?' · '+dupCnt+'건 중복제외':'')+(skipped?' · '+skipped+'건 건너뜀':''),'ok',3000);
+      qToast('✓ 신규 '+addedNew+'건 · 일정수정 '+updated+'건'+(skipped?' · '+skipped+'건 건너뜀':''),'ok',3500);
     }catch(err){ qToast('가져오기 실패: '+err.message,'err',5000); }
     inp.value='';
   };
