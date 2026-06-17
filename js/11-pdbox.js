@@ -1180,6 +1180,7 @@ function pbImportCSV(inp){
       var iRev=fi(['rev','revision']);
       var iStatus=fi(['상태','status']);
       var iNoPo=fi(['po미접수','nopo','no_po','선진행']);
+      var iPoRecv=fi(['po_received','poreceived','po접수','발주접수']);
       var iNote=fi(['비고','note','remark']);
       var iReq=fi(['납품요청일','reqdate','req_date','납품일','납품일자']);
       var iMachine=fi(['가공물발주','machinedate','machine_date','가공물발주일','가공물 발주일']);
@@ -1246,7 +1247,9 @@ function pbImportCSV(inp){
           ccn:iCcn>=0?String(r[iCcn]||'').trim():'',
           rev:iRev>=0?String(r[iRev]||'').trim():'',
           status:status,
-          poReceived:iNoPo>=0?String(r[iNoPo]||'').trim()!=='Y'&&String(r[iNoPo]||'').trim()!=='TRUE'&&String(r[iNoPo]||'').trim()!=='1':true,
+          poReceived: iPoRecv>=0
+            ? truthy(r[iPoRecv])
+            : (iNoPo>=0?String(r[iNoPo]||'').trim()!=='Y'&&String(r[iNoPo]||'').trim()!=='TRUE'&&String(r[iNoPo]||'').trim()!=='1':true),
           note:iNote>=0?String(r[iNote]||'').trim():'',
           reqDate:iReq>=0?String(r[iReq]||'').trim():'',
           machineDate:iMachine>=0?String(r[iMachine]||'').trim():'',
