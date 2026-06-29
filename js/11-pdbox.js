@@ -30,6 +30,10 @@ var _pbSortDir = 1;  // 1=오름차순, -1=내림차순
 
 function pbLoad(){
   try{ _pbData=JSON.parse(localStorage.getItem(PB_KEY)||'[]'); }catch(e){ _pbData=[]; }
+  // 자동 변경 뱃지(changes) 기능 제거 — 남아있는 데이터 정리
+  if(Array.isArray(_pbData)){
+    _pbData.forEach(function(r){ if(r && r.changes && r.changes.length) r.changes=[]; });
+  }
 }
 function pbSaveAll(onDone){
   try{ localStorage.setItem(PB_KEY,JSON.stringify(_pbData)); }catch(e){}
@@ -315,23 +319,7 @@ function pbRender(){
           var full=String(r.note).replace(/"/g,'&quot;');
           noteHtml='<span title="'+full+'" style="font-size:11.5px;color:var(--text2);white-space:pre-line;cursor:help">'+parsed.latest+(parsed.more?' <span style="opacity:.5;font-size:10px">+'+parsed.more+'</span>':'')+'</span>';
         }
-        var changes=r.changes||[];
-        if(typeof changes==='string'){try{changes=JSON.parse(changes);}catch(e){changes=[];}}
-        if(!Array.isArray(changes)) changes=[];
-        // 신규등록, 납품일 변경만 표시
-        var showChanges=changes.filter(function(c){
-          return c.type==='신규' || (c.type==='날짜' && (c.msg||'').includes('납품요청일'));
-        });
-        if(!showChanges.length) return '<td style="white-space:normal;word-break:break-word;line-height:1.4">'+noteHtml+'</td>';
-        var recent=showChanges.slice(-2).reverse();
-        var badges=recent.map(function(c){
-          var color=c.type==='신규'?'#00e676':c.type==='날짜'?'var(--amb)':c.type==='상태'?'var(--accent)':'var(--text2)';
-          var bg=c.type==='신규'?'rgba(0,230,118,.12)':c.type==='날짜'?'rgba(255,181,71,.12)':c.type==='상태'?'rgba(79,124,255,.12)':'rgba(255,255,255,.05)';
-          var dt=c.at?(c.at.slice(5,10).replace('-','/')):'';
-          var typeLabel=c.type==='신규'?'🆕':c.type==='날짜'?'📅':c.type==='상태'?'🔄':'✏';
-          return '<div style="font-size:10px;line-height:1.5;padding:1px 5px;border-radius:4px;background:'+bg+';color:'+color+';white-space:nowrap;margin-bottom:2px">'+typeLabel+' '+c.msg+(dt?' <span style="opacity:.55;font-size:9px">/ '+dt+'</span>':'')+'</div>';
-        }).join('');
-        return '<td style="white-space:normal;word-break:break-word;line-height:1.4;min-width:140px">'+(r.note?noteHtml+'<br>':'')+badges+'</td>';
+        return '<td style="white-space:normal;word-break:break-word;line-height:1.4;min-width:140px">'+noteHtml+'</td>';
       })()
       +'</tr>'
       +mpDetail;
@@ -1118,8 +1106,8 @@ function pbSave(){
       history.push({type:'수정', msg:'비고 변경 ('+who+')', at:now});
     }
   }
-  rec.changes = changes;
-  rec.history = history.slice(-50);  // 최대 50건
+  rec.changes = [];                  // 자동 변경 뱃지 기능 제거 — 더이상 쌓지 않음
+  rec.history = history.slice(-50);  // 전체 이력은 유지(추적용)
 
   if(id){ var idx=_pbData.findIndex(function(x){return x.id===id;});
     if(idx>=0){
@@ -1317,7 +1305,7 @@ function pbImportCSV(inp){
           var ex=_pbData[existIdx[k]];
           SCHED_FIELDS.forEach(function(f){ ex[f]=nr[f]; });
           ex.updatedAt=now;
-          ex.changes=(ex.changes||[]).concat([{type:'수정', msg:'CSV 일정 갱신', at:now}]).slice(-50);
+          ex.changes=[];   // 자동 변경 뱃지 제거
           updated++;
         } else {
           // 신규
