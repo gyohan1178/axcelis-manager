@@ -178,6 +178,27 @@ function pbRenderStats(items){
    +'<div class="pb-stat" style="border-color:var(--red)"><div class="pb-stat-l" style="color:var(--red)">미불출 있음</div><div class="pb-stat-v" style="color:var(--red)">'+hasMissing+'</div></div>';
 }
 
+// 비고(변경점 기록)에서 최신 항목만 추출. ' / '로 구분, 괄호 안 날짜(MM/DD)로 정렬.
+// 반환 {latest:'최신 텍스트', more:추가개수}
+function pbLatestNote(note){
+  var s=String(note||'').trim();
+  if(!s) return {latest:'', more:0};
+  // ' / '로 분리 (앞쪽 'FA' 같은 접두어는 첫 조각에 붙어있을 수 있음)
+  var parts=s.split(/\s*\/\s*(?=\[|\s*\[)/).map(function(p){return p.trim();}).filter(Boolean);
+  if(parts.length<=1) return {latest:s, more:0};
+  // 각 조각의 괄호 안 날짜(MM/DD 또는 MM-DD) 추출 → 정렬 키
+  function dateKey(p){
+    var m=p.match(/\((\d{1,2})[\/\-](\d{1,2})\)/);
+    if(!m) return -1;
+    return (+m[1])*100 + (+m[2]);   // MMDD 정수
+  }
+  var withKey=parts.map(function(p,i){ return {p:p, k:dateKey(p), i:i}; });
+  // 날짜 큰(늦은) 게 최신. 날짜 없으면 적힌 순서(뒤가 최신)
+  withKey.sort(function(a,b){ if(a.k!==b.k) return a.k-b.k; return a.i-b.i; });
+  var latest=withKey[withKey.length-1].p;
+  return {latest:latest, more:parts.length-1};
+}
+
 function pbRender(){
   // pbLoad()는 탭 전환 시에만 호출, 검색/필터 시엔 메모리 데이터 그대로 사용
   if(!_pbData || !_pbData.length) pbLoad();
@@ -288,7 +309,12 @@ function pbRender(){
       +'<td style="background:rgba(167,139,250,.04);white-space:nowrap;min-width:36px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();pbToggleComplete(\''+r.id+'\',\'elecRecv\')" title="'+(r.elecRecv?'✔ 전장완료 · 클릭=취소':'완료요청 '+(pbNormDate(pbCalcElec(r))?pbNormDate(pbCalcElec(r)).slice(5,10):'')+' · 클릭하면 완료')+'">'  +(r.elecRecv?'<span style="color:#a78bfa;font-weight:700;font-size:11px">✔ 완료</span>':'<span style="font-size:10.5px;color:var(--text2)">'+(pbNormDate(pbCalcElec(r))?pbNormDate(pbCalcElec(r)).slice(5,10):'—')+'</span>')+'</td>'
       +'<td style="text-align:center;padding:4px 2px" onclick="event.stopPropagation()">'+mpBadge+'</td>'
       +(function(){
-        var noteHtml='<span style="font-size:11.5px;color:var(--text2);white-space:pre-line">'+r.note+'</span>';
+        var noteHtml='';
+        if(r.note){
+          var parsed=pbLatestNote(r.note);
+          var full=String(r.note).replace(/"/g,'&quot;');
+          noteHtml='<span title="'+full+'" style="font-size:11.5px;color:var(--text2);white-space:pre-line;cursor:help">'+parsed.latest+(parsed.more?' <span style="opacity:.5;font-size:10px">+'+parsed.more+'</span>':'')+'</span>';
+        }
         var changes=r.changes||[];
         if(typeof changes==='string'){try{changes=JSON.parse(changes);}catch(e){changes=[];}}
         if(!Array.isArray(changes)) changes=[];
@@ -1181,7 +1207,13 @@ function pbImportCSV(inp){
       var iStatus=fi(['상태','status']);
       var iNoPo=fi(['po미접수','nopo','no_po','선진행']);
       var iPoRecv=fi(['po_received','poreceived','po접수','발주접수']);
-      var iNote=fi(['비고','note','remark']);
+      var iNote=fi(['note','remark','노트','변경점','메모']);
+      // note 컬럼이 없으면 '비고'를 차선으로 쓰되, 미불출 비고(맨끝)와 같은 칸이면 제외
+      if(iNote<0){
+        var iBigo=fi(['비고']);
+        var iMpNoteTmp=hdr.lastIndexOf('비고');  // 미불출용 비고는 보통 맨 끝
+        if(iBigo>=0 && iBigo!==iMpNoteTmp) iNote=iBigo;
+      }
       var iReq=fi(['납품요청일','reqdate','req_date','납품일','납품일자']);
       var iMachine=fi(['가공물발주','machinedate','machine_date','가공물발주일','가공물 발주일']);
       var iArrival=fi(['입고예정','arrivaldate','arrival_date','가공물입고','가공물 입고일','가공물입고일']);
