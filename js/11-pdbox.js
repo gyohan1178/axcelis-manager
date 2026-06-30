@@ -1163,6 +1163,10 @@ function pbMpLookup(inp){
 // ── CSV 업로드 (기존 데이터 일괄 입력) ──
 function pbImportCSV(inp){
   if(!inp||!inp.files[0]) return;
+  // 전체 교체 모드 — 되돌릴 수 없으므로 확인
+  if(!confirm('CSV 가져오기는 기존 PD BOX 데이터를 전부 삭제하고 이 파일 내용으로 교체합니다.\n계속할까요?')){
+    inp.value=''; return;
+  }
   var ext=inp.files[0].name.split('.').pop().toLowerCase();
   var reader=new FileReader();
   reader.onload=function(e){
@@ -1292,31 +1296,11 @@ function pbImportCSV(inp){
         _byKey[key]=rec; _lastRec=rec;
       });
 
-      // 기존 데이터와 대조: 같은 품번+호기면 일정만 갱신, 없으면 신규 추가
-      var existIdx={};
-      _pbData.forEach(function(r,i){ existIdx[(r.pn||'')+'|'+(r.hogi||'')]=i; });
-      var updated=0, addedNew=0;
-      // 일정 관련 필드만 갱신 (완료상태·id·createdAt·history는 보존)
-      var SCHED_FIELDS=['status','reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone','note','poReceived','ccn','rev','missingParts'];
-      newRecs.forEach(function(nr){
-        var k=(nr.pn||'')+'|'+(nr.hogi||'');
-        if(existIdx[k]!==undefined){
-          // 기존 레코드 → 일정 필드만 덮어쓰기
-          var ex=_pbData[existIdx[k]];
-          SCHED_FIELDS.forEach(function(f){ ex[f]=nr[f]; });
-          ex.updatedAt=now;
-          ex.changes=[];   // 자동 변경 뱃지 제거
-          updated++;
-        } else {
-          // 신규
-          _pbData.push(nr);
-          existIdx[k]=_pbData.length-1;
-          addedNew++;
-        }
-      });
-      added=addedNew;
+      // 전체 교체 모드: 기존 데이터 전부 버리고 CSV 내용으로만 채움
+      var oldCount=_pbData.length;
+      _pbData = newRecs;
       pbSaveAll(); pbRender();
-      qToast('✓ 신규 '+addedNew+'건 · 일정수정 '+updated+'건'+(skipped?' · '+skipped+'건 건너뜀':''),'ok',3500);
+      qToast('✓ 전체 교체: '+newRecs.length+'건 등록 (기존 '+oldCount+'건 대체)'+(skipped?' · '+skipped+'건 건너뜀':''),'ok',4000);
     }catch(err){ qToast('가져오기 실패: '+err.message,'err',5000); }
     inp.value='';
   };
