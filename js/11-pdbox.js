@@ -89,16 +89,18 @@ function pbSyncFromServer(callback){
       });
       var serverMap={};
       serverData.forEach(function(r){ if(r.id) serverMap[r.id]=r; });
+      // 서버를 진실로 사용 (CSV 전체 교체 방식). 로컬에만 남은 옛 레코드는 버림 —
+      // 안 그러면 다른 PC의 옛 데이터가 병합돼 캘린더 중복/유령 데이터 발생.
+      // 단, 로컬에서 방금 수정해 서버보다 최신인 같은 id는 로컬 유지(충돌 보호).
       var local=[];
       try{ local=JSON.parse(localStorage.getItem(PB_KEY)||'[]'); }catch(e){}
       var localMap={};
       local.forEach(function(r){ if(r.id) localMap[r.id]=r; });
-      var allIds=new Set(Object.keys(serverMap).concat(Object.keys(localMap)));
-      var merged=[];
-      allIds.forEach(function(id){
-        var s=serverMap[id], l=localMap[id];
-        if(s&&l){ merged.push((s.updatedAt||'')>=(l.updatedAt||'')?s:l); }
-        else merged.push(s||l);
+      var merged=serverData.map(function(s){
+        var l=localMap[s.id];
+        // 같은 id가 로컬에 있고 로컬이 더 최신이면 로컬(내가 방금 수정) 채택
+        if(l && (l.updatedAt||'')>(s.updatedAt||'')) return l;
+        return s;
       });
       merged.sort(function(a,b){return (a.reqDate||'').localeCompare(b.reqDate||'');});
       var dateFields=['reqDate','machineDate','arrivalDate','harnessIssue','harnessDone','partIssue','elecDone'];
@@ -1299,8 +1301,15 @@ function pbImportCSV(inp){
       // 전체 교체 모드: 기존 데이터 전부 버리고 CSV 내용으로만 채움
       var oldCount=_pbData.length;
       _pbData = newRecs;
-      pbSaveAll(); pbRender();
-      qToast('✓ 전체 교체: '+newRecs.length+'건 등록 (기존 '+oldCount+'건 대체)'+(skipped?' · '+skipped+'건 건너뜀':''),'ok',4000);
+      pbRender();
+      qToast('저장 중... (서버 동기화)','info',2000);
+      pbSaveAll(function(ok, err){
+        if(ok){
+          qToast('✓ 전체 교체 완료: '+newRecs.length+'건 (서버 동기화됨)'+(skipped?' · '+skipped+'건 건너뜀':''),'ok',4000);
+        } else {
+          qToast('⚠ 화면엔 반영됐으나 서버 저장 실패: '+(err||'')+'\n다른 PC에 반영되려면 다시 시도하세요. (로그인 상태 확인)','err',7000);
+        }
+      });
     }catch(err){ qToast('가져오기 실패: '+err.message,'err',5000); }
     inp.value='';
   };
